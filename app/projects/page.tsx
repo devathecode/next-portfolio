@@ -2,6 +2,11 @@ import React from 'react';
 import Container from "@/app/components/Container";
 import Projectcard from "@/app/components/Projectcard/Projectcard";
 
+export const metadata = {
+    title: 'Projects | Devanshu Verma',
+    description: 'Devanshu verma is a frontend web developer from Gorakhpur',
+}
+
 const projectsDataArr = [
     {
         mainImage: `/images/netflix-clone/Netflix-Clone.png`,

@@ -3,6 +3,12 @@ import React from "react";
 import Image from "next/image";
 import Typed from "@/app/components/Typed/Typed";
 
+export const metadata = {
+    title: 'Devanshu Verma',
+    description: 'Devanshu verma is a frontend web developer from Gorakhpur',
+    keywords: ['dev verma', 'frontend', 'website', 'web developer', 'Devanshu Verma', 'Devanshu Verma angular', 'Devanshu Verma React']
+}
+
 export default function Home() {
     return (
         <Container>

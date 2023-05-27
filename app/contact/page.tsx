@@ -2,6 +2,11 @@ import React from 'react';
 import Container from "@/app/components/Container";
 import ContactForm from "@/app/components/contact/ContactForm/ContactForm";
 
+export const metadata = {
+    title: 'Contact | Devanshu Verma',
+    description: 'Devanshu verma is a frontend web developer from Gorakhpur',
+}
+
 const Page = () => {
     return (
         <Container>

@@ -3,6 +3,12 @@ import Container from "@/app/components/Container";
 import Progressbar from "@/app/components/Progressbar/Progressbar";
 import Image from "next/image";
 
+export const metadata = {
+    title: 'Skills | Devanshu Verma',
+    description: 'Devanshu verma is a frontend web developer from Gorakhpur',
+}
+
+
 const Page = () => {
     const cubeClasses = 'bg-yellow-600 text-white h-16 md:h-24 w-20 md:w-28 flex justify-center items-center';
     const skillsArr = [
