@@ -81,8 +81,9 @@ const Header = (props: any) => {
                 <div className="col-span-2 sm:col-span-9 place-self-end cursor-pointer hidden sm:block my-auto">
                     <ul className="flex justify-between space-x-8">
                         {menuOptions.map((data) => {
-                            return <Link href={data.url} key={data.id}
-                                            className={`text-yellow-600 font-semibold uppercase`}>{data.title}</Link>
+                            return <li className={`text-yellow-600 font-semibold uppercase`} key={data.id}>
+                                <Link href={data.url}>{data.title}</Link>
+                            </li>
                         })}
                     </ul>
                 </div>
@@ -91,8 +92,10 @@ const Header = (props: any) => {
                 className={`${open ? 'active left-0 block' : '-left-[200%]'} fixed z-50 top-12 w-full transition-all px-2 duration-700 bg-[#1a1a1a] h-full border-t-2 border-gray-400`}>
                 <ul className="grid grid-cols-12 gap-0 sm:gap-5 gap-y-7 place-items-center mt-12">
                     {menuOptions.map((data) => {
-                        return <Link onClick={closeHamburger} href={data.url} key={data.id}
-                                        className={`col-span-12 text-yellow-600 font-semibold uppercase`}>{data.title}</Link>
+                        return <li key={data.id}
+                                   className={`col-span-12 text-yellow-600 font-semibold uppercase`}>
+                            <Link onClick={closeHamburger} href={data.url} >{data.title}</Link>
+                        </li>
                     })}
                 </ul>
             </div>
