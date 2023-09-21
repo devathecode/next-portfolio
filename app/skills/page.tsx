@@ -93,7 +93,9 @@ const Page = () => {
                                 className="col-span-6 md:col-span-3 flex justify-center items-center flex-col text-center">
                                 <div className={`${cubeClasses}`}
                                      style={{clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)"}}>
-                                    <Image src={data.icon} width="100" height="80" className="aspect-[7/3] object-contain invert" alt={`icon-${data.heading}`} priority={true}/>
+                                    <Image src={data.icon} width="100" height="80"
+                                           className="aspect-[7/3] object-contain invert" alt={`icon-${data.heading}`}
+                                           priority={true}/>
                                 </div>
                                 <h1 className="text-xl md:text-2xl text-white tracking-widest mt-4">{data.heading}</h1>
                                 <h2 className="text-gray-500 text-xs md:text-sm max-w-[17rem]">{data.subHeading}</h2>
@@ -108,13 +110,15 @@ const Page = () => {
                     <div
                         className={`bg-yellow-600 text-white h-72 md:h-96 w-76 md:w-[27rem] flex justify-center items-center p-10`}
                         style={{clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)"}}>
-                        <Image width="400" height="400" src="https://i.postimg.cc/Ss0BbCmK/new.png" className="max-w-full h-auto object-contain" priority={true} alt="My-image"/>
+                        <Image width="400" height="400" src="https://i.postimg.cc/Ss0BbCmK/new.png"
+                               className="max-w-full h-auto object-contain" priority={true} alt="My-image"/>
                     </div>
                     <div className="mt-5">
                         <h1 className="text-white text-center">
                             As a <span className="text-yellow-600">frontend developer</span> I am
                             passionate about creating user-friendly and engaging interfaces that elevate the user
-                            experience. My experience in designing and developing <span className="text-yellow-600">responsive, </span>
+                            experience. My experience in designing and developing <span
+                            className="text-yellow-600">responsive, </span>
                             <span className="text-yellow-600">cross-platform web </span>
                             applications has allowed me to develop a strong ability to balance creative and technical
                             aspects in order to produce visually appealing and functional applications.

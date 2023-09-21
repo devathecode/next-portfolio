@@ -7,7 +7,7 @@ const Progressbar = (props: any) => {
     // label of counter
     // number to increment to
     // duration of count in seconds
-    const {percentage } = props.data
+    const {percentage} = props.data
 
     // number displayed by component
     const [count, setCount] = useState("0")
@@ -23,7 +23,7 @@ const Progressbar = (props: any) => {
     useEffect(() => {
         let start = 0;
         // first three numbers from props
-        const end = parseInt(percentage.substring(0,3))
+        const end = parseInt(percentage.substring(0, 3))
         // if zero, return
         if (start === end) return;
         let timer = setInterval(() => {

@@ -1,27 +1,27 @@
 import './globals.css'
-import { Inter } from 'next/font/google'
-import Header from "@/app/components/Header";
+import {Inter} from 'next/font/google'
 import ContentContainer from "@/app/components/ContentContainer";
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({subsets: ['latin']});
 
 export const metadata = {
-    title: 'Devanshu Verma',
-    description: 'Devanshu verma is a frontend web developer from Gorakhpur',
+    title: 'Devanshu Verma | Frontend developer',
+    description: 'Devanshu Verma, Gorakhpur-based frontend developer, crafts visually stunning web apps with Angular, React, Vue, Nextjs and modern tools.',
+    keywords: ['Angular', 'React', 'Nextjs', 'Vue', 'Gorakhpur']
 }
 
 export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
+                                       children,
+                                   }: {
+    children: React.ReactNode
 }) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>
-      <ContentContainer>
-        {children}
-      </ContentContainer>
-      </body>
-    </html>
-  )
+    return (
+        <html lang="en">
+        <body className={inter.className}>
+        <ContentContainer>
+            {children}
+        </ContentContainer>
+        </body>
+        </html>
+    )
 }

@@ -15,7 +15,7 @@ export default function Home() {
             <div className="grid grid-cols-12 border-b-2 border-gray-400 gap-y-10 lg:gap-y-0 sm:mt-16">
                 <div className="col-span-12 lg:col-span-7 order-last lg:order-first px-4 md:px-0 my-auto">
                     <div className="font-semibold">
-                        <span className="text-5xl sm:text-6xl md:text-7xl text-white">Nice to meet you!</span>
+                        <h1 className="text-5xl sm:text-6xl md:text-7xl text-white">Nice to meet you!</h1>
                         <div className="text-4xl sm:text-5xl md:text-6xl my-2 text-yellow-600">
                             <div className="underline underline-offset-8 decoration-white decoration-2">
                                 <Typed/>

@@ -3,7 +3,7 @@
 import React from 'react';
 
 // @ts-ignore
-const Imageslider = ({ imageUrl, caption, currentImage, index }) => {
+const Imageslider = ({imageUrl, caption, currentImage, index}) => {
     console.log('imageUrl', imageUrl);
     console.log('caption', caption);
     console.log('currentImage', currentImage);
@@ -14,7 +14,7 @@ const Imageslider = ({ imageUrl, caption, currentImage, index }) => {
                 index === currentImage ? "opacity-100" : "opacity-0"
             }`}
         >
-            <img className="h-full w-full object-contain" src={imageUrl} alt={caption} />
+            <img className="h-full w-full object-contain" src={imageUrl} alt={caption}/>
         </div>
     );
 };

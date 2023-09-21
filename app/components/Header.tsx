@@ -59,7 +59,7 @@ const Header = (props: any) => {
             <div className="grid grid-cols-12 gap-0 sm:gap-2 md:gap-4 lg:gap-6 xl:gap-8">
                 <div className="col-span-9 sm:col-span-3 justify-self-start my-auto">
                     <Link href="/"
-                             className="flex flex-row cursor-pointer justify-center items-center text-white font-mono text-2xl font-bold">
+                          className="flex flex-row cursor-pointer justify-center items-center text-white font-mono text-2xl font-bold">
                         <div className="ml-3 font-mono tracking-widest">
                             <span className="text-sm sm:text-lg md:text-2xl font-semibold">De</span>
                             <span
@@ -94,7 +94,7 @@ const Header = (props: any) => {
                     {menuOptions.map((data) => {
                         return <li key={data.id}
                                    className={`col-span-12 text-yellow-600 font-semibold uppercase`}>
-                            <Link onClick={closeHamburger} href={data.url} >{data.title}</Link>
+                            <Link onClick={closeHamburger} href={data.url}>{data.title}</Link>
                         </li>
                     })}
                 </ul>

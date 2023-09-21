@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React, {useRef} from 'react';
 
 type ModalProps = {
     isOpen: boolean;
@@ -8,7 +8,7 @@ type ModalProps = {
     children: any
 };
 
-const AddModal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const AddModal: React.FC<ModalProps> = ({isOpen, onClose, children}) => {
     const modalRef = useRef<HTMLDivElement>(null);
 
     const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -27,8 +27,9 @@ const AddModal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
                 >
                     <div className="bg-white rounded-lg">
                         <div className="flex justify-between items-center mb-4 relative">
-                            <button className="text-gray-500 hover:text-gray-700 focus:outline-none absolute -top-2 -right-2"
-                                    onClick={onClose}>
+                            <button
+                                className="text-gray-500 hover:text-gray-700 focus:outline-none absolute -top-2 -right-2"
+                                onClick={onClose}>
                                 <span className="sr-only">Close</span>
                                 <svg
                                     className="h-6 w-6"

@@ -30,8 +30,8 @@ const Projectcard = (props: any) => {
                 <Image src={cardImage}
                        width="384"
                        height="320"
-                     className="group-hover:mix-blend-luminosity object-cover h-80 w-96 group-hover:opacity-10 scale-150"
-                     alt={`banner-${heading}`}/>
+                       className="group-hover:mix-blend-luminosity object-cover h-80 w-96 group-hover:opacity-10 scale-150"
+                       alt={`banner-${heading}`}/>
                 <div
                     className="absolute -translate-x-2/4 -translate-y-2/4 left-2/4 top-2/4 text-center opacity-0 group-hover:opacity-100 transition-all ease-in-out duration-500">
                     <h1 className="text-2xl font-semibold text-yellow-600 uppercase tracking-widest">{heading}</h1>
