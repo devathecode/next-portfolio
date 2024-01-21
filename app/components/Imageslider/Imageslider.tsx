@@ -3,18 +3,13 @@
 import React from 'react';
 
 // @ts-ignore
-const Imageslider = ({imageUrl, caption, currentImage, index}) => {
-    console.log('imageUrl', imageUrl);
-    console.log('caption', caption);
-    console.log('currentImage', currentImage);
-    console.log('index', index);
+const Imageslider = ({ imageUrl, caption, currentImage, index }) => {
     return (
         <div
-            className={`h-full absolute top-0 left-0 right-0 transition-all duration-1000 ${
-                index === currentImage ? "opacity-100" : "opacity-0"
-            }`}
+            className={`h-full absolute top-0 left-0 right-0 transition-all duration-1000 ${index === currentImage ? "opacity-100" : "opacity-0"
+                }`}
         >
-            <img className="h-full w-full object-contain" src={imageUrl} alt={caption}/>
+            <img className="h-full w-full object-contain" src={imageUrl} alt={caption} />
         </div>
     );
 };

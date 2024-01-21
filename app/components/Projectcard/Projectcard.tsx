@@ -1,12 +1,11 @@
 "use client";
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import Imageslider from "../Imageslider/Imageslider";
 import Image from "next/image";
 
 
 const Projectcard = (props: any) => {
-    console.log('props', props)
     const images = props.modalImageArr;
     const heading = props.projectName;
     const cardImage = props.cardImage;
@@ -25,17 +24,44 @@ const Projectcard = (props: any) => {
     };
     return (
         <div className="overflow-hidden">
-            <div
+            {/* <div
                 className="cursor-pointer group hover:scale-110 hover:my-4 lg:hover:my-0 transition-all ease-in-out duration-700 relative">
                 <Image src={cardImage}
-                       width="384"
-                       height="320"
-                       className="group-hover:mix-blend-luminosity object-cover h-80 w-96 group-hover:opacity-10 scale-150"
-                       alt={`banner-${heading}`}/>
+                    width="384"
+                    height="320"
+                    className="group-hover:mix-blend-luminosity object-cover h-80 w-96 group-hover:opacity-10 scale-150"
+                    alt={`banner-${heading}`} />
                 <div
                     className="absolute -translate-x-2/4 -translate-y-2/4 left-2/4 top-2/4 text-center opacity-0 group-hover:opacity-100 transition-all ease-in-out duration-500">
                     <h1 className="text-2xl font-semibold text-yellow-600 uppercase tracking-widest">{heading}</h1>
                     <h3 className="text-sm mb-2 text-white">React + Tailwind</h3>
+                    <button
+                        onClick={() => {
+                            setShowModal(true)
+                        }}
+                        className="w-40 border-2 border-yellow-600 px-3 py-1 transition-all ease-in-out delay-75 duration-700 text-white hover:bg-yellow-600">
+                        Learn more
+                    </button>
+                </div>
+            </div> */}
+
+            <div className="group relative cursor-pointer items-center justify-center overflow-hidden transition-shadow hover:shadow-xl hover:shadow-black/30">
+                <div className="h-[32rem] w-full">
+                    <img className="h-full w-full object-cover transition-transform duration-500 group-hover:rotate-3 group-hover:scale-125"
+                        src={cardImage} alt="" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black group-hover:from-black/70 group-hover:via-black/60 group-hover:to-black/70"></div>
+                <div className="absolute inset-0 flex translate-y-[60%] flex-col items-center justify-center px-9 text-center transition-all duration-500 group-hover:translate-y-0 group-hover:bg-black/60 text-white group-hover:text-primary-500">
+                    <div className="font-dmserif text-3xl font-bold mb-40 group-hover:mb-2 flex flex-col justify-center items-center">
+                        <h1>{heading}</h1>
+                        <div className="relative w-16 h-6 animate-bounce mt-10 group-hover:hidden z-10">
+                            <svg className="absolute bottom-0 left-0 fill-current text-white -rotate-90" viewBox="0 0 24 24">
+                                <path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <p className="mb-3 text-lg italic opacity-0 transition-opacity duration-300 group-hover:opacity-100 line-clamp-2">{desc}</p>
                     <button
                         onClick={() => {
                             setShowModal(true)
