@@ -1,16 +1,12 @@
-"use client";
+import Header from "./Header";
 
-import React, {useState} from 'react';
-import Header from "@/app/components/Header";
-
-const ContentContainer = (props: any) => {
-    const [open, setOpen] = useState(false);
+const ContentContainer = ({ children, }: Readonly<{ children: React.ReactNode; }>) => {
     return (
-        <div className={`${open && 'h-screen overflow-hidden'} font-serif`}>
-            <Header handleSubMenuOpen={setOpen}/>
-            {props.children}
+        <div className="cpm">
+            <Header />
+            {children}
         </div>
-    );
-};
+    )
+}
 
 export default ContentContainer;
