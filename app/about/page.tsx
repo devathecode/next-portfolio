@@ -77,7 +77,7 @@ const About = () => {
                 <div className="py-6 md:py-12">
                     <h3 className="text-3xl md:text-4xl font-medium dark:text-white mb-2.5 ">What I do!</h3>
                     <div className="grid grid-cols-12 gap-4 mt-5">
-                        <Card classes="col-span-4">
+                        <Card classes="col-span-12 lg:col-span-4">
                             <div className="flex items-center">
                                 <MdDesignServices className="text-4xl text-pink-600" />
                                 <h4 className="text-xl md:text-2xl font-medium dark:text-white/80 mb-2 ms-4">UI/UX Design</h4>
@@ -86,7 +86,7 @@ const About = () => {
                                 Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam euismod volutpat.
                             </p>
                         </Card>
-                        <Card classes="col-span-4">
+                        <Card classes="col-span-12 lg:col-span-4">
                             <div className="flex items-center">
                                 <FaCode className="text-4xl text-blue-500" />
                                 <h4 className="text-xl md:text-2xl font-medium dark:text-white/80 mb-2 ms-4">Web Development</h4>
@@ -95,7 +95,7 @@ const About = () => {
                                 Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam euismod volutpat.
                             </p>
                         </Card>
-                        <Card classes="col-span-4">
+                        <Card classes="col-span-12 lg:col-span-4">
                             <div className="flex items-center">
                                 <MdDeveloperMode className="text-4xl text-yellow-500" />
                                 <h4 className="text-xl md:text-2xl font-medium dark:text-white/80 mb-2 ms-4">App Development</h4>
