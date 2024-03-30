@@ -2,30 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    background: #1a1a1a;
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
-/*:root {*/
-/*  --foreground-rgb: 0, 0, 0;*/
-/*  --background-start-rgb: 214, 219, 220;*/
-/*  --background-end-rgb: 255, 255, 255;*/
-/*}*/
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
 
-/*@media (prefers-color-scheme: dark) {*/
-/*  :root {*/
-/*    --foreground-rgb: 255, 255, 255;*/
-/*    --background-start-rgb: 0, 0, 0;*/
-/*    --background-end-rgb: 0, 0, 0;*/
-/*  }*/
-/*}*/
+@layer base {
+  body {
+    @apply dark:bg-stone-900 bg-gray-100
+  }
+}
 
-/*body {*/
-/*  color: rgb(var(--foreground-rgb));*/
-/*  background: linear-gradient(*/
-/*      to bottom,*/
-/*      transparent,*/
-/*      rgb(var(--background-end-rgb))*/
-/*    )*/
-/*    rgb(var(--background-start-rgb));*/
-/*}*/
+@layer components {
+  .cpm {
+    @apply mt-6 md:mt-8 lg:mt-10 px-0 xl:px-6 2xl:px-40 py-3 sm:py-4 md:py-5 lg:py-6;
+  }
+
+  .wrapper {
+    @apply container lg:rounded-2xl bg-white dark:bg-[#111111] px-4 sm:px-5 md:px-10 lg:px-20 mx-auto
+  }
+}
