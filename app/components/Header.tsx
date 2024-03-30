@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from "next/link";
 import { IoHomeOutline } from "react-icons/io5";
 import { IoPersonOutline } from "react-icons/io5";
-import { TiDocumentText } from "react-icons/ti";
 import { MdOutlineWork } from "react-icons/md";
 import { MdOutlineContactSupport } from "react-icons/md";
 import { usePathname } from 'next/navigation';
