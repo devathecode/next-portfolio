@@ -55,7 +55,7 @@ const Header = () => {
     }
     return (
         <header className={`px-2 sm:px-16 2xl:px-40 z-50 py-2 sm:py-3 bg-gray-100 dark:bg-stone-900 w-full fixed lg:block top-0 lg:top-none ${open ? ' left-0 right-0 bottom-auto ' : ''}`}>
-            <nav className="flex justify-between">
+            <nav className="flex justify-between 2xl:max-w-6xl mx-auto">
                 <Link href="/"
                     className="flex flex-row cursor-pointer justify-center text-black/70 dark:text-white items-center font-mono text-2xl font-bold">
                     <div className="ml-3 font-mono tracking-widest">
