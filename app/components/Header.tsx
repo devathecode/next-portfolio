@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation';
 import { CiLight } from "react-icons/ci";
 import { useTheme } from 'next-themes';
 import { MdOutlineDarkMode } from "react-icons/md";
+import TransitionLink from './Transitionlink';
 
 const Header = () => {
     const { systemTheme, theme, setTheme } = useTheme();
@@ -74,10 +75,9 @@ const Header = () => {
                                     <li key={data.id} onClick={() => setOpen(false)} className={`${open ? 'ps-2 sm:ps-6' : ''} ${pathname === `${data.url}` ? 'bg-gradient-to-l' : 'hover:bg-gradient-to-l'}
                                         font-semibold first-letter:uppercase my-4 md:my-5 w-[98vw] lg:w-auto bg-black/70 from-yellow-600 via-yellow-700 to-yellow-800 text-white/80 text-sm px-4
                                          py-2 rounded-md cursor-pointer`}>
-                                        <Link href={data.url} className='flex items-center'>
-                                            {data.icon}
-                                            <span className="ms-2">{data.title}</span>
-                                        </Link>
+                                        <TransitionLink href={data.url} label={data.title}>
+
+                                        </TransitionLink>
                                     </li>
                                 )
                             })}
