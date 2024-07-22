@@ -13,12 +13,12 @@ const Work = () => {
                         <div className="ms-5 h-0.5 w-32 md:w-72 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 mt-12 lg:mt-0"></div>
                     </div>
                     <div className="grid grid-cols-12 gap-y-5 md:gap-10 pt-4 md:pt-[40px] items-center">
-                        <Card redirectUrl="https://www.bigboyzlounge.co.in/" classes="col-span-12 md:col-span-6 lg:col-span-4">
+                        <Card redirectUrl="https://www.npmjs.com/package/ngx-table-with-pagination" classes="col-span-12 md:col-span-6 lg:col-span-4">
                             <div className=" bg-black rounded-md overflow-hidden h-60">
-                                <Image width="300" height="300" className="h-60 w-60 object-contain group-hover:scale-110 transition-all ease-in-out duration-700 mx-auto" alt="tax" src="https://firebasestorage.googleapis.com/v0/b/bigboyzlounge-ddf64.appspot.com/o/bb-logo.webp?alt=media&token=b5043d75-0a17-40ba-8812-af329da7e6e4" />
+                                <Image width="300" height="300" className="h-60 w-60 object-contain group-hover:scale-110 transition-all ease-in-out duration-700 mx-auto" alt="tax" src="/npm.png" />
                             </div>
-                            <h4 className="text-base dark:text-white/60 my-3">Web app</h4>
-                            <p className="text-lg lg:text-xl">BigBoyz lounge</p>
+                            <h4 className="text-base dark:text-white/60 my-3">NPM Library</h4>
+                            <p className="text-lg lg:text-xl">ngx-table-with-pagination</p>
                         </Card>
                         <Card redirectUrl="https://tax-calculator-nine.vercel.app" classes="col-span-12 md:col-span-6 lg:col-span-4">
                             <div className="bg-pink-50 rounded-md overflow-hidden h-60">
