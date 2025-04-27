@@ -22,7 +22,7 @@ const HomeComponent = () => {
           scalable frontend products with exceptional user interfaces.
         </p>
         <a
-          href="#_"
+          href="/resume/Resume.pdf"
           className="relative mt-4 inline-flex items-center justify-center p-4 px-6 py-2 overflow-hidden font-medium
              text-indigo-600 transition duration-300 ease-out border-2 border-yellow-600 rounded-md shadow-md group"
         >
