@@ -74,24 +74,33 @@ const TechStack: FC = () => {
           <h2 className="text-3xl text-center font-semibold text-gray-900 dark:text-white mb-4">
             Technologies I Specialize In
           </h2>
-          <div className="h-0.5 w-32 md:w-72 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 mb-3"></div>
+          <div className="h-0.5 w-32 md:w-72 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 mb-3" />
         </div>
-        <div
-          className="overflow-hidden whitespace-nowrap w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-6xl mx-auto"
-          ref={scrollRef}
-        >
-          <div className="flex w-max space-x-6 animate-scroll">
-            {[...technologies, ...technologies].map((tech, index) => (
-              <div
-                key={index}
-                className="p-6 flex flex-col items-center justify-center rounded-2xl min-w-[120px] sm:min-w-[150px]"
-              >
-                {tech.icon}
-                <p className="mt-2 text-sm sm:text-lg font-semibold text-gray-700 dark:text-gray-300">
-                  {tech.name}
-                </p>
-              </div>
-            ))}
+
+        {/* Carousel with fade masks on both edges */}
+        <div className="relative w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-6xl mx-auto">
+          {/* Left fade */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-gray-50 dark:from-[#0d0d0d] to-transparent pointer-events-none" />
+          {/* Right fade */}
+          <div className="absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-gray-50 dark:from-[#0d0d0d] to-transparent pointer-events-none" />
+
+          <div
+            className="overflow-hidden whitespace-nowrap"
+            ref={scrollRef}
+          >
+            <div className="flex w-max space-x-6 animate-scroll">
+              {[...technologies, ...technologies].map((tech, index) => (
+                <div
+                  key={index}
+                  className="p-6 flex flex-col items-center justify-center rounded-2xl min-w-[120px] sm:min-w-[150px]"
+                >
+                  {tech.icon}
+                  <p className="mt-2 text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300">
+                    {tech.name}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
