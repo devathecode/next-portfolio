@@ -16,7 +16,10 @@ const fadeUp = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+    transition: {
+      duration: 0.65,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
   },
 };
 
@@ -25,7 +28,11 @@ const imageFade = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 },
+    transition: {
+      duration: 0.9,
+      ease: [0.22, 1, 0.36, 1] as const,
+      delay: 0.2,
+    },
   },
 };
 
@@ -103,12 +110,14 @@ const HomeComponent = () => {
             <span className="relative invisible">Download Resume</span>
           </a>
 
-          <a
-            href="#work"
+          <button
+            onClick={() =>
+              document.getElementById("work")?.scrollIntoView({ behavior: "smooth" })
+            }
             className="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors duration-200 underline underline-offset-4"
           >
             See my work ↓
-          </a>
+          </button>
         </motion.div>
       </motion.div>
 
