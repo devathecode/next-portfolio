@@ -105,6 +105,7 @@ const SlideTabs: React.FC = () => {
       {navigationItems.map((item, index) => (
         <Tab
           key={item.href}
+          title={item.title}
           setPosition={setPosition}
           onClick={() => {
             isClickScrolling.current = true;
@@ -123,12 +124,12 @@ const SlideTabs: React.FC = () => {
           }}
         >
           <div
-            className={`flex group-hover:text-yellow-600 ${
+            className={`flex items-center group-hover:text-yellow-600 ${
               index === activeIndex ? "text-yellow-600" : ""
             }`}
           >
-            <item.icon className="text-xs" />
-            <span className="ms-2 hidden lg:block">{item.title}</span>
+            <item.icon className="w-4 h-4" />
+            <span className="ms-2 hidden md:block">{item.title}</span>
           </div>
         </Tab>
       ))}
@@ -142,15 +143,17 @@ interface TabProps {
   children: React.ReactNode;
   setPosition: React.Dispatch<React.SetStateAction<Position>>;
   onClick: () => void;
+  title?: string;
 }
 
 const Tab = React.forwardRef<HTMLLIElement, TabProps>(function TabComponent(
-  { children, setPosition, onClick },
+  { children, setPosition, onClick, title },
   ref
 ) {
   return (
     <li
       ref={ref}
+      title={title}
       onMouseEnter={(e) => {
         const { width } = e.currentTarget.getBoundingClientRect();
         setPosition({
@@ -160,9 +163,7 @@ const Tab = React.forwardRef<HTMLLIElement, TabProps>(function TabComponent(
         });
       }}
       onClick={onClick}
-      className={`relative cursor-pointer z-10 md:block group px-3 rounded-full flex justify-center items-center text-xs uppercase md:px-5 md:py-3 md:text-base h-12 
-
-      `}
+      className="relative cursor-pointer z-10 group px-3 rounded-full flex justify-center items-center uppercase md:px-5 md:py-3 md:text-base h-12"
     >
       {children}
     </li>
@@ -179,7 +180,7 @@ const Cursor: React.FC<CursorProps> = ({ position }) => {
       animate={{
         ...position,
       }}
-      className="absolute z-0 h-12 rounded-full border border-yellow-600 text-white"
+      className="absolute z-0 h-12 rounded-full border border-yellow-600 bg-yellow-600/10 text-white"
     />
   );
 };

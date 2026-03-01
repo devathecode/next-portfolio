@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import { LogOutIcon } from "lucide-react";
-import { logoutAction } from "./actions";
+import { logoutAction } from "../actions";
 
 export const metadata = {
   title: "Admin – devanshuverma.in",
   robots: { index: false, follow: false },
 };
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminPanelLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <header className="sticky top-0 z-10 border-b border-gray-800 bg-gray-950/90 backdrop-blur-sm px-6 py-3 flex items-center justify-between">

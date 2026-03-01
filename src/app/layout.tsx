@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-context";
-import Header from "@/components/Header";
 import { poppins } from "@/utils/fonts";
 
 export const metadata: Metadata = {
@@ -74,7 +73,6 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ThemeProvider>
-          <Header />
           <div>{children}</div>
         </ThemeProvider>
       </body>

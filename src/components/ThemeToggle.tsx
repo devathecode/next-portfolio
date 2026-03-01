@@ -2,44 +2,47 @@
 
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<string | null>(null); // Null initially to avoid mismatch
+  const [theme, setTheme] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load theme from localStorage or default to light
     const storedTheme = localStorage.getItem("theme") || "light";
     setTheme(storedTheme);
-
-    // Apply the theme class to the HTML element
-    const html = document.documentElement;
-    html.classList.toggle("dark", storedTheme === "dark");
+    document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
-
-    // Update the theme on the HTML element and localStorage
-    const html = document.documentElement;
-    html.classList.toggle("dark", newTheme === "dark");
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
     localStorage.setItem("theme", newTheme);
   };
 
-  // Prevent rendering until theme is determined
   if (!theme) return null;
 
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full bg-black dark:bg-gray-200 transition duration-300"
+      className="p-2 rounded-full bg-black dark:bg-gray-200 transition-colors duration-300 overflow-hidden"
       aria-label="Toggle Theme"
     >
-      {theme === "light" ? (
-        <Moon className="w-5 h-5 text-white" />
-      ) : (
-        <Sun className="w-5 h-5 text-yellow-600 font-bold" />
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={theme}
+          initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+          animate={{ rotate: 0, opacity: 1, scale: 1 }}
+          exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          {theme === "light" ? (
+            <Moon className="w-5 h-5 text-white" />
+          ) : (
+            <Sun className="w-5 h-5 text-yellow-600" />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </button>
   );
 }

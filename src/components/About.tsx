@@ -1,4 +1,3 @@
-import { MailCheckIcon, PhoneIcon } from "lucide-react";
 import Image from "next/image";
 import TechStack from "./TechStack";
 import AnimateOnScroll from "./AnimateOnScroll";
@@ -62,47 +61,6 @@ const AboutComponent = () => {
                 . I take pride in writing clean code that scales — and in
                 interfaces that users actually enjoy using.
               </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 my-4">
-                Personal Info
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-gray-100 dark:bg-gray-800">
-                    <PhoneIcon size={18} className="text-sky-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                      Phone
-                    </p>
-                    <a
-                      className="text-sm font-medium dark:text-white hover:text-yellow-600 dark:hover:text-yellow-600 transition-colors duration-200"
-                      href="tel:+917078146612"
-                    >
-                      +91 7078146612
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-gray-100 dark:bg-gray-800">
-                    <MailCheckIcon size={18} className="text-sky-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wide">
-                      Email
-                    </p>
-                    <a
-                      className="text-sm font-medium dark:text-white hover:text-yellow-600 dark:hover:text-yellow-600 transition-colors duration-200"
-                      href="mailto:code.devanshu@gmail.com"
-                    >
-                      code.devanshu@gmail.com
-                    </a>
-                  </div>
-                </div>
-              </div>
             </div>
           </AnimateOnScroll>
         </div>

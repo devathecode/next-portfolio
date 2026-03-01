@@ -12,7 +12,7 @@ import {
   markReadAction,
   markUnreadAction,
   deleteMessageAction,
-} from "../actions";
+} from "../../actions";
 import type { Message } from "@/lib/supabase";
 
 function formatDate(dateStr: string) {

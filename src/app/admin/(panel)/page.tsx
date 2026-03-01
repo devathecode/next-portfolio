@@ -37,9 +37,10 @@ export default async function AdminPage() {
 
   if (error) {
     return (
-      <p className="text-red-400 text-sm">
-        Failed to load messages. Check your Supabase configuration.
-      </p>
+      <div className="text-red-400 text-sm space-y-1">
+        <p className="font-semibold">Failed to load messages.</p>
+        <p className="text-red-500/70 font-mono text-xs">{error.code}: {error.message}</p>
+      </div>
     );
   }
 
