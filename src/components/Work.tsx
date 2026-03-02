@@ -45,6 +45,14 @@ const projects: Project[] = [
     techStack: ["React", "Tailwind CSS"],
     accent: "from-red-700 to-red-500",
   },
+  {
+    title: "CUET Score Calculator",
+    description:
+      "A tool that lets students instantly calculate their CUET UG exam score — upload your NTA response sheet PDF and answer key HTML, and get results in seconds. No manual comparison needed.",
+    liveUrl: "https://cuet-frontend.vercel.app/",
+    techStack: ["Next.js", "TypeScript", "Tailwind CSS"],
+    accent: "from-violet-500 to-indigo-500",
+  },
 ];
 
 const WorkComponent: FC = () => {
