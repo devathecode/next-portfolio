@@ -55,35 +55,45 @@ const SlideTabs: React.FC = () => {
   const tabsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
+    // Cache section elements once
+    const sections = navigationItems.map((item) =>
+      document.querySelector(item.href)
+    );
+
+    let ticking = false;
     const handleScroll = () => {
       if (isClickScrolling.current) return;
-
-      for (let i = navigationItems.length - 1; i >= 0; i--) {
-        const section = document.querySelector(navigationItems[i].href);
-        if (section) {
-          const rect = section.getBoundingClientRect();
-          if (
-            rect.top <= window.innerHeight / 7 &&
-            rect.bottom >= window.innerHeight / 3
-          ) {
-            setActiveIndex(i);
-            const tabElement = tabsRef.current[i];
-            if (tabElement) {
-              const { width } = tabElement.getBoundingClientRect();
-              setPosition({
-                left: tabElement.offsetLeft,
-                width,
-                opacity: 1,
-              });
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        for (let i = sections.length - 1; i >= 0; i--) {
+          const section = sections[i];
+          if (section) {
+            const rect = section.getBoundingClientRect();
+            if (
+              rect.top <= window.innerHeight / 7 &&
+              rect.bottom >= window.innerHeight / 3
+            ) {
+              setActiveIndex(i);
+              const tabElement = tabsRef.current[i];
+              if (tabElement) {
+                const { width } = tabElement.getBoundingClientRect();
+                setPosition({
+                  left: tabElement.offsetLeft,
+                  width,
+                  opacity: 1,
+                });
+              }
+              break;
             }
-            break;
           }
         }
-      }
+        ticking = false;
+      });
     };
 
     handleScroll();
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 

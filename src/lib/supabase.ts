@@ -10,6 +10,18 @@ export type Message = {
   created_at: string;
 };
 
+export type Project = {
+  id: string;
+  title: string;
+  description: string;
+  live_url: string;
+  github_url?: string | null;
+  tech_stack: string[];
+  accent: string;
+  sort_order: number;
+  created_at: string;
+};
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

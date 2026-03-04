@@ -1,6 +1,8 @@
-import { supabaseAdmin, Message } from "@/lib/supabase";
-import { InboxIcon } from "lucide-react";
+import { supabaseAdmin, Message, Project } from "@/lib/supabase";
+import { InboxIcon, FolderOpenIcon } from "lucide-react";
 import { MessageList } from "./_components/MessageList";
+import { ProjectList } from "./_components/ProjectList";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -29,56 +31,110 @@ function StatCard({
   );
 }
 
-export default async function AdminPage() {
-  const { data, error } = await supabaseAdmin
-    .from("messages")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab = "messages" } = await searchParams;
 
-  if (error) {
-    return (
-      <div className="text-red-400 text-sm space-y-1">
-        <p className="font-semibold">Failed to load messages.</p>
-        <p className="text-red-500/70 font-mono text-xs">{error.code}: {error.message}</p>
-      </div>
-    );
-  }
+  const [msgResult, projResult] = await Promise.all([
+    supabaseAdmin.from("messages").select("*").order("created_at", { ascending: false }),
+    supabaseAdmin.from("projects").select("*").order("sort_order", { ascending: true }),
+  ]);
 
-  const msgs = (data ?? []) as Message[];
+  const msgs = (msgResult.data ?? []) as Message[];
+  const projects = (projResult.data ?? []) as Project[];
   const unread = msgs.filter((m) => !m.is_read).length;
 
   return (
     <div>
-      {/* Page header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-white">Messages</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Contact form submissions from devanshuverma.in
-        </p>
+      {/* Tab nav */}
+      <div className="flex gap-1 mb-8 border-b border-gray-800">
+        {[
+          { key: "messages", label: "Messages", count: msgs.length },
+          { key: "projects", label: "Projects", count: projects.length },
+        ].map(({ key, label, count }) => (
+          <Link
+            key={key}
+            href={`/admin?tab=${key}`}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === key
+                ? "border-yellow-600 text-yellow-500"
+                : "border-transparent text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            {label}
+            <span className="ml-2 text-xs bg-gray-800 px-1.5 py-0.5 rounded-full text-gray-400">
+              {count}
+            </span>
+          </Link>
+        ))}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <StatCard label="Total" value={msgs.length} />
-        <StatCard label="Unread" value={unread} highlight />
-        <StatCard label="Read" value={msgs.length - unread} />
-      </div>
+      {tab === "messages" && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-white">Messages</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Contact form submissions from devanshuverma.in
+            </p>
+          </div>
 
-      {/* Messages list */}
-      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
-        All Messages
-      </h2>
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <StatCard label="Total" value={msgs.length} />
+            <StatCard label="Unread" value={unread} highlight />
+            <StatCard label="Read" value={msgs.length - unread} />
+          </div>
 
-      {msgs.length === 0 ? (
-        <div className="text-center py-20 text-gray-700">
-          <InboxIcon size={40} className="mx-auto mb-3 opacity-40" />
-          <p className="text-sm">No messages yet.</p>
-          <p className="text-xs mt-1 text-gray-600">
-            Messages from the contact form will appear here.
-          </p>
-        </div>
-      ) : (
-        <MessageList messages={msgs} />
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+            All Messages
+          </h2>
+
+          {msgs.length === 0 ? (
+            <div className="text-center py-20 text-gray-700">
+              <InboxIcon size={40} className="mx-auto mb-3 opacity-40" />
+              <p className="text-sm">No messages yet.</p>
+              <p className="text-xs mt-1 text-gray-600">
+                Messages from the contact form will appear here.
+              </p>
+            </div>
+          ) : (
+            <MessageList messages={msgs} />
+          )}
+        </>
+      )}
+
+      {tab === "projects" && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-white">Projects</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Manage the projects shown on your portfolio.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <StatCard label="Total Projects" value={projects.length} />
+            <StatCard label="Visible on site" value={projects.length} highlight />
+          </div>
+
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+            All Projects
+          </h2>
+
+          {projects.length === 0 ? (
+            <div className="text-center py-12 text-gray-700">
+              <FolderOpenIcon size={40} className="mx-auto mb-3 opacity-40" />
+              <p className="text-sm">No projects yet.</p>
+              <p className="text-xs mt-1 text-gray-600">
+                Use the form above to add your first project.
+              </p>
+            </div>
+          ) : null}
+
+          <ProjectList projects={projects} />
+        </>
       )}
     </div>
   );

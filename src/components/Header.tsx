@@ -9,7 +9,15 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    let ticking = false;
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 20);
+        ticking = false;
+      });
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -18,15 +26,16 @@ export default function Header() {
     <header className="p-2 md:p-4 min-h-[8vh]">
       {/* Positioning wrapper — keeps -translate-x-1/2 isolated from Framer Motion transforms */}
       <div
-        className={`fixed left-1/2 top-0 z-50 w-full md:w-11/12 max-w-lg md:max-w-7xl -translate-x-1/2 transition-all duration-300 ${
+        className={`fixed left-1/2 top-0 z-50 w-full md:w-11/12 max-w-lg md:max-w-7xl -translate-x-1/2 transition-[margin] duration-300 ${
           scrolled ? "mt-0 md:mt-1" : "mt-0 md:mt-3"
         }`}
       >
         <motion.nav
           initial={{ y: -60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className={`flex w-full flex-col items-center rounded-none md:rounded-full bg-background/20 backdrop-blur-lg border border-gray-200 dark:border-gray-800 transition-all duration-300 ${
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          style={{ willChange: "transform" }}
+          className={`flex w-full flex-col items-center rounded-none md:rounded-full bg-background/20 backdrop-blur-lg border border-gray-200 dark:border-gray-800 transition-[padding] duration-300 ${
             scrolled ? "p-1 px-2 md:px-4" : "p-2 px-2 md:px-5"
           }`}
         >
