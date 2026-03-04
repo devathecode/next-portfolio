@@ -190,7 +190,7 @@ const Cursor: React.FC<CursorProps> = ({ position }) => {
       animate={{
         ...position,
       }}
-      className="absolute z-0 h-12 rounded-full border border-yellow-600 bg-yellow-600/10 text-white"
+      className="absolute z-0 h-12 rounded-full border border-yellow-600/70 bg-yellow-600/15 shadow-[0_0_18px_rgba(202,138,4,0.22)]"
     />
   );
 };

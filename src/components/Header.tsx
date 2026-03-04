@@ -35,17 +35,25 @@ export default function Header() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           style={{ willChange: "transform" }}
-          className={`flex w-full flex-col items-center rounded-none md:rounded-full bg-background/20 backdrop-blur-lg border border-gray-200 dark:border-gray-800 transition-[padding] duration-300 ${
-            scrolled ? "p-1 px-2 md:px-4" : "p-2 px-2 md:px-5"
+          className={`flex w-full flex-col items-center rounded-2xl md:rounded-full backdrop-blur-lg border transition-all duration-300 ${
+            scrolled
+              ? "p-1 px-2 md:px-4 bg-background/80 border-gray-300/80 dark:border-gray-700/80 shadow-lg"
+              : "p-2 px-2 md:px-5 bg-background/20 border-gray-200 dark:border-gray-800"
           }`}
         >
           <div className="flex items-center justify-between w-full gap-0 md:gap-2">
-            <div className="h-10 w-10 bg-black dark:bg-white rounded-full flex items-center justify-center text-sm font-bold text-white dark:text-yellow-600 cursor-pointer hover:ring-2 hover:ring-yellow-600 hover:scale-105 transition-all duration-200">
+            {/* Logo */}
+            <div className="h-10 w-10 bg-black dark:bg-white rounded-full flex items-center justify-center text-sm font-bold text-yellow-500 dark:text-yellow-600 cursor-pointer ring-1 ring-yellow-600/30 hover:ring-2 hover:ring-yellow-600 hover:scale-105 transition-all duration-200">
               DV
             </div>
 
             <SlideTabsExample />
-            <ThemeToggle />
+
+            {/* Divider + ThemeToggle */}
+            <div className="flex items-center gap-3">
+              <span className="hidden md:block w-px h-5 bg-gray-300 dark:bg-gray-700" />
+              <ThemeToggle />
+            </div>
           </div>
         </motion.nav>
       </div>
