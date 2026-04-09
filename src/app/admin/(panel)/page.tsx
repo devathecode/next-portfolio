@@ -1,7 +1,8 @@
-import { supabaseAdmin, Message, Project } from "@/lib/supabase";
-import { InboxIcon, FolderOpenIcon } from "lucide-react";
+import { supabaseAdmin, Message, Project, PdfDownload } from "@/lib/supabase";
+import { InboxIcon, FolderOpenIcon, DownloadCloudIcon } from "lucide-react";
 import { MessageList } from "./_components/MessageList";
 import { ProjectList } from "./_components/ProjectList";
+import { DownloadList } from "./_components/DownloadList";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -38,22 +39,25 @@ export default async function AdminPage({
 }) {
   const { tab = "messages" } = await searchParams;
 
-  const [msgResult, projResult] = await Promise.all([
+  const [msgResult, projResult, dlResult] = await Promise.all([
     supabaseAdmin.from("messages").select("*").order("created_at", { ascending: false }),
     supabaseAdmin.from("projects").select("*").order("sort_order", { ascending: true }),
+    supabaseAdmin.from("pdf_downloads").select("*").order("created_at", { ascending: false }),
   ]);
 
-  const msgs = (msgResult.data ?? []) as Message[];
-  const projects = (projResult.data ?? []) as Project[];
-  const unread = msgs.filter((m) => !m.is_read).length;
+  const msgs      = (msgResult.data  ?? []) as Message[];
+  const projects  = (projResult.data ?? []) as Project[];
+  const downloads = (dlResult.data   ?? []) as PdfDownload[];
+  const unread    = msgs.filter((m) => !m.is_read).length;
 
   return (
     <div>
       {/* Tab nav */}
       <div className="flex gap-1 mb-8 border-b border-gray-800">
         {[
-          { key: "messages", label: "Messages", count: msgs.length },
-          { key: "projects", label: "Projects", count: projects.length },
+          { key: "messages",   label: "Messages",   count: msgs.length      },
+          { key: "projects",   label: "Projects",   count: projects.length  },
+          { key: "downloads",  label: "Downloads",  count: downloads.length },
         ].map(({ key, label, count }) => (
           <Link
             key={key}
@@ -102,6 +106,35 @@ export default async function AdminPage({
           ) : (
             <MessageList messages={msgs} />
           )}
+        </>
+      )}
+
+      {tab === "downloads" && (
+        <>
+          <div className="mb-6 flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                <DownloadCloudIcon size={20} className="text-yellow-500" />
+                PDF Downloads
+              </h1>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Every CSS Tips PDF download — browser, device, screen, timezone, referrer &amp; more.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard label="Total Downloads" value={downloads.length} highlight />
+            <StatCard label="Desktop" value={downloads.filter((d) => d.device === "Desktop").length} />
+            <StatCard label="Mobile"  value={downloads.filter((d) => d.device === "Mobile").length}  />
+            <StatCard label="Tablet"  value={downloads.filter((d) => d.device === "Tablet").length}  />
+          </div>
+
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+            All Downloads — click any row to expand full details
+          </h2>
+
+          <DownloadList downloads={downloads} />
         </>
       )}
 

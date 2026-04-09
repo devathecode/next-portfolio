@@ -10,6 +10,26 @@ export type Message = {
   created_at: string;
 };
 
+export type PdfDownload = {
+  id: string;
+  created_at: string;
+  ip: string | null;
+  browser: string | null;
+  os: string | null;
+  device: string | null;
+  user_agent: string | null;
+  screen_resolution: string | null;
+  viewport: string | null;
+  language: string | null;
+  timezone: string | null;
+  referrer: string | null;
+  page_url: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  connection_type: string | null;
+};
+
 export type Project = {
   id: string;
   title: string;

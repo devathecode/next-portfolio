@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { HomeIcon, UserIcon, LaptopIcon, Contact2Icon } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 interface NavigationItem {
   title: string;
@@ -45,16 +46,26 @@ export const SlideTabsExample: React.FC = () => {
 };
 
 const SlideTabs: React.FC = () => {
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
+
   const [position, setPosition] = useState<Position>({
     left: 0,
     width: 0,
-    opacity: 1,
+    opacity: isHomePage ? 1 : 0,
   });
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(isHomePage ? 0 : -1);
   const isClickScrolling = useRef(false);
   const tabsRef = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
+    // Only run scroll-spy on the home page
+    if (!isHomePage) {
+      setActiveIndex(-1);
+      setPosition((p) => ({ ...p, opacity: 0 }));
+      return;
+    }
+
     // Cache section elements once
     const sections = navigationItems.map((item) =>
       document.querySelector(item.href)
@@ -95,11 +106,15 @@ const SlideTabs: React.FC = () => {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHomePage]);
 
   return (
     <ul
       onMouseLeave={() => {
+        if (!isHomePage) {
+          setPosition((p) => ({ ...p, opacity: 0 }));
+          return;
+        }
         const tabElement = tabsRef.current[activeIndex];
         if (tabElement) {
           const { width } = tabElement.getBoundingClientRect();
@@ -118,15 +133,21 @@ const SlideTabs: React.FC = () => {
           title={item.title}
           setPosition={setPosition}
           onClick={() => {
+            if (!isHomePage) {
+              // Navigate to home page — for Home go to /, others go to /#section
+              window.location.href =
+                item.href === "#home" ? "/" : `/${item.href}`;
+              return;
+            }
             isClickScrolling.current = true;
             setActiveIndex(index);
             const section = document.querySelector(item.href);
             if (section) {
-              const offset = (10 * window.innerHeight) / 90; // 10vh offset
+              const offset = (10 * window.innerHeight) / 90;
               const top =
                 section.getBoundingClientRect().top + window.scrollY - offset;
               window.scrollTo({ top, behavior: "smooth" });
-              setTimeout(() => (isClickScrolling.current = false), 500); // Prevent flickering during scroll
+              setTimeout(() => (isClickScrolling.current = false), 500);
             }
           }}
           ref={(el) => {
