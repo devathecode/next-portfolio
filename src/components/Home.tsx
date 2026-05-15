@@ -81,9 +81,9 @@ const HomeComponent = () => {
                      bg-amber-600/8 dark:bg-amber-500/10"
         />
 
-        {/* Amber halo behind portrait */}
+        {/* Amber halo behind portrait — dark mode only (blur fogs portrait in light mode) */}
         <div
-          className="absolute right-0 inset-y-0 w-1/2 pointer-events-none"
+          className="hidden dark:block absolute right-0 inset-y-0 w-1/2 pointer-events-none"
           style={{
             background:
               "radial-gradient(ellipse 70% 75% at 65% 55%, rgba(202,138,4,0.28) 0%, rgba(160,80,0,0.10) 48%, transparent 72%)",
@@ -113,8 +113,8 @@ const HomeComponent = () => {
           />
         </motion.div>
 
-        {/* Left-to-right overlay — text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-primary)] from-[30%] via-[var(--bg-primary)]/75 to-[var(--bg-primary)]/20" />
+        {/* Left-to-right overlay — text readability; clears at 62% so portrait (starts at 60%) shows cleanly */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--bg-primary)_50%,transparent_62%)]" />
 
         {/* Mobile: stronger overlay */}
         <div className="absolute inset-0 lg:hidden bg-[var(--bg-primary)]/72" />

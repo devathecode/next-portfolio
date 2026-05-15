@@ -4,10 +4,12 @@ import { SlideTabsExample } from "./SlideTabs";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/context/theme-context";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     let ticking = false;
@@ -63,8 +65,19 @@ export default function Header() {
             </div>
           </div>
 
-          {/* RIGHT — Resume Chat CTA */}
-          <div className="flex justify-end">
+          {/* RIGHT — Theme toggle + Resume Chat CTA */}
+          <div className="flex justify-end items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="flex items-center justify-center w-9 h-9 rounded-full
+                         border border-[var(--border)] text-[var(--text-muted)]
+                         hover:border-[var(--accent)]/50 hover:text-[var(--accent)]
+                         transition-all duration-200"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
             <a
               href="/resume"
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium
