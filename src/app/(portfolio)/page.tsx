@@ -18,31 +18,27 @@ export default function Home() {
       <div
         className="w-full border-y"
         style={{
-          background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
+          background:
+            "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
           borderColor: "var(--border)",
         }}
       >
-        <div className="max-w-7xl mx-auto">
-          <AboutComponent />
-        </div>
+        <AboutComponent />
       </div>
 
       {/* Work */}
-      <div className="max-w-7xl mx-auto">
-        <WorkComponent />
-      </div>
+      <WorkComponent />
 
       {/* Contact — alternate background */}
       <div
         className="w-full border-y"
         style={{
-          background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
+          background:
+            "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
           borderColor: "var(--border)",
         }}
       >
-        <div className="max-w-7xl mx-auto">
-          <ContactComponent />
-        </div>
+        <ContactComponent />
       </div>
 
       <Footer />

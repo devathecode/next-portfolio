@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-context";
 import { playfairDisplay, inter, jetbrainsMono } from "@/utils/fonts";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://devanshuverma.in"),
@@ -92,6 +93,7 @@ export default function RootLayout({
           <div>{children}</div>
         </ThemeProvider>
       </body>
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
     </html>
   );
 }

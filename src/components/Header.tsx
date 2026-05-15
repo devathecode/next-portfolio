@@ -3,6 +3,7 @@
 import { SlideTabsExample } from "./SlideTabs";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Sparkles } from "lucide-react";
 
 export default function Header() {
@@ -45,11 +46,10 @@ export default function Header() {
           >
             <span
               className="flex items-center justify-center w-9 h-9 rounded-full shrink-0
-                         bg-[var(--accent)] text-black font-mono text-xs font-bold
-                         ring-1 ring-[var(--accent)]/40 hover:ring-2 hover:ring-[var(--accent)]
+                         overflow-hidden ring-1 ring-[var(--accent)]/40 hover:ring-2 hover:ring-[var(--accent)]
                          hover:scale-105 transition-all duration-200"
             >
-              DV
+              <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={36} height={36} className="object-cover w-full h-full" />
             </span>
             <span className="hidden md:block text-sm font-semibold text-[var(--text-primary)] tracking-tight">
               Devanshu

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeftIcon,
@@ -168,12 +169,7 @@ export default function ResumePage() {
 
         {/* Centre — identity */}
         <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2.5">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center text-black text-[9px] font-black font-mono"
-            style={{ background: "var(--accent)" }}
-          >
-            DV
-          </div>
+          <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="rounded-full object-cover shrink-0" />
           <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
             Devanshu Verma
           </span>
@@ -262,12 +258,7 @@ export default function ResumePage() {
             style={{ borderColor: "var(--border)" }}
           >
             <div className="flex items-center gap-3">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-black text-[10px] font-black font-mono shrink-0"
-                style={{ background: "var(--accent)" }}
-              >
-                DV
-              </div>
+              <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={28} height={28} className="rounded-full object-cover shrink-0" />
               <div>
                 <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   Resume Assistant
@@ -322,12 +313,7 @@ export default function ResumePage() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2`}
               >
                 {msg.role === "assistant" && (
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-black text-[9px] font-black font-mono shrink-0 mt-0.5"
-                    style={{ background: "var(--accent)" }}
-                  >
-                    DV
-                  </div>
+                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="rounded-full object-cover shrink-0 mt-0.5" />
                 )}
 
                 <div

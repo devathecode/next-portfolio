@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BsLinkedin } from "react-icons/bs";
 
 const Footer = () => {
@@ -12,7 +13,13 @@ const Footer = () => {
             designed &amp; built by me
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
+            <Link
+              href="/blog"
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-200 font-mono"
+            >
+              Blog
+            </Link>
             <a
               href="https://www.linkedin.com/in/devthecoder/"
               target="_blank"

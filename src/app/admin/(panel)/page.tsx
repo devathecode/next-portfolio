@@ -1,8 +1,9 @@
-import { supabaseAdmin, Message, Project, PdfDownload } from "@/lib/supabase";
+import { supabaseAdmin, Message, Project, PdfDownload, Post } from "@/lib/supabase";
 import { InboxIcon, FolderOpenIcon, DownloadCloudIcon } from "lucide-react";
 import { MessageList } from "./_components/MessageList";
 import { ProjectList } from "./_components/ProjectList";
 import { DownloadList } from "./_components/DownloadList";
+import { PostList } from "./_components/PostList";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -39,16 +40,19 @@ export default async function AdminPage({
 }) {
   const { tab = "messages" } = await searchParams;
 
-  const [msgResult, projResult, dlResult] = await Promise.all([
+  const [msgResult, projResult, dlResult, postResult] = await Promise.all([
     supabaseAdmin.from("messages").select("*").order("created_at", { ascending: false }),
     supabaseAdmin.from("projects").select("*").order("sort_order", { ascending: true }),
     supabaseAdmin.from("pdf_downloads").select("*").order("created_at", { ascending: false }),
+    supabaseAdmin.from("posts").select("*").order("created_at", { ascending: false }),
   ]);
 
   const msgs      = (msgResult.data  ?? []) as Message[];
   const projects  = (projResult.data ?? []) as Project[];
   const downloads = (dlResult.data   ?? []) as PdfDownload[];
+  const posts     = (postResult.data ?? []) as Post[];
   const unread    = msgs.filter((m) => !m.is_read).length;
+  const published = posts.filter((p) => p.published).length;
 
   return (
     <div>
@@ -58,6 +62,7 @@ export default async function AdminPage({
           { key: "messages",   label: "Messages",   count: msgs.length      },
           { key: "projects",   label: "Projects",   count: projects.length  },
           { key: "downloads",  label: "Downloads",  count: downloads.length },
+          { key: "blog",       label: "Blog",       count: posts.length     },
         ].map(({ key, label, count }) => (
           <Link
             key={key}
@@ -167,6 +172,29 @@ export default async function AdminPage({
           ) : null}
 
           <ProjectList projects={projects} />
+        </>
+      )}
+
+      {tab === "blog" && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-white">Blog Posts</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Write and publish articles on devanshuverma.in/blog.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <StatCard label="Total Posts" value={posts.length} />
+            <StatCard label="Published" value={published} highlight />
+            <StatCard label="Drafts" value={posts.length - published} />
+          </div>
+
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">
+            All Posts
+          </h2>
+
+          <PostList posts={posts} />
         </>
       )}
     </div>

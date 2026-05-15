@@ -42,6 +42,20 @@ export type Project = {
   created_at: string;
 };
 
+export type Post = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  cover_image: string | null;
+  content: string;
+  tags: string[];
+  published: boolean;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

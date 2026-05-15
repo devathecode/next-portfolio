@@ -2,8 +2,8 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { HomeIcon, UserIcon, LaptopIcon, Contact2Icon } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { HomeIcon, UserIcon, LaptopIcon, Contact2Icon, PenLineIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 interface NavigationItem {
   title: string;
@@ -19,26 +19,11 @@ interface Position {
 }
 
 export const navigationItems: NavigationItem[] = [
-  {
-    title: "Home",
-    href: "#home",
-    icon: HomeIcon,
-  },
-  {
-    title: "About",
-    href: "#about",
-    icon: UserIcon,
-  },
-  {
-    title: "Work",
-    href: "#work",
-    icon: LaptopIcon,
-  },
-  {
-    title: "Contact",
-    href: "#contact",
-    icon: Contact2Icon,
-  },
+  { title: "Home",    href: "#home",    icon: HomeIcon     },
+  { title: "About",   href: "#about",   icon: UserIcon     },
+  { title: "Work",    href: "#work",    icon: LaptopIcon   },
+  { title: "Contact", href: "#contact", icon: Contact2Icon },
+  { title: "Blog",    href: "/blog",    icon: PenLineIcon  },
 ];
 
 export const SlideTabsExample: React.FC = () => {
@@ -47,29 +32,46 @@ export const SlideTabsExample: React.FC = () => {
 
 const SlideTabs: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const isHomePage = pathname === "/";
+
+  const pageTabIndex = navigationItems.findIndex(
+    (n) => !n.href.startsWith("#") && pathname.startsWith(n.href)
+  );
 
   const [position, setPosition] = useState<Position>({
     left: 0,
     width: 0,
     opacity: isHomePage ? 1 : 0,
   });
-  const [activeIndex, setActiveIndex] = useState(isHomePage ? 0 : -1);
+  const [activeIndex, setActiveIndex] = useState(isHomePage ? 0 : pageTabIndex);
   const isClickScrolling = useRef(false);
   const tabsRef = useRef<(HTMLLIElement | null)[]>([]);
+
+  // Highlight the matching page-route tab (e.g. /blog)
+  useEffect(() => {
+    if (pageTabIndex === -1) return;
+    setActiveIndex(pageTabIndex);
+    const tabEl = tabsRef.current[pageTabIndex];
+    if (tabEl) {
+      const { width } = tabEl.getBoundingClientRect();
+      setPosition({ left: tabEl.offsetLeft, width, opacity: 1 });
+    }
+  }, [pageTabIndex]);
 
   useEffect(() => {
     // Only run scroll-spy on the home page
     if (!isHomePage) {
-      setActiveIndex(-1);
-      setPosition((p) => ({ ...p, opacity: 0 }));
+      if (pageTabIndex === -1) {
+        setActiveIndex(-1);
+        setPosition((p) => ({ ...p, opacity: 0 }));
+      }
       return;
     }
 
-    // Cache section elements once
-    const sections = navigationItems.map((item) =>
-      document.querySelector(item.href)
-    );
+    // Cache only hash-section items
+    const hashItems = navigationItems.filter((n) => n.href.startsWith("#"));
+    const sections = hashItems.map((item) => document.querySelector(item.href));
 
     let ticking = false;
     const handleScroll = () => {
@@ -106,12 +108,12 @@ const SlideTabs: React.FC = () => {
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
+  }, [isHomePage, pageTabIndex]);
 
   return (
     <ul
       onMouseLeave={() => {
-        if (!isHomePage) {
+        if (!isHomePage && pageTabIndex === -1) {
           setPosition((p) => ({ ...p, opacity: 0 }));
           return;
         }
@@ -121,7 +123,7 @@ const SlideTabs: React.FC = () => {
           setPosition({
             left: tabElement.offsetLeft,
             width,
-            opacity: 1,
+            opacity: activeIndex === -1 ? 0 : 1,
           });
         }
       }}
@@ -133,10 +135,13 @@ const SlideTabs: React.FC = () => {
           title={item.title}
           setPosition={setPosition}
           onClick={() => {
+            const isPageLink = !item.href.startsWith("#");
+            if (isPageLink) {
+              router.push(item.href);
+              return;
+            }
             if (!isHomePage) {
-              // Navigate to home page — for Home go to /, others go to /#section
-              window.location.href =
-                item.href === "#home" ? "/" : `/${item.href}`;
+              router.push(item.href === "#home" ? "/" : `/${item.href}`);
               return;
             }
             isClickScrolling.current = true;

@@ -21,7 +21,7 @@ export default function LinkedInBadge() {
             className="rounded-full object-cover ring-2 ring-yellow-600/30"
           />
           {/* LinkedIn dot */}
-          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0a66c2] flex items-center justify-center ring-2 ring-white dark:ring-gray-950">
+          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0A66C2] flex items-center justify-center ring-2 ring-white dark:ring-gray-950">
             <BsLinkedin size={8} className="text-white" />
           </span>
         </div>
@@ -42,10 +42,10 @@ export default function LinkedInBadge() {
           target="_blank"
           rel="noopener noreferrer"
           className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg
-                     bg-[#0a66c2] hover:bg-[#004182]
+                     bg-[#0A66C2] hover:bg-[#004182]
                      text-white text-xs font-semibold
                      transition-all duration-200
-                     hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#0a66c2]/30"
+                     hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#0A66C2]/30"
         >
           <BsLinkedin size={11} />
           Follow
