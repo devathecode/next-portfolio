@@ -1,4 +1,5 @@
 import { BsGithub } from "react-icons/bs";
+import { ArrowUpRightIcon } from "lucide-react";
 import AnimateOnScroll from "./AnimateOnScroll";
 import ProjectImage from "./ProjectImage";
 import { supabaseAdmin, Project } from "@/lib/supabase";
@@ -13,36 +14,48 @@ const WorkComponent = async () => {
 
   return (
     <section
-      className="flex flex-col items-center justify-center py-16 px-4"
       id="work"
+      className="relative overflow-hidden py-24 px-5 lg:px-10"
     >
-      <div className="w-full text-center">
-        {/* Heading */}
-        <AnimateOnScroll direction="up" className="flex flex-col items-center">
-          <h2 className="text-2xl md:text-5xl text-center font-bold text-gray-900 dark:text-white mb-4">
-            Featured Projects
-          </h2>
-          <div className="h-0.5 w-32 md:w-72 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 text-base max-w-xl mt-2 mb-2">
+      {/* Ambient orb */}
+      <div
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px]
+                   bg-cyan-500/3 dark:bg-cyan-400/4 rounded-full blur-[200px] pointer-events-none"
+      />
+
+      <div className="max-w-7xl mx-auto">
+        {/* Section heading */}
+        <AnimateOnScroll direction="up" className="mb-16">
+          <p className="section-label mb-4">Selected work</p>
+          <div className="flex items-end gap-6">
+            <h2
+              className="font-display font-bold leading-none tracking-tight
+                         text-[clamp(2.4rem,5vw,4rem)] text-[var(--text-primary)]"
+            >
+              Projects
+            </h2>
+            <div className="h-px flex-1 max-w-xs bg-[var(--border)] mb-3" />
+          </div>
+          <p className="text-[var(--text-secondary)] text-base mt-4 max-w-lg">
             A selection of things I&apos;ve built — from open-source libraries
-            to full-stack web apps.
+            to full-stack production apps.
           </p>
         </AnimateOnScroll>
 
-        {/* Cards — each fades up with stagger */}
-        <div className="flex flex-row justify-center gap-4 flex-wrap pt-4 md:pt-10">
+        {/* Project grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {projects.map((project, index) => (
-            <AnimateOnScroll
-              key={project.id}
-              direction="up"
-              delay={index * 0.12}
-            >
-              <div
-                className="relative w-72 sm:w-80 dark:bg-gray-900 bg-white border border-gray-200 dark:border-yellow-600/30
-                           rounded-lg overflow-hidden shadow-sm hover:shadow-lg hover:shadow-yellow-600/10
-                           hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            <AnimateOnScroll key={project.id} direction="up" delay={index * 0.08}>
+              <article
+                className="group relative flex flex-col rounded-2xl overflow-hidden
+                           bg-[var(--bg-card)] border border-[var(--border)]
+                           shadow-[var(--shadow-card)]
+                           hover:-translate-y-1.5 hover:border-[var(--accent)]/30
+                           hover:shadow-[0_20px_60px_rgba(0,0,0,0.12)]
+                           transition-all duration-300"
               >
-                {/* Whole-card link */}
+                {/* Full-card link */}
                 <a
                   href={project.live_url}
                   target="_blank"
@@ -51,56 +64,76 @@ const WorkComponent = async () => {
                   className="absolute inset-0 z-0"
                 />
 
-                {/* Preview image */}
-                <ProjectImage
-                  liveUrl={project.live_url}
-                  alt={`${project.title} preview`}
-                  href={project.live_url}
-                />
+                {/* Screenshot */}
+                <div className="relative overflow-hidden">
+                  <ProjectImage
+                    liveUrl={project.live_url}
+                    alt={`${project.title} preview`}
+                    href={project.live_url}
+                  />
+                  {/* Accent gradient bar */}
+                  <div className={`h-0.5 bg-gradient-to-r ${project.accent}`} />
+                </div>
 
-                <div className={`h-1.5 bg-gradient-to-r ${project.accent}`} />
-
-                <div className="p-6">
-                  <div className="flex flex-row justify-between items-center mb-4">
-                    <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                      Project
+                <div className="flex flex-col flex-1 p-6">
+                  {/* Index + actions row */}
+                  <div className="flex items-center justify-between mb-5">
+                    <span
+                      className="font-mono text-[10px] font-medium text-[var(--text-muted)]
+                                 border border-[var(--border)] rounded px-2 py-0.5"
+                    >
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <div className="relative z-10 flex flex-row gap-3 items-center">
+
+                    <div className="relative z-10 flex items-center gap-3">
                       {project.github_url && (
                         <a
                           href={project.github_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label="View source on GitHub"
-                          className="text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors duration-200"
+                          className="text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors duration-200"
                         >
-                          <BsGithub size={18} />
+                          <BsGithub size={16} />
                         </a>
                       )}
+                      <span
+                        className="text-[var(--text-muted)] group-hover:text-[var(--accent)]
+                                   transition-colors duration-200"
+                      >
+                        <ArrowUpRightIcon size={16} />
+                      </span>
                     </div>
                   </div>
 
-                  <h3 className="font-semibold text-lg text-yellow-600 text-left mb-2">
+                  {/* Title */}
+                  <h3
+                    className="font-display font-bold text-xl text-[var(--text-primary)]
+                               group-hover:text-[var(--accent)] transition-colors duration-200 mb-2"
+                  >
                     {project.title}
                   </h3>
-                  <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400 text-left line-clamp-3 mb-4">
+
+                  {/* Description */}
+                  <p className="text-sm leading-relaxed text-[var(--text-secondary)] line-clamp-3 mb-5 flex-1">
                     {project.description}
                   </p>
 
-                  <hr className="border-gray-100 dark:border-gray-800 mb-3" />
-
-                  <div className="flex flex-row gap-2 flex-wrap">
+                  {/* Tech pills */}
+                  <div className="flex flex-wrap gap-1.5 pt-4 border-t border-[var(--border-subtle)]">
                     {project.tech_stack.map((tech) => (
                       <span
                         key={tech}
-                        className="bg-gray-100 dark:bg-gray-800 text-yellow-600 rounded-full text-xs px-3 py-1 font-medium"
+                        className="font-mono text-[10px] px-2.5 py-1 rounded-full
+                                   bg-[var(--accent-muted)] text-[var(--accent)]
+                                   border border-[var(--accent)]/20"
                       >
                         {tech}
                       </span>
                     ))}
                   </div>
                 </div>
-              </div>
+              </article>
             </AnimateOnScroll>
           ))}
         </div>

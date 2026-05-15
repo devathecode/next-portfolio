@@ -1,18 +1,39 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { DownloadIcon, ArrowDownIcon } from "lucide-react";
+import { ArrowDownIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { BsLinkedin } from "react-icons/bs";
+import Header from "./Header";
 
-/* ── Animation presets ─────────────────────────────────────────── */
+/* ── Cursor glow — follows mouse on hero only ───────────────── */
+function CursorGlow() {
+  const glowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = glowRef.current;
+    if (!el) return;
+    const move = (e: MouseEvent) => {
+      el.style.left = `${e.clientX}px`;
+      el.style.top = `${e.clientY}px`;
+    };
+    window.addEventListener("mousemove", move);
+    return () => window.removeEventListener("mousemove", move);
+  }, []);
+
+  return <div ref={glowRef} aria-hidden="true" id="cursor-glow" />;
+}
+
+/* ── Animation presets ──────────────────────────────────────── */
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.11, delayChildren: 0.1 } },
+  visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 22 },
   visible: {
     opacity: 1,
     y: 0,
@@ -21,104 +42,146 @@ const fadeUp = {
 };
 
 const imageFade = {
-  hidden: { opacity: 0, scale: 0.92 },
+  hidden: { opacity: 0, scale: 0.97 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.9,
+      duration: 1.1,
       ease: [0.22, 1, 0.36, 1] as const,
-      delay: 0.25,
+      delay: 0.15,
     },
   },
 };
 
-/* ── Component ─────────────────────────────────────────────────── */
+/* ── Component ──────────────────────────────────────────────── */
 const HomeComponent = () => {
   return (
     <section
       id="home"
-      className="relative grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-8vh)] items-center px-4 lg:px-8 py-10"
+      className="relative flex items-center min-h-[calc(100vh)]
+                 px-5 lg:px-10 py-12 overflow-hidden"
     >
-      {/* Subtle dot-grid background */}
+      <CursorGlow />
+
+      {/* Ambient orb — top-left */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgb(161 130 0 / 0.22) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
+        aria-hidden="true"
+        className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none
+                   bg-violet-500/5 dark:bg-violet-500/6"
       />
 
-      {/* Ambient glow */}
-      <motion.div
-        animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/3 right-1/3 w-[500px] h-[500px]
-                   bg-yellow-500/8 dark:bg-yellow-600/5 rounded-full blur-[100px] pointer-events-none"
-      />
+      {/* ── Background image layer ── */}
+      <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
+        {/* Amber ambient orb */}
+        <motion.div
+          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none
+                     bg-amber-600/8 dark:bg-amber-500/10"
+        />
+
+        {/* Amber halo behind portrait */}
+        <div
+          className="absolute right-0 inset-y-0 w-1/2 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 75% at 65% 55%, rgba(202,138,4,0.28) 0%, rgba(160,80,0,0.10) 48%, transparent 72%)",
+            filter: "blur(30px)",
+          }}
+        />
+
+        {/* Portrait — full bleed */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={imageFade}
+          className="absolute inset-0 lg:left-[60%] pointer-events-none"
+          style={{
+            maskImage:
+              "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
+          }}
+        >
+          <Image
+            src="/images/dev5.png"
+            fill
+            className="object-cover object-center lg:object-right"
+            alt="Devanshu Verma – Frontend Developer"
+            priority
+          />
+        </motion.div>
+
+        {/* Left-to-right overlay — text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--bg-primary)] from-[30%] via-[var(--bg-primary)]/75 to-[var(--bg-primary)]/20" />
+
+        {/* Mobile: stronger overlay */}
+        <div className="absolute inset-0 lg:hidden bg-[var(--bg-primary)]/72" />
+      </div>
 
       {/* ── Text column ── */}
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="visible"
-        className="col-span-12 lg:col-span-6 z-10 order-2 lg:order-1 py-6 lg:py-0"
+        className="relative z-10 max-w-3xl py-8 lg:py-0"
       >
         {/* Status badge */}
         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-8">
           <div
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-green-500/30
-                          bg-green-500/8 text-green-600 dark:text-green-400 text-xs font-medium"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
+                       border border-green-500/30 bg-green-500/8
+                       text-green-600 dark:text-green-400 text-xs font-medium font-mono"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Available for opportunities
+            available for opportunities
           </div>
-          <div className="h-px flex-1 bg-gradient-to-r from-gray-200 dark:from-gray-800 to-transparent max-w-[80px]" />
         </motion.div>
 
-        {/* Role label */}
-        <motion.p
-          variants={fadeUp}
-          className="text-xs font-bold tracking-[0.25em] uppercase text-gray-400 dark:text-gray-500 mb-4"
-        >
-          Frontend Engineer
+        {/* Mono label */}
+        <motion.p variants={fadeUp} className="section-label mb-5">
+          Frontend Engineer · Noida, India
         </motion.p>
 
-        {/* Name — the hero statement */}
+        {/* ── Main heading — editorial serif ── */}
         <motion.h1
           variants={fadeUp}
-          className="text-5xl sm:text-6xl lg:text-[4rem] font-black tracking-tight leading-[1.0] text-gray-900 dark:text-white mb-6"
+          className="font-display font-bold leading-[1.0] tracking-tight mb-6
+                     text-[clamp(3rem,7vw,5.5rem)] text-[var(--text-primary)]"
         >
-          Devanshu
-          {/* <br /> */}
-          <span className="text-yellow-600"> Verma.</span>
+          Crafting the <span className="text-[var(--accent)] italic">web</span>
+          <br />
+          one pixel
+          <br />
+          at a time.
         </motion.h1>
 
         {/* Tagline */}
         <motion.p
           variants={fadeUp}
-          className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-lg leading-relaxed mb-3"
+          className="text-base sm:text-lg text-[var(--text-secondary)] max-w-4xl leading-relaxed mb-2"
         >
-          I build fast, accessible, and beautifully crafted web experiences — at
-          the intersection of{" "}
-          <span className="text-gray-900 dark:text-gray-200 font-medium">
-            design and engineering.
-          </span>
+          I&apos;m{" "}
+          <span className="text-[var(--text-primary)] font-semibold">
+            Devanshu Verma
+          </span>{" "}
+          — I build fast, accessible, and beautifully crafted web experiences at
+          the intersection of design and engineering.
         </motion.p>
 
         <motion.p
           variants={fadeUp}
-          className="text-sm text-gray-400 dark:text-gray-600 mb-8"
+          className="font-mono text-xs text-[var(--text-muted)] mb-8"
         >
-          React &middot; Next.js &middot; Angular &middot; Vue.js &middot;
-          TypeScript
+          React &nbsp;·&nbsp; Next.js &nbsp;·&nbsp; Angular &nbsp;·&nbsp; Vue.js
+          &nbsp;·&nbsp; TypeScript
         </motion.p>
 
-        {/* Yellow rule */}
+        {/* Accent rule */}
         <motion.div
           variants={fadeUp}
-          className="h-px w-16 bg-yellow-600/40 mb-8"
+          className="h-px w-14 bg-[var(--accent)]/50 mb-8"
         />
 
         {/* CTAs */}
@@ -126,16 +189,21 @@ const HomeComponent = () => {
           variants={fadeUp}
           className="flex flex-wrap items-center gap-3"
         >
-          <a
-            href="/resume/Resume.pdf"
-            download="Devanshu_Verma_Resume.pdf"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-yellow-600 hover:bg-yellow-500
-                       text-black text-sm font-semibold transition-all duration-200
-                       hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-600/25"
+          <Link
+            href="/resume"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full
+                       bg-[var(--accent)] text-black text-sm font-semibold
+                       hover:opacity-90 hover:-translate-y-0.5
+                       transition-all duration-200
+                       shadow-[0_0_24px_var(--accent-glow)]"
           >
-            <DownloadIcon size={15} />
-            Download Resume
-          </a>
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black/50 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-black/60" />
+            </span>
+            Chat with my AI version
+            <Sparkles className="w-3.5 h-3.5" />
+          </Link>
 
           <button
             onClick={() =>
@@ -143,119 +211,115 @@ const HomeComponent = () => {
                 .getElementById("work")
                 ?.scrollIntoView({ behavior: "smooth" })
             }
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-gray-200 dark:border-gray-800
-                       text-sm font-medium text-gray-600 dark:text-gray-400
-                       hover:border-yellow-600/50 hover:text-yellow-600
-                       dark:hover:border-yellow-600/40 dark:hover:text-yellow-500
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full
+                       border border-[var(--border)] text-sm font-medium
+                       text-[var(--text-secondary)]
+                       hover:border-[var(--accent)]/50 hover:text-[var(--accent)]
                        transition-all duration-200"
           >
             See my work
-            <ArrowDownIcon size={14} />
+            <ArrowDownIcon size={13} />
           </button>
 
           <a
             href="https://www.linkedin.com/in/devthecoder/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800
-                       text-gray-400 hover:text-blue-600 hover:border-blue-600/30
-                       dark:hover:border-blue-600/30 transition-all duration-200"
             aria-label="LinkedIn"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-full
+                       border border-[var(--border)] text-[var(--text-muted)]
+                       hover:text-blue-500 hover:border-blue-500/30
+                       transition-all duration-200"
           >
-            <BsLinkedin size={16} />
+            <BsLinkedin size={15} />
           </a>
+        </motion.div>
+
+        {/* Mobile stat chips */}
+        <motion.div
+          variants={fadeUp}
+          className="flex lg:hidden items-center gap-3 mt-8"
+        >
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl
+                          bg-[var(--bg-card)]/80 backdrop-blur-sm border border-[var(--border)] shadow-[var(--shadow-card)]"
+          >
+            <div
+              className="w-7 h-7 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center
+                            text-[var(--accent)] font-black text-xs font-mono"
+            >
+              5+
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-[var(--text-primary)] leading-none">
+                Years exp.
+              </p>
+              <p className="text-[10px] text-[var(--text-muted)] leading-none mt-0.5">
+                Production apps
+              </p>
+            </div>
+          </div>
+          <div className="px-3 py-2 rounded-xl bg-[var(--bg-card)]/80 backdrop-blur-sm border border-[var(--border)] shadow-[var(--shadow-card)]">
+            <p className="font-mono text-[9px] font-medium text-[var(--text-muted)] leading-none mb-0.5 uppercase tracking-wider">
+              Open to
+            </p>
+            <p className="text-[11px] font-bold text-[var(--accent)] leading-none">
+              Full-time · Freelance
+            </p>
+          </div>
         </motion.div>
       </motion.div>
 
-      {/* ── Image column ── */}
+      {/* ── Floating badges — desktop only, absolutely positioned ── */}
       <motion.div
-        variants={imageFade}
-        initial="hidden"
-        animate="visible"
-        className="col-span-12 lg:col-span-6 order-1 lg:order-2 flex flex-col items-center lg:items-end z-10"
+        animate={{ y: [0, -7, 0] }}
+        transition={{
+          duration: 3.2,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1.5,
+        }}
+        className="hidden lg:flex absolute right-[18%] bottom-[22%] z-20 items-center gap-2.5
+                   px-3.5 py-2.5 rounded-2xl
+                   bg-[var(--bg-card)]/80 backdrop-blur-md
+                   border border-[var(--border)]
+                   shadow-[var(--shadow-card)]"
       >
-        <div className="relative">
-          {/* Corner dot grids — desktop only */}
-          <div className="hidden lg:grid absolute -top-5 -right-5 grid-cols-3 gap-2.5 pointer-events-none">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full bg-yellow-600/35" />
-            ))}
-          </div>
-          <div className="hidden lg:grid absolute -bottom-5 -left-5 grid-cols-3 gap-2.5 pointer-events-none">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="w-1 h-1 rounded-full bg-yellow-600/35" />
-            ))}
-          </div>
-
-          {/* Floating badge — experience (desktop only, positioned outside image) */}
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-            className="hidden lg:flex absolute -left-8 bottom-12 z-20 items-center gap-2.5 px-3 py-2.5 rounded-xl
-                       bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
-                       shadow-lg shadow-black/5 dark:shadow-black/40"
-          >
-            <div className="w-8 h-8 rounded-lg bg-yellow-600/15 flex items-center justify-center text-yellow-600 font-black text-xs shrink-0">
-              4+
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-gray-900 dark:text-white leading-none">Years exp.</p>
-              <p className="text-[10px] text-gray-400 leading-none mt-0.5">Production apps</p>
-            </div>
-          </motion.div>
-
-          {/* Floating badge — availability (desktop only) */}
-          <motion.div
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="hidden lg:block absolute right-3 top-4 z-20 px-3.5 py-2.5 rounded-xl
-                       bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800
-                       shadow-lg shadow-black/5 dark:shadow-black/40"
-          >
-            <p className="text-[9px] font-medium text-gray-400 leading-none mb-1 uppercase tracking-wider">Open to</p>
-            <p className="text-[11px] font-bold text-yellow-600 leading-none">Full-time · Freelance</p>
-          </motion.div>
-
-          {/* Main floating image */}
-          <motion.div
-            animate={{ y: [0, -12, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="relative"
-          >
-            <div className="absolute inset-0 rounded-3xl bg-yellow-500/20 dark:bg-yellow-600/10 blur-2xl scale-105" />
-            <div className="relative rounded-3xl overflow-hidden border border-yellow-600/20 dark:border-yellow-600/15
-                            bg-gradient-to-br from-yellow-50 to-gray-100 dark:from-gray-900 dark:to-gray-800
-                            shadow-2xl shadow-yellow-600/10">
-              <Image
-                src="/images/dev.png"
-                height={500}
-                width={500}
-                className="h-56 w-56 sm:h-72 sm:w-72 lg:h-[380px] lg:w-[380px] object-cover"
-                alt="Devanshu Verma – Frontend Developer"
-                priority
-              />
-            </div>
-          </motion.div>
+        <div
+          className="w-9 h-9 rounded-xl bg-[var(--accent-muted)] flex items-center justify-center
+                        text-[var(--accent)] font-black text-sm shrink-0 font-mono"
+        >
+          5+
         </div>
-
-        {/* Mobile-only stat chips — shown below the image instead of overlapping face */}
-        <div className="flex lg:hidden items-center gap-3 mt-5">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-gray-900
-                          border border-gray-100 dark:border-gray-800 shadow-sm">
-            <div className="w-7 h-7 rounded-lg bg-yellow-600/15 flex items-center justify-center text-yellow-600 font-black text-xs">
-              4+
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-gray-900 dark:text-white leading-none">Years exp.</p>
-              <p className="text-[10px] text-gray-400 leading-none mt-0.5">Production apps</p>
-            </div>
-          </div>
-          <div className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900
-                          border border-gray-100 dark:border-gray-800 shadow-sm">
-            <p className="text-[9px] font-medium text-gray-400 leading-none mb-0.5 uppercase tracking-wider">Open to</p>
-            <p className="text-[11px] font-bold text-yellow-600 leading-none">Full-time · Freelance</p>
-          </div>
+        <div>
+          <p className="text-xs font-bold text-[var(--text-primary)] leading-none">
+            Years exp.
+          </p>
+          <p className="text-[10px] text-[var(--text-muted)] leading-none mt-0.5">
+            Production apps
+          </p>
         </div>
+      </motion.div>
+
+      <motion.div
+        animate={{ y: [0, -7, 0] }}
+        transition={{
+          duration: 3.8,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 0.5,
+        }}
+        className="hidden lg:block absolute right-[10%] top-[18%] z-20 px-3.5 py-2.5 rounded-2xl
+                   bg-[var(--bg-card)]/80 backdrop-blur-md
+                   border border-[var(--border)]
+                   shadow-[var(--shadow-card)]"
+      >
+        <p className="font-mono text-[9px] font-medium text-[var(--text-muted)] leading-none mb-1 uppercase tracking-wider">
+          Open to
+        </p>
+        <p className="text-xs font-bold text-[var(--accent)] leading-none">
+          Full-time · Freelance
+        </p>
       </motion.div>
     </section>
   );

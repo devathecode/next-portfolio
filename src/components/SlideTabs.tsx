@@ -125,7 +125,7 @@ const SlideTabs: React.FC = () => {
           });
         }
       }}
-      className="relative mx-auto flex w-fit rounded-full p-1"
+      className="relative mx-auto flex w-fit rounded-full p-0.5"
     >
       {navigationItems.map((item, index) => (
         <Tab
@@ -155,12 +155,14 @@ const SlideTabs: React.FC = () => {
           }}
         >
           <div
-            className={`flex items-center group-hover:text-yellow-600 ${
-              index === activeIndex ? "text-yellow-600" : ""
+            className={`flex items-center transition-colors duration-150 ${
+              index === activeIndex
+                ? "text-[var(--accent)]"
+                : "text-[var(--text-secondary)] group-hover:text-[var(--accent)]"
             }`}
           >
-            <item.icon className="w-4 h-4" />
-            <span className="ms-2 hidden md:block">{item.title}</span>
+            <item.icon className="w-3.5 h-3.5" />
+            <span className="ms-1.5 hidden md:block text-xs font-medium">{item.title}</span>
           </div>
         </Tab>
       ))}
@@ -194,7 +196,7 @@ const Tab = React.forwardRef<HTMLLIElement, TabProps>(function TabComponent(
         });
       }}
       onClick={onClick}
-      className="relative cursor-pointer z-10 group px-3 rounded-full flex justify-center items-center uppercase md:px-5 md:py-3 md:text-base h-12"
+      className="relative cursor-pointer z-10 group px-3 md:px-4 py-2.5 rounded-full flex justify-center items-center h-9"
     >
       {children}
     </li>
@@ -211,7 +213,7 @@ const Cursor: React.FC<CursorProps> = ({ position }) => {
       animate={{
         ...position,
       }}
-      className="absolute z-0 h-12 rounded-full border border-yellow-600/70 bg-yellow-600/15 shadow-[0_0_18px_rgba(202,138,4,0.22)]"
+      className="absolute z-0 h-9 rounded-full border border-[var(--accent)]/60 bg-[var(--accent-muted)] shadow-[0_0_14px_var(--accent-glow)]"
     />
   );
 };

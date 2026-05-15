@@ -4,87 +4,70 @@ import { useActionState } from "react";
 import { contactSubmit } from "@/lib/actions";
 import Submitbutton from "./SubmitButton";
 
+const inputClass =
+  "block w-full rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] " +
+  "px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] " +
+  "focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 " +
+  "transition-colors duration-200 autofill:bg-[var(--bg-secondary)]";
+
 export default function ContactForm() {
   const [state, action] = useActionState(contactSubmit, null);
 
   return (
-    <form action={action} className="mt-8 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="relative z-0 w-full group">
+    <form action={action} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="name" className="font-mono text-xs text-[var(--text-muted)]">
+            Name *
+          </label>
           <input
             id="name"
             type="text"
             name="name"
-            className="block autofill:bg-transparent py-2.5 px-0 w-full text-sm bg-transparent border-0
-                       border-b-2 border-gray-300 dark:border-gray-700 appearance-none dark:text-white
-                       dark:focus:border-yellow-600 focus:outline-none focus:ring-0 focus:border-yellow-600 peer"
-            placeholder=" "
+            className={inputClass}
+            placeholder="Your name"
             required
           />
-          <label
-            htmlFor="name"
-            className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300
-                       transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0
-                       peer-focus:text-yellow-600 peer-placeholder-shown:scale-100
-                       peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Name *
-          </label>
         </div>
 
-        <div className="relative z-0 w-full group">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="font-mono text-xs text-[var(--text-muted)]">
+            Email *
+          </label>
           <input
             id="email"
             type="email"
             name="email"
-            className="block autofill:bg-transparent py-2.5 px-0 w-full text-sm bg-transparent border-0
-                       border-b-2 border-gray-300 dark:border-gray-700 appearance-none dark:text-white
-                       dark:focus:border-yellow-600 focus:outline-none focus:ring-0 focus:border-yellow-600 peer"
-            placeholder=" "
+            className={inputClass}
+            placeholder="your@email.com"
             required
           />
-          <label
-            htmlFor="email"
-            className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300
-                       transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0
-                       peer-focus:text-yellow-600 peer-placeholder-shown:scale-100
-                       peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Email *
-          </label>
         </div>
       </div>
 
-      <div className="relative z-0 w-full group">
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="message" className="font-mono text-xs text-[var(--text-muted)]">
+          Message *
+        </label>
         <input
           id="message"
           type="text"
           name="message"
-          className="block autofill:bg-transparent py-2.5 px-0 w-full text-sm bg-transparent border-0
-                     border-b-2 border-gray-300 dark:border-gray-700 appearance-none dark:text-white
-                     dark:focus:border-yellow-600 focus:outline-none focus:ring-0 focus:border-yellow-600 peer"
-          placeholder=" "
+          className={inputClass}
+          placeholder="What's on your mind?"
           required
         />
-        <label
-          htmlFor="message"
-          className="peer-focus:font-medium absolute text-sm text-gray-400 duration-300
-                     transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0
-                     peer-focus:text-yellow-600 peer-placeholder-shown:scale-100
-                     peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-        >
-          Message *
-        </label>
       </div>
 
-      {/* Real error from the server */}
       {state?.error && (
-        <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2.5">
+        <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
           {state.error}
         </p>
       )}
 
-      <Submitbutton buttonText="Send Message" />
+      <div className="pt-2">
+        <Submitbutton buttonText="Send Message" />
+      </div>
     </form>
   );
 }

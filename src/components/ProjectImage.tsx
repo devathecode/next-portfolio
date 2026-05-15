@@ -28,11 +28,10 @@ export default function ProjectImage({ liveUrl, alt, href }: ProjectImageProps) 
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={-1}>
-      <div className="relative w-full h-40 overflow-hidden bg-gray-100 dark:bg-gray-800">
-        {/* Shimmer while fetching URL or loading image */}
+      <div className="relative w-full h-44 overflow-hidden bg-[var(--bg-secondary)]">
         {(!src || !loaded) && (
-          <div className="absolute inset-0 overflow-hidden bg-gray-200 dark:bg-gray-800">
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
+          <div className="absolute inset-0 overflow-hidden bg-[var(--bg-secondary)]">
+            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-[var(--border)]/60 to-transparent" />
           </div>
         )}
         {src && (

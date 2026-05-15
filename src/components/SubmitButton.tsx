@@ -15,21 +15,22 @@ const Submitbutton: FC<ButtonData> = ({ buttonText }) => {
     <button
       type="submit"
       disabled={pending}
-      className="relative mt-4 inline-flex items-center justify-center px-6 py-2 overflow-hidden font-medium
-                 transition duration-300 ease-out border-2 border-yellow-600 rounded-md shadow-md group
-                 disabled:opacity-60 disabled:cursor-not-allowed"
+      className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full
+                 bg-[var(--accent)] text-black text-sm font-semibold
+                 hover:opacity-90 hover:-translate-y-0.5
+                 transition-all duration-200
+                 shadow-[0_0_24px_var(--accent-glow)]
+                 disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0"
     >
       {pending ? (
-        <div className="w-6 h-6 rounded-full animate-spin mx-auto border-2 border-yellow-600 border-t-transparent" />
+        <>
+          <span className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+          Sending…
+        </>
       ) : (
         <>
-          <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-yellow-600 group-hover:translate-x-0 ease">
-            <SendIcon size={18} />
-          </span>
-          <span className="absolute flex items-center justify-center w-full h-full text-yellow-600 transition-all duration-300 transform group-hover:translate-x-full ease">
-            {buttonText}
-          </span>
-          <span className="relative invisible">{buttonText}</span>
+          {buttonText}
+          <SendIcon size={14} />
         </>
       )}
     </button>

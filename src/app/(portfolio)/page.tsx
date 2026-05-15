@@ -3,17 +3,25 @@ import ContactComponent from "@/components/Contact";
 import HomeComponent from "@/components/Home";
 import WorkComponent from "@/components/Work";
 import Footer from "@/components/Footer";
+import HireMeCTA from "@/components/HireMeCTA";
 
 export default function Home() {
   return (
     <main>
+      <HireMeCTA />
       {/* Hero */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-full mx-auto">
         <HomeComponent />
       </div>
 
       {/* About — alternate background */}
-      <div className="w-full bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5">
+      <div
+        className="w-full border-y"
+        style={{
+          background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
+          borderColor: "var(--border)",
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <AboutComponent />
         </div>
@@ -25,7 +33,13 @@ export default function Home() {
       </div>
 
       {/* Contact — alternate background */}
-      <div className="w-full bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5">
+      <div
+        className="w-full border-y"
+        style={{
+          background: "linear-gradient(135deg, var(--bg-secondary) 0%, var(--accent-muted) 100%)",
+          borderColor: "var(--border)",
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <ContactComponent />
         </div>

@@ -1,146 +1,363 @@
-import Image from "next/image";
+"use client";
+
 import TechStack from "./TechStack";
-import AnimateOnScroll from "./AnimateOnScroll";
-import { ArrowRightIcon, CodeIcon, LayersIcon, ZapIcon, UsersIcon, MapPinIcon } from "lucide-react";
+import { motion } from "framer-motion";
+import type { MotionProps } from "framer-motion";
+import {
+  ArrowRightIcon,
+  CodeIcon,
+  LayersIcon,
+  ZapIcon,
+  UsersIcon,
+  MapPinIcon,
+  SparklesIcon,
+  BrainIcon,
+  BriefcaseIcon,
+} from "lucide-react";
 
 const stats = [
-  { value: "4+", label: "Years exp." },
-  { value: "10+", label: "Apps shipped" },
-  { value: "3", label: "Frameworks" },
+  { value: "5+", label: "Years\nexp." },
+  { value: "10+", label: "Apps\nshipped" },
+  { value: "3", label: "Major\nframeworks" },
 ];
 
-const expertise = [
-  { icon: <LayersIcon size={14} />, label: "Component Architecture" },
-  { icon: <ZapIcon size={14} />, label: "Performance Optimisation" },
-  { icon: <CodeIcon size={14} />, label: "Design Systems" },
-  { icon: <UsersIcon size={14} />, label: "Cross-team Collaboration" },
+const tags = [
+  { icon: <LayersIcon size={11} />, label: "Component Architecture" },
+  { icon: <ZapIcon size={11} />, label: "Performance" },
+  { icon: <CodeIcon size={11} />, label: "Design Systems" },
+  { icon: <UsersIcon size={11} />, label: "Cross-team Collab" },
+  { icon: <SparklesIcon size={11} />, label: "UI Animation" },
+  { icon: <BrainIcon size={11} />, label: "TypeScript" },
 ];
+
+const spring = (delay = 0): MotionProps => ({
+  initial: { opacity: 0, y: 28 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: {
+    duration: 0.7,
+    delay,
+    ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  },
+});
 
 const AboutComponent = () => {
   return (
-    <section id="about" className="py-16 px-4 overflow-hidden relative">
-      <div className="max-w-6xl mx-auto">
+    <section
+      id="about"
+      className="relative py-28 px-5 lg:px-10 overflow-hidden"
+    >
+      {/* Ambient orbs */}
+      <div
+        aria-hidden
+        className="absolute top-10 right-1/3 w-[560px] h-[560px]
+                                   bg-[var(--accent)]/5 rounded-full blur-[150px] pointer-events-none"
+      />
+      <div
+        aria-hidden
+        className="absolute bottom-1/4 left-0 w-[400px] h-[400px]
+                                   bg-purple-500/4 rounded-full blur-[120px] pointer-events-none"
+      />
 
-        {/* Section heading */}
-        <AnimateOnScroll direction="up" className="mb-12">
-          <h2 className="text-2xl md:text-5xl font-bold text-gray-900 dark:text-white mb-3">
-            About Me
-          </h2>
-          <div className="h-0.5 w-16 bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800" />
-        </AnimateOnScroll>
+      <div className="max-w-7xl mx-auto">
+        {/* ── Section label ── */}
+        <motion.div {...spring(0)} className="mb-14 flex items-center gap-4">
+          <p className="section-label">Who I am</p>
+          <div className="h-px w-12 bg-[var(--border)]" />
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-10 lg:gap-20 items-start">
-
-          {/* ── Left column ── */}
-          <AnimateOnScroll
-            direction="fade"
-            delay={0.1}
-            className="md:col-span-5 order-2 md:order-1"
-          >
-            {/* Image card */}
-            <div className="rounded-2xl overflow-hidden border border-yellow-600/20 bg-white dark:bg-gray-800">
-              <div className="relative w-full h-52 sm:h-64 md:h-80">
-                <Image
-                  src="/images/main.gif"
-                  fill
-                  className="object-contain"
-                  alt="Developer illustration"
-                  loading="lazy"
-                  sizes="(max-width: 768px) 100vw, 500px"
-                />
+        {/* ── Bento grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
+          {/* ═══ LEFT COLUMN: identity card + stats ═══ */}
+          <div className="lg:col-span-4 flex flex-col gap-4 order-2 lg:order-1">
+            {/* Identity card */}
+            <motion.div
+              {...spring(0.1)}
+              className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)] p-6
+                         flex flex-col gap-5"
+            >
+              {/* Available badge */}
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 self-start
+                              rounded-full bg-[var(--bg-secondary)]
+                              border border-[var(--border)] text-[11px] font-mono
+                              text-[var(--text-secondary)]"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full
+                                   bg-emerald-400 opacity-75"
+                  />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                Available for work
               </div>
-            </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
-              {stats.map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-2 sm:p-4 text-center min-w-0"
+              {/* Name + role */}
+              <div>
+                <p
+                  className="font-mono text-[9px] uppercase tracking-[0.18em]
+                              text-[var(--text-muted)] mb-2"
                 >
-                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{s.value}</p>
-                  <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-500 mt-0.5 leading-tight">
+                  Who I am
+                </p>
+                <p
+                  className="font-display font-bold text-[1.9rem] leading-tight
+                              text-[var(--text-primary)]"
+                >
+                  Devanshu
+                  <br />
+                  Verma
+                </p>
+                <p className="text-[var(--accent)] font-medium text-sm mt-1.5">
+                  Frontend Developer
+                </p>
+              </div>
+
+              {/* Key facts */}
+              <div className="space-y-2.5">
+                {[
+                  {
+                    icon: <MapPinIcon size={12} />,
+                    text: "Noida, India · Remote-friendly",
+                  },
+                  {
+                    icon: <BriefcaseIcon size={12} />,
+                    text: "5+ years in production",
+                  },
+                  {
+                    icon: <CodeIcon size={12} />,
+                    text: "React · Next.js · Angular · Vue",
+                  },
+                ].map(({ icon, text }) => (
+                  <div key={text} className="flex items-center gap-3">
+                    <div
+                      className="w-7 h-7 rounded-lg bg-[var(--bg-secondary)]
+                                    flex items-center justify-center shrink-0
+                                    text-[var(--accent)]"
+                    >
+                      {icon}
+                    </div>
+                    <span className="text-[12.5px] text-[var(--text-secondary)]">
+                      {text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div
+                className="h-px bg-gradient-to-r from-[var(--accent)]/30
+                              via-[var(--accent)]/10 to-transparent"
+              />
+
+              {/* Open to */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono text-[10px] uppercase tracking-wider
+                                 text-[var(--text-muted)]"
+                >
+                  Open to
+                </span>
+                <span className="text-[12px] font-semibold text-[var(--text-primary)]">
+                  Full-time · Freelance
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Stat tiles */}
+            <div className="grid grid-cols-3 gap-3">
+              {stats.map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={{ opacity: 0, scale: 0.82 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 0.55,
+                    delay: 0.22 + i * 0.08,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]
+                             p-4 text-center cursor-default"
+                >
+                  <p
+                    className="font-display font-bold text-[1.6rem] leading-none
+                                text-[var(--accent)] mb-1.5"
+                  >
+                    {s.value}
+                  </p>
+                  <p
+                    className="font-mono text-[9px] uppercase tracking-wider
+                                text-[var(--text-muted)] leading-tight whitespace-pre-line"
+                  >
                     {s.label}
                   </p>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </AnimateOnScroll>
+          </div>
 
-          {/* ── Right column ── */}
-          <AnimateOnScroll
-            direction="up"
-            delay={0.15}
-            className="md:col-span-7 flex flex-col justify-center order-1 md:order-2"
-          >
-            {/* Location badge */}
-            <div className="inline-flex items-center gap-2 self-start mb-6 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 text-xs font-medium">
-              <MapPinIcon size={12} className="text-yellow-600" />
-              Noida, India &middot; Remote-friendly
-            </div>
-
+          {/* ═══ RIGHT COLUMN: headline + cards ═══ */}
+          <div className="lg:col-span-8 flex flex-col gap-4 order-1 lg:order-2">
             {/* Headline */}
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white leading-snug tracking-tight mb-5">
-              Building for the web,{" "}
-              <span className="text-yellow-600">obsessing</span>{" "}
-              over the craft.
-            </h2>
-
-            {/* Bio */}
-            <div className="space-y-3 text-gray-500 dark:text-gray-400 leading-7 text-[15px]">
-              <p>
-                I&apos;m a frontend developer who sits at the intersection of
-                design and engineering — turning complex requirements into clean,
-                fast, and intuitive interfaces. My work spans fintech,
-                e-commerce, and SaaS.
-              </p>
-              <p>
-                With{" "}
-                <span className="text-gray-900 dark:text-white font-medium">
-                  4+ years of production experience
+            <motion.div {...spring(0.15)}>
+              <h2
+                className="font-display font-bold leading-[1.06] tracking-tight
+                             text-[clamp(2.4rem,5.2vw,4.2rem)] text-[var(--text-primary)]"
+              >
+                Building for the web, <br className="hidden sm:block" />
+                <span className="text-[var(--accent)] italic">
+                  obsessing
                 </span>{" "}
-                across{" "}
-                <span className="text-yellow-600 font-medium">
-                  React, Next.js, Angular, and Vue.js
-                </span>
-                , I care deeply about code that scales and interfaces that users
-                actually enjoy using.
-              </p>
-            </div>
+                over the craft.
+              </h2>
+            </motion.div>
 
-            {/* Divider */}
-            <div className="h-px w-full bg-gray-200 dark:bg-white/5 my-7" />
-
-            {/* Expertise grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {expertise.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-400"
-                >
-                  <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-yellow-600/10 text-yellow-600 shrink-0">
-                    {item.icon}
-                  </span>
-                  {item.label}
+            {/* Bio + expertise row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+              {/* Bio card */}
+              <motion.div
+                {...spring(0.2)}
+                className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)]
+                           p-6 flex flex-col justify-between min-h-[220px]"
+              >
+                <div className="space-y-3.5 text-[var(--text-secondary)] leading-[1.75] text-[14.5px]">
+                  <p>
+                    I&apos;m a frontend developer sitting at the intersection of
+                    design and engineering — turning complex requirements into
+                    clean, fast, intuitive interfaces.
+                  </p>
+                  <p>
+                    With{" "}
+                    <span className="text-[var(--text-primary)] font-semibold">
+                      5+ years of production experience
+                    </span>{" "}
+                    across{" "}
+                    <span className="text-[var(--accent)] font-medium">
+                      React, Next.js, Angular &amp; Vue
+                    </span>
+                    , I care deeply about code that scales.
+                  </p>
                 </div>
-              ))}
+
+                <a
+                  href="#work"
+                  className="inline-flex items-center gap-2 mt-5 self-start text-[13px]
+                             font-medium text-[var(--accent)] hover:opacity-75
+                             transition-opacity group"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document
+                      .getElementById("work")
+                      ?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  See my work
+                  <ArrowRightIcon
+                    size={13}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </a>
+              </motion.div>
+
+              {/* Expertise card */}
+              <motion.div
+                {...spring(0.25)}
+                className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)]
+                           p-6 flex flex-col min-h-[220px]"
+              >
+                <p
+                  className="font-mono text-[9px] uppercase tracking-[0.18em]
+                              text-[var(--text-muted)] mb-4"
+                >
+                  Core expertise
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((t, i) => (
+                    <motion.span
+                      key={t.label}
+                      initial={{ opacity: 0, scale: 0.75 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.3 + i * 0.06,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+                                 border border-[var(--border)] bg-[var(--bg-secondary)]
+                                 text-[var(--text-secondary)] text-[11.5px] font-medium"
+                    >
+                      <span className="text-[var(--accent)]">{t.icon}</span>
+                      {t.label}
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
             </div>
 
-            {/* CTA */}
-            <a
-              href="#work"
-              className="inline-flex items-center gap-2 self-start mt-8 text-sm font-medium text-yellow-600 hover:text-yellow-500 transition-colors group"
+            {/* Code card */}
+            <motion.div
+              {...spring(0.3)}
+              className="rounded-3xl border border-[var(--border)] bg-[var(--bg-card)]
+                         p-5 font-mono text-xs leading-relaxed overflow-hidden"
             >
-              See my work
-              <ArrowRightIcon
-                size={14}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </a>
-          </AnimateOnScroll>
+              {/* Traffic lights */}
+              <div className="flex items-center gap-1.5 mb-4">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
+                <span className="ml-2 text-[10px] text-[var(--text-muted)]">
+                  devanshu.ts
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <p>
+                  <span className="text-purple-400">const</span>{" "}
+                  <span className="text-sky-400">me</span>{" "}
+                  <span className="text-[var(--text-muted)]">=</span>{" "}
+                  <span className="text-[var(--text-secondary)]">{"{"}</span>
+                </p>
+                <p className="pl-5">
+                  <span className="text-[var(--text-muted)]">name:</span>{" "}
+                  <span className="text-emerald-400">
+                    &quot;Devanshu Verma&quot;
+                  </span>
+                  <span className="text-[var(--text-muted)]">,</span>
+                </p>
+                <p className="pl-5">
+                  <span className="text-[var(--text-muted)]">role:</span>{" "}
+                  <span className="text-emerald-400">
+                    &quot;Frontend Developer&quot;
+                  </span>
+                  <span className="text-[var(--text-muted)]">,</span>
+                </p>
+                <p className="pl-5">
+                  <span className="text-[var(--text-muted)]">focus:</span>{" "}
+                  <span className="text-[var(--accent)]">
+                    [&quot;UI/UX&quot;, &quot;Performance&quot;,
+                    &quot;Scalability&quot;]
+                  </span>
+                  <span className="text-[var(--text-muted)]">,</span>
+                </p>
+                <p className="pl-5">
+                  <span className="text-[var(--text-muted)]">available:</span>{" "}
+                  <span className="text-emerald-400">true</span>
+                </p>
+                <p>
+                  <span className="text-[var(--text-secondary)]">{"}"}</span>
+                  <span className="text-[var(--text-muted)] ml-0.5 animate-pulse">
+                    _
+                  </span>
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Tech stack */}
+        {/* Tech stack marquee */}
         <TechStack />
       </div>
     </section>
