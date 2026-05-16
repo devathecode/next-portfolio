@@ -165,8 +165,8 @@ export function PostEditor({ post }: { post?: Post }) {
         {/* Excerpt */}
         <div>
           <label className={labelCls}>
-            Excerpt{" "}
-            <span className="text-gray-600">(optional — shown on listing page)</span>
+            Excerpt <span className="text-red-500">*</span>{" "}
+            <span className="text-gray-600">(shown on listing page &amp; used as SEO description)</span>
           </label>
           <textarea
             value={excerpt}
@@ -291,7 +291,7 @@ export function PostEditor({ post }: { post?: Post }) {
             <button
               type="button"
               onClick={handleSave}
-              disabled={pending || !title || !slug}
+              disabled={pending || !title || !slug || !excerpt}
               className="flex items-center gap-2 text-sm px-5 py-2 rounded-lg bg-yellow-600 text-black
                          font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-40"
             >

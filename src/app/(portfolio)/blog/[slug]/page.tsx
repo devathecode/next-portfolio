@@ -8,8 +8,18 @@ import type { Post } from "@/lib/supabase";
 import { ShareBar } from "./_components/ShareBar";
 import { ReadTracker } from "./_components/ReadTracker";
 
+export const revalidate = 86400; // revalidate post pages every 24 hours
+
 const SITE_URL = "https://devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
+
+export async function generateStaticParams() {
+  const { data } = await supabaseAdmin
+    .from("posts")
+    .select("slug")
+    .eq("published", true);
+  return (data ?? []).map((p) => ({ slug: p.slug }));
+}
 
 async function getPost(slug: string, preview: boolean): Promise<Post | null> {
   let query = supabaseAdmin
@@ -67,6 +77,8 @@ export async function generateMetadata({
       description: post.excerpt ?? undefined,
       siteName: "Devanshu Verma",
       publishedTime: post.published_at ?? undefined,
+      modifiedTime: post.updated_at ?? undefined,
+      tags: post.tags.length > 0 ? post.tags : undefined,
       images: [{ url: image, width: 1200, height: 630, alt: post.title }],
     },
     twitter: {

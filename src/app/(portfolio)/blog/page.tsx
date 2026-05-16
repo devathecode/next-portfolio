@@ -4,6 +4,8 @@ import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 
+export const revalidate = 3600; // revalidate listing page every hour
+
 const SITE_URL = "https://devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 const OG_IMAGE = `${SITE_URL}/images/dev.jpeg`;
