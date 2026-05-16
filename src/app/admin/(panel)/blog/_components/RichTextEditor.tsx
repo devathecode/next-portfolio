@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { Markdown } from "tiptap-markdown";
 import {
   BoldIcon,
   ItalicIcon,
@@ -72,6 +73,11 @@ export function RichTextEditor({
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
       Placeholder.configure({ placeholder: "Write your post…" }),
+      Markdown.configure({
+        html: true,
+        transformPastedText: true,
+        transformCopiedText: false,
+      }),
     ],
     content: defaultContent,
     onUpdate: ({ editor }) => {

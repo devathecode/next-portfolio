@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { marked } from "marked";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 import { ShareBar } from "./_components/ShareBar";
@@ -33,8 +34,11 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function readingTime(html: string): string {
-  const words = html.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;
+function readingTime(content: string): string {
+  const words = (marked.parse(content) as string)
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
   const mins = Math.max(1, Math.round(words / 200));
   return `${mins} min read`;
 }
@@ -253,7 +257,7 @@ export default async function BlogPostPage({
               {/* Content */}
               <div
                 className="blog-prose mt-10"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: marked.parse(post.content) as string }}
               />
 
               <ReadTracker slug={post.slug} title={post.title} />
