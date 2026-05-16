@@ -41,6 +41,13 @@ export const metadata: Metadata = {
   icons: {
     icon: "/images/dev.jpeg",
   },
+  verification: {
+    google: "G0CPMFouEDVl1J7WUbmQ_HmTVMQUcZL0QpraFVFx_mY",
+    // If it's a different service, you can use custom or other keys:
+    // other: {
+    //   'me-verification': ['your-custom-code'],
+    // },
+  },
 };
 
 const jsonLd = {
