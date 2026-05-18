@@ -47,6 +47,11 @@ function getIP(req: NextRequest): string {
   );
 }
 
+function str(val: unknown, max: number): string | null {
+  if (typeof val !== "string") return null;
+  return val.slice(0, max) || null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -59,17 +64,17 @@ export async function POST(req: NextRequest) {
       browser,
       os,
       device,
-      user_agent:        ua,
-      screen_resolution: body.screen        ?? null,
-      viewport:          body.viewport      ?? null,
-      language:          body.language      ?? null,
-      timezone:          body.timezone      ?? null,
-      referrer:          body.referrer      ?? null,
-      page_url:          body.page_url      ?? null,
-      utm_source:        body.utm_source    ?? null,
-      utm_medium:        body.utm_medium    ?? null,
-      utm_campaign:      body.utm_campaign  ?? null,
-      connection_type:   body.connection    ?? null,
+      user_agent:        ua.slice(0, 512),
+      screen_resolution: str(body.screen,       32),
+      viewport:          str(body.viewport,     32),
+      language:          str(body.language,     16),
+      timezone:          str(body.timezone,     64),
+      referrer:          str(body.referrer,   2048),
+      page_url:          str(body.page_url,   2048),
+      utm_source:        str(body.utm_source,  128),
+      utm_medium:        str(body.utm_medium,  128),
+      utm_campaign:      str(body.utm_campaign,128),
+      connection_type:   str(body.connection,   32),
     };
 
     const { error } = await supabase.from("pdf_downloads").insert(row);

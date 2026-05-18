@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
+import { BlogSearch } from "./_components/BlogSearch";
+import { Pagination } from "./_components/Pagination";
 
 export const revalidate = 3600; // revalidate listing page every hour
 
@@ -15,9 +17,12 @@ const DESCRIPTION =
   "Thoughts on web development, React, Next.js, CSS, and building things for the web.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: "Blog",
   description: DESCRIPTION,
-  alternates: { canonical: BLOG_URL },
+  alternates: {
+    canonical: BLOG_URL,
+    types: { "application/rss+xml": `${BLOG_URL}/feed.xml` },
+  },
   authors: [{ name: "Devanshu Verma", url: SITE_URL }],
   openGraph: {
     type: "website",
@@ -59,8 +64,30 @@ async function getPosts(): Promise<Post[]> {
   return (data as Post[]) ?? [];
 }
 
-export default async function BlogPage() {
-  const posts = await getPosts();
+const PAGE_SIZE = 7; // 1 featured + 6 grid cards
+
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page ?? "1", 10));
+
+  const allPosts = await getPosts();
+  const uniqueTags = [...new Set(allPosts.flatMap((p) => p.tags))].sort();
+
+  const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
+  const currentPage = Math.min(page, totalPages || 1);
+
+  // Page 1: slot 0 = featured, slots 1..PAGE_SIZE-1 = grid
+  // Page N>1: slice of PAGE_SIZE grid posts
+  const pagePosts =
+    currentPage === 1
+      ? allPosts.slice(0, PAGE_SIZE)
+      : allPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const posts = pagePosts;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -109,7 +136,7 @@ export default async function BlogPage() {
           {/* Heading */}
           <div className="mb-12">
             <p className="section-label mb-3">
-              Writing{posts.length > 0 && ` · ${posts.length} ${posts.length === 1 ? "post" : "posts"}`}
+              Writing{allPosts.length > 0 && ` · ${allPosts.length} ${allPosts.length === 1 ? "post" : "posts"}`}
             </p>
             <h1 className="font-display text-4xl font-bold text-[var(--text-primary)] sm:text-5xl">
               Blog
@@ -117,25 +144,55 @@ export default async function BlogPage() {
             <p className="mt-3 text-[var(--text-secondary)] max-w-xl">
               {DESCRIPTION}
             </p>
+
+            {uniqueTags.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {uniqueTags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/blog/tag/${encodeURIComponent(tag)}`}
+                    className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium
+                               text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]
+                               transition-colors"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
+
+          {allPosts.length > 0 && <BlogSearch posts={allPosts} />}
 
           {posts.length === 0 ? (
             <p className="text-[var(--text-muted)] text-sm">No posts yet — check back soon.</p>
           ) : (
             <div className="space-y-8">
-              {/* Featured — first post */}
-              <FeaturedCard post={posts[0]} />
+              {currentPage === 1 ? (
+                <>
+                  {/* Featured — first post */}
+                  <FeaturedCard post={posts[0]} />
 
-              {/* Grid — remaining posts */}
-              {posts.length > 1 && (
+                  {/* Grid — remaining posts on this page */}
+                  {posts.length > 1 && (
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      {posts.slice(1).map((post) => (
+                        <GridCard key={post.id} post={post} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
                 <div className="grid gap-6 sm:grid-cols-2">
-                  {posts.slice(1).map((post) => (
+                  {posts.map((post) => (
                     <GridCard key={post.id} post={post} />
                   ))}
                 </div>
               )}
             </div>
           )}
+
+          <Pagination currentPage={currentPage} totalPages={totalPages} />
         </div>
       </main>
     </>

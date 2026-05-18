@@ -43,47 +43,31 @@ export default function HireMeCTA() {
         className="relative flex items-center justify-center w-[88px] h-[88px] md:w-[120px] md:h-[120px]"
       >
         {/* ── Layer 1: deep glow bloom ── */}
-        <motion.div
-          animate={{ opacity: [0.25, 0.55, 0.25], scale: [1, 1.2, 1] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-[-12px] rounded-full blur-3xl pointer-events-none"
+        <div
+          className="animate-glow-deep absolute inset-[-12px] rounded-full blur-3xl pointer-events-none"
           style={{ background: "var(--accent)" }}
         />
 
         {/* ── Layer 2: tight inner glow ── */}
-        <motion.div
-          animate={{ opacity: [0.5, 0.9, 0.5], scale: [1, 1.08, 1] }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.4,
-          }}
-          className="absolute inset-[8px] rounded-full blur-xl pointer-events-none"
+        <div
+          className="animate-glow-inner absolute inset-[8px] rounded-full blur-xl pointer-events-none"
           style={{ background: "var(--accent)" }}
         />
 
         {/* ── Layer 3: orbiting dashed ring ── */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-0 rounded-full pointer-events-none"
-          style={{
-            border: "1px dashed rgba(200,130,10,0.35)",
-          }}
+        <div
+          className="animate-spin-cw absolute inset-0 rounded-full pointer-events-none"
+          style={{ border: "1px dashed rgba(200,130,10,0.35)" }}
         />
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute inset-[6px] rounded-full pointer-events-none"
-          style={{
-            border: "1px solid rgba(200,130,10,0.15)",
-          }}
+        <div
+          className="animate-spin-ccw absolute inset-[6px] rounded-full pointer-events-none"
+          style={{ border: "1px solid rgba(200,130,10,0.15)" }}
         />
 
         {/* ── Layer 4: main gold sphere ── */}
         <motion.a
           href="#contact"
+          aria-label="Hire me – scroll to contact section"
           style={{
             rotateX,
             rotateY,

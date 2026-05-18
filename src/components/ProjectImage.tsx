@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface ProjectImageProps {
@@ -27,7 +28,7 @@ export default function ProjectImage({ liveUrl, alt, href }: ProjectImageProps) 
   if (errored) return null;
 
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={-1}>
+    <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-label={alt}>
       <div className="relative w-full h-44 overflow-hidden bg-[var(--bg-secondary)]">
         {(!src || !loaded) && (
           <div className="absolute inset-0 overflow-hidden bg-[var(--bg-secondary)]">
@@ -35,13 +36,14 @@ export default function ProjectImage({ liveUrl, alt, href }: ProjectImageProps) 
           </div>
         )}
         {src && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={src}
             alt={alt}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
             onLoad={() => setLoaded(true)}
             onError={() => setErrored(true)}
-            className={`w-full h-full object-cover object-top transition-opacity duration-500 ${
+            className={`object-cover object-top transition-opacity duration-500 ${
               loaded ? "opacity-100" : "opacity-0"
             }`}
           />

@@ -41,19 +41,6 @@ const fadeUp = {
   },
 };
 
-const imageFade = {
-  hidden: { opacity: 0, scale: 0.97 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 1.1,
-      ease: [0.22, 1, 0.36, 1] as const,
-      delay: 0.15,
-    },
-  },
-};
-
 /* ── Component ──────────────────────────────────────────────── */
 const HomeComponent = () => {
   return (
@@ -74,10 +61,8 @@ const HomeComponent = () => {
       {/* ── Background image layer ── */}
       <div aria-hidden="true" className="absolute inset-0 z-0 overflow-hidden">
         {/* Amber ambient orb */}
-        <motion.div
-          animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.1, 1] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none
+        <div
+          className="animate-orb-pulse absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none
                      bg-amber-600/8 dark:bg-amber-500/10"
         />
 
@@ -92,11 +77,8 @@ const HomeComponent = () => {
         />
 
         {/* Portrait — full bleed */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={imageFade}
-          className="absolute inset-0 lg:left-[60%] pointer-events-none"
+        <div
+          className="animate-hero-portrait absolute inset-0 lg:left-[60%] pointer-events-none"
           style={{
             maskImage:
               "linear-gradient(to bottom, black 0%, black 60%, transparent 95%)",
@@ -105,13 +87,14 @@ const HomeComponent = () => {
           }}
         >
           <Image
-            src="/images/dev5.png"
+            src="/images/dev.webp"
             fill
+            sizes="(max-width: 1024px) 100vw, 40vw"
             className="object-cover object-center lg:object-right"
             alt="Devanshu Verma – Frontend Developer"
             priority
           />
-        </motion.div>
+        </div>
 
         {/* Left-to-right overlay — text readability; clears at 62% so portrait (starts at 60%) shows cleanly */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--bg-primary)_50%,transparent_62%)]" />
@@ -271,15 +254,8 @@ const HomeComponent = () => {
       </motion.div>
 
       {/* ── Floating badges — desktop only, absolutely positioned ── */}
-      <motion.div
-        animate={{ y: [0, -7, 0] }}
-        transition={{
-          duration: 3.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1.5,
-        }}
-        className="hidden lg:flex absolute right-[18%] bottom-[22%] z-20 items-center gap-2.5
+      <div
+        className="animate-badge-float-slow hidden lg:flex absolute right-[18%] bottom-[22%] z-20 items-center gap-2.5
                    px-3.5 py-2.5 rounded-2xl
                    bg-[var(--bg-card)]/80 backdrop-blur-md
                    border border-[var(--border)]
@@ -299,17 +275,10 @@ const HomeComponent = () => {
             Production apps
           </p>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        animate={{ y: [0, -7, 0] }}
-        transition={{
-          duration: 3.8,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5,
-        }}
-        className="hidden lg:block absolute right-[10%] top-[18%] z-20 px-3.5 py-2.5 rounded-2xl
+      <div
+        className="animate-badge-float-medium hidden lg:block absolute right-[10%] top-[18%] z-20 px-3.5 py-2.5 rounded-2xl
                    bg-[var(--bg-card)]/80 backdrop-blur-md
                    border border-[var(--border)]
                    shadow-[var(--shadow-card)]"
@@ -320,7 +289,7 @@ const HomeComponent = () => {
         <p className="text-xs font-bold text-[var(--accent)] leading-none">
           Full-time · Freelance
         </p>
-      </motion.div>
+      </div>
     </section>
   );
 };

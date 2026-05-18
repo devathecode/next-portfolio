@@ -3,10 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
+import sanitizeHtml from "sanitize-html";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 import { ShareBar } from "./_components/ShareBar";
 import { ReadTracker } from "./_components/ReadTracker";
+import { ScrollProgress } from "./_components/ScrollProgress";
+import { TableOfContents } from "./_components/TableOfContents";
+import type { TocItem } from "./_components/TableOfContents";
+import { CopyCodeButtons } from "./_components/CopyCodeButtons";
 
 export const revalidate = 86400; // revalidate post pages every 24 hours
 
@@ -19,6 +24,19 @@ export async function generateStaticParams() {
     .select("slug")
     .eq("published", true);
   return (data ?? []).map((p) => ({ slug: p.slug }));
+}
+
+async function getRelatedPosts(slug: string, tags: string[]): Promise<Post[]> {
+  if (tags.length === 0) return [];
+  const { data } = await supabaseAdmin
+    .from("posts")
+    .select("*")
+    .eq("published", true)
+    .overlaps("tags", tags)
+    .neq("slug", slug)
+    .order("published_at", { ascending: false })
+    .limit(3);
+  return (data as Post[]) ?? [];
 }
 
 async function getPost(slug: string, preview: boolean): Promise<Post | null> {
@@ -44,13 +62,36 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function readingTime(content: string): string {
-  const words = (marked.parse(content) as string)
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+}
+
+function extractTocAndAddIds(html: string): { html: string; toc: TocItem[] } {
+  const toc: TocItem[] = [];
+  const seen = new Map<string, number>();
+  const result = html.replace(/<h([23])>(.*?)<\/h\1>/gi, (_match, level, inner) => {
+    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const base = slugify(text);
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    const id = count === 0 ? base : `${base}-${count}`;
+    toc.push({ id, text, level: parseInt(level, 10) });
+    return `<h${level} id="${id}">${inner}</h${level}>`;
+  });
+  return { html: result, toc };
+}
+
+function postStats(content: string): { wordCount: number; readTime: string } {
+  const wordCount = (marked.parse(content) as string)
     .replace(/<[^>]+>/g, " ")
     .split(/\s+/)
     .filter(Boolean).length;
-  const mins = Math.max(1, Math.round(words / 200));
-  return `${mins} min read`;
+  return { wordCount, readTime: `${Math.max(1, Math.round(wordCount / 200))} min read` };
 }
 
 export async function generateMetadata({
@@ -66,7 +107,7 @@ export async function generateMetadata({
   const image = post.cover_image ?? `${SITE_URL}/images/dev.jpeg`;
 
   return {
-    title: `${post.title} — Devanshu Verma`,
+    title: post.title,
     description: post.excerpt ?? undefined,
     alternates: { canonical: url },
     authors: [{ name: "Devanshu Verma", url: SITE_URL }],
@@ -93,6 +134,7 @@ export async function generateMetadata({
       follow: true,
       googleBot: { index: post.published, follow: true },
     },
+    other: { author: "Devanshu Verma" },
   };
 }
 
@@ -109,9 +151,27 @@ export default async function BlogPostPage({
   const post = await getPost(slug, isPreview);
   if (!post) notFound();
 
+  const [relatedPosts] = await Promise.all([
+    getRelatedPosts(post.slug, post.tags),
+  ]);
+
   const date = formatDate(post.published_at ?? post.created_at);
-  const readTime = readingTime(post.content);
+  const { wordCount, readTime } = postStats(post.content);
   const postUrl = `${BLOG_URL}/${post.slug}`;
+  const rawHtml = marked.parse(post.content) as string;
+  const safeHtml = sanitizeHtml(rawHtml, {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+      "img", "h1", "h2", "h3", "h4", "details", "summary", "pre", "code",
+    ]),
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ["src", "alt", "width", "height", "loading", "class"],
+      code: ["class"],
+      pre: ["class"],
+      "*": ["id", "class"],
+    },
+  });
+  const { html: contentHtml, toc } = extractTocAndAddIds(safeHtml);
 
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -121,6 +181,7 @@ export default async function BlogPostPage({
     datePublished: post.published_at,
     dateModified: post.updated_at,
     description: post.excerpt ?? undefined,
+    wordCount,
     author: {
       "@type": "Person",
       name: "Devanshu Verma",
@@ -142,6 +203,7 @@ export default async function BlogPostPage({
 
   return (
     <>
+      <ScrollProgress />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
@@ -204,14 +266,16 @@ export default async function BlogPostPage({
               {post.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {post.tags.map((tag) => (
-                    <span
+                    <Link
                       key={tag}
+                      href={`/blog/tag/${encodeURIComponent(tag)}`}
                       className="rounded-full border border-[var(--accent)]/35
                                  bg-[var(--accent)]/15 px-2.5 py-0.5 text-xs
-                                 font-medium text-[var(--accent)] backdrop-blur-sm"
+                                 font-medium text-[var(--accent)] backdrop-blur-sm
+                                 hover:bg-[var(--accent)]/30 transition-colors"
                     >
                       {tag}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -269,10 +333,51 @@ export default async function BlogPostPage({
               {/* Content */}
               <div
                 className="blog-prose mt-10"
-                dangerouslySetInnerHTML={{ __html: marked.parse(post.content) as string }}
+                dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
+              <CopyCodeButtons />
 
               <ReadTracker slug={post.slug} title={post.title} />
+
+              {/* Related posts */}
+              {relatedPosts.length > 0 && (
+                <div className="mt-16 border-t border-[var(--border)] pt-10">
+                  <p className="section-label mb-6">Related posts</p>
+                  <div className="grid gap-5 sm:grid-cols-3">
+                    {relatedPosts.map((rp) => (
+                      <Link
+                        key={rp.id}
+                        href={`/blog/${rp.slug}`}
+                        className="group flex flex-col gap-3 rounded-xl border border-[var(--border)]
+                                   bg-[var(--bg-card)] overflow-hidden p-4 shadow-[var(--shadow-card)]
+                                   transition-all duration-200 hover:border-[var(--accent-glow)]
+                                   hover:-translate-y-0.5"
+                      >
+                        {rp.cover_image && (
+                          <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[var(--bg-secondary)]">
+                            <Image
+                              src={rp.cover_image}
+                              alt={rp.title}
+                              fill
+                              sizes="(max-width: 640px) 100vw, 33vw"
+                              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                            />
+                          </div>
+                        )}
+                        <p className="text-sm font-semibold leading-snug text-[var(--text-primary)]
+                                      group-hover:text-[var(--accent)] transition-colors line-clamp-2">
+                          {rp.title}
+                        </p>
+                        {rp.tags.length > 0 && (
+                          <span className="text-[11px] font-mono text-[var(--text-muted)]">
+                            {rp.tags[0]}
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Author + LinkedIn cards */}
               <div className="mt-16 mb-20 grid gap-4 sm:grid-cols-2 border-t border-[var(--border)] pt-10">
@@ -342,6 +447,14 @@ export default async function BlogPostPage({
             {/* ── Sticky sidebar — hidden below lg ── */}
             <aside className="hidden lg:block w-40 xl:w-44 shrink-0">
               <div className="sticky top-8 pt-6 space-y-8">
+                {/* Table of Contents */}
+                {toc.length > 0 && (
+                  <>
+                    <TableOfContents items={toc} />
+                    <div className="border-t border-[var(--border)]" />
+                  </>
+                )}
+
                 {/* Share */}
                 <ShareBar url={postUrl} title={post.title} layout="vertical" />
 

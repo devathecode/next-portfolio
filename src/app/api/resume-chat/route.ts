@@ -1,5 +1,32 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextRequest } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
 import { RESUME_CONTENT } from "@/data/resume-content";
+
+const CHAT_LIMIT = 30;
+const CHAT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+async function isRateLimited(req: NextRequest): Promise<boolean> {
+  const ip =
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown";
+
+  const key = `chat:${ip}`;
+  const windowStart = new Date(Date.now() - CHAT_WINDOW_MS).toISOString();
+
+  const { count } = await supabaseAdmin
+    .from("login_attempts")
+    .select("*", { count: "exact", head: true })
+    .eq("ip", key)
+    .gte("created_at", windowStart);
+
+  if ((count ?? 0) >= CHAT_LIMIT) return true;
+
+  await supabaseAdmin.from("login_attempts").insert({ ip: key });
+  return false;
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -28,12 +55,22 @@ ${RESUME_CONTENT}`;
 
 type HistoryItem = { role: "user" | "assistant"; content: string };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  if (await isRateLimited(req)) {
+    return new Response("Too many requests. Please try again later.", { status: 429 });
+  }
+
   try {
-    const { message, history } = (await req.json()) as {
-      message: string;
-      history: HistoryItem[];
-    };
+    const body = await req.json();
+    const message: string = body?.message;
+    const history: HistoryItem[] = Array.isArray(body?.history) ? body.history : [];
+
+    if (!message || typeof message !== "string" || message.trim().length === 0) {
+      return new Response("Message is required.", { status: 400 });
+    }
+    if (message.length > 2000) {
+      return new Response("Message too long.", { status: 400 });
+    }
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",

@@ -6,7 +6,10 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://devanshuverma.in"),
-  title: "Devanshu Verma | Frontend Developer",
+  title: {
+    default: "Devanshu Verma | Frontend Developer",
+    template: "%s — Devanshu Verma",
+  },
   description: `Frontend developer based in India with 5+ years shipping production apps across fintech, e-commerce, and SaaS. Specialising in React, Next.js, Angular, and Vue.js. Open to freelance and full-time opportunities.`,
   keywords: [
     "Devanshu Verma",
@@ -31,15 +34,13 @@ export const metadata: Metadata = {
     description:
       "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
     siteName: "Devanshu Verma Portfolio",
+    images: [{ url: "/images/dev.jpeg", width: 1200, height: 630, alt: "Devanshu Verma — Frontend Developer" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Devanshu Verma | Frontend Developer",
     description:
       "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
-  },
-  icons: {
-    icon: "/images/dev.jpeg",
   },
   verification: {
     google: "G0CPMFouEDVl1J7WUbmQ_HmTVMQUcZL0QpraFVFx_mY",
@@ -72,7 +73,7 @@ const jsonLd = {
     "TypeScript",
     "Tailwind CSS",
   ],
-  sameAs: ["https://github.com/devanshu-verma"],
+  sameAs: ["https://www.linkedin.com/in/devthecoder/"],
 };
 
 export default function RootLayout({
@@ -99,8 +100,8 @@ export default function RootLayout({
         <ThemeProvider>
           <div>{children}</div>
         </ThemeProvider>
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
       </body>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
     </html>
   );
 }

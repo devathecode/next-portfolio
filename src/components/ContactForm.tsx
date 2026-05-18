@@ -26,6 +26,7 @@ export default function ContactForm() {
             name="name"
             className={inputClass}
             placeholder="Your name"
+            maxLength={100}
             required
           />
         </div>
@@ -40,6 +41,7 @@ export default function ContactForm() {
             name="email"
             className={inputClass}
             placeholder="your@email.com"
+            maxLength={254}
             required
           />
         </div>
@@ -49,12 +51,13 @@ export default function ContactForm() {
         <label htmlFor="message" className="font-mono text-xs text-[var(--text-muted)]">
           Message *
         </label>
-        <input
+        <textarea
           id="message"
-          type="text"
           name="message"
-          className={inputClass}
+          rows={5}
+          className={`${inputClass} resize-none`}
           placeholder="What's on your mind?"
+          maxLength={5000}
           required
         />
       </div>
