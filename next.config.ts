@@ -8,7 +8,20 @@ const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
 ];
 
+const emptyPolyfill = "./src/empty-polyfill.js";
+
 const nextConfig: NextConfig = {
+  turbopack: {
+    resolveAlias: {
+      "core-js/modules/es.array.at": emptyPolyfill,
+      "core-js/modules/es.array.flat": emptyPolyfill,
+      "core-js/modules/es.array.flat-map": emptyPolyfill,
+      "core-js/modules/es.object.from-entries": emptyPolyfill,
+      "core-js/modules/es.object.has-own": emptyPolyfill,
+      "core-js/modules/es.string.trim-end": emptyPolyfill,
+      "core-js/modules/es.string.trim-start": emptyPolyfill,
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
@@ -20,6 +33,16 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "5mb",
     },
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "devanshuverma.in" }],
+        destination: "https://www.devanshuverma.in/:path*",
+        permanent: true,
+      },
+    ];
   },
   async headers() {
     return [

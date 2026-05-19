@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const SITE_URL = "https://devanshuverma.in";
+const SITE_URL = "https://www.devanshuverma.in";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { data: posts } = await supabaseAdmin

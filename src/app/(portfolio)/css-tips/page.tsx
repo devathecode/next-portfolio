@@ -4,8 +4,8 @@ import CssTipsClient from "./_components/CssTipsClient";
 const TITLE       = "Modern CSS Tips & Tricks — 20 Code Examples | Devanshu Verma";
 const DESCRIPTION =
   "20 modern CSS tips every frontend developer should know — container queries, :has(), cascade layers, color-mix(), clamp(), CSS nesting, and more. Each tip includes a Before/After code example and a free PDF download.";
-const URL         = "https://devanshuverma.in/css-tips";
-const OG_IMAGE    = "https://devanshuverma.in/images/dev.jpeg";
+const URL         = "https://www.devanshuverma.in/css-tips";
+const OG_IMAGE    = "https://www.devanshuverma.in/images/dev.jpeg";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     "web development CSS",
     "Devanshu Verma CSS",
   ],
-  authors: [{ name: "Devanshu Verma", url: "https://devanshuverma.in" }],
+  authors: [{ name: "Devanshu Verma", url: "https://www.devanshuverma.in" }],
   alternates: {
     canonical: URL,
   },
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
       },
     ],
     publishedTime: "2025-01-01T00:00:00.000Z",
-    authors: ["https://devanshuverma.in"],
+    authors: ["https://www.devanshuverma.in"],
   },
   twitter: {
     card: "summary_large_image",
@@ -81,13 +81,13 @@ const jsonLd = {
   author: {
     "@type": "Person",
     name: "Devanshu Verma",
-    url: "https://devanshuverma.in",
+    url: "https://www.devanshuverma.in",
     sameAs: ["https://www.linkedin.com/in/devthecoder/"],
   },
   publisher: {
     "@type": "Person",
     name: "Devanshu Verma",
-    url: "https://devanshuverma.in",
+    url: "https://www.devanshuverma.in",
   },
   image: OG_IMAGE,
   mainEntityOfPage: {
@@ -111,7 +111,7 @@ const breadcrumbJsonLd = {
       "@type": "ListItem",
       position: 1,
       name: "Home",
-      item: "https://devanshuverma.in",
+      item: "https://www.devanshuverma.in",
     },
     {
       "@type": "ListItem",

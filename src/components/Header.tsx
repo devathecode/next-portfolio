@@ -51,7 +51,7 @@ export default function Header() {
                          overflow-hidden ring-1 ring-[var(--accent)]/40 hover:ring-2 hover:ring-[var(--accent)]
                          hover:scale-105 transition-all duration-200"
             >
-              <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={36} height={36} className="object-cover w-full h-full" />
+              <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={36} height={36} priority className="object-cover w-full h-full" />
             </span>
             <span className="hidden md:block text-sm font-semibold text-[var(--text-primary)] tracking-tight">
               Devanshu

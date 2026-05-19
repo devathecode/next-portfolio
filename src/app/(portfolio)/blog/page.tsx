@@ -8,7 +8,7 @@ import { Pagination } from "./_components/Pagination";
 
 export const revalidate = 3600; // revalidate listing page every hour
 
-const SITE_URL = "https://devanshuverma.in";
+const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 const OG_IMAGE = `${SITE_URL}/images/dev.jpeg`;
 

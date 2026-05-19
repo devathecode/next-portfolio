@@ -5,10 +5,10 @@ export const metadata: Metadata = {
   description:
     "View and download Devanshu Verma's resume. Frontend developer with 5+ years of experience in React, Next.js, Angular, and Vue.js.",
   alternates: {
-    canonical: "https://devanshuverma.in/resume",
+    canonical: "https://www.devanshuverma.in/resume",
   },
   openGraph: {
-    url: "https://devanshuverma.in/resume",
+    url: "https://www.devanshuverma.in/resume",
     title: "Resume — Devanshu Verma",
     description:
       "Frontend developer with 5+ years of experience building production apps. Specialising in React, Next.js, Angular, and Vue.js.",

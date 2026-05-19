@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowDownIcon, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { BsLinkedin } from "react-icons/bs";
-import Header from "./Header";
 
 /* ── Cursor glow — follows mouse on hero only ───────────────── */
 function CursorGlow() {
@@ -33,7 +32,7 @@ const stagger = {
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 22 },
+  hidden: { opacity: 1, y: 22 },
   visible: {
     opacity: 1,
     y: 0,

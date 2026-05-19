@@ -93,7 +93,7 @@ export async function contactSubmit(
           <p style="margin:12px 0 4px"><strong>Message:</strong></p>
           <p style="background:#f5f5f5;padding:12px 16px;border-radius:8px;white-space:pre-wrap;margin:0">${escapeHtml(message)}</p>
           <p style="margin-top:20px;font-size:12px;color:#888">
-            View all messages in your <a href="https://devanshuverma.in/admin" style="color:#d97706">admin panel</a>.
+            View all messages in your <a href="https://www.devanshuverma.in/admin" style="color:#d97706">admin panel</a>.
           </p>
         </div>
       `,

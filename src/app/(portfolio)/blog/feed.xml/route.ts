@@ -3,7 +3,7 @@ import type { Post } from "@/lib/supabase";
 
 export const revalidate = 3600;
 
-const SITE_URL = "https://devanshuverma.in";
+const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 
 function escapeXml(str: string): string {

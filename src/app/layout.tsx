@@ -5,7 +5,7 @@ import { playfairDisplay, inter, jetbrainsMono } from "@/utils/fonts";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://devanshuverma.in"),
+  metadataBase: new URL("https://www.devanshuverma.in"),
   title: {
     default: "Devanshu Verma | Frontend Developer",
     template: "%s — Devanshu Verma",
@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     "freelance web developer India",
     "web development portfolio",
   ],
-  authors: [{ name: "Devanshu Verma", url: "https://devanshuverma.in" }],
+  authors: [{ name: "Devanshu Verma", url: "https://www.devanshuverma.in" }],
   alternates: {
-    canonical: "https://devanshuverma.in",
+    canonical: "https://www.devanshuverma.in",
   },
   openGraph: {
     type: "website",
-    url: "https://devanshuverma.in",
+    url: "https://www.devanshuverma.in",
     title: "Devanshu Verma | Frontend Developer",
     description:
       "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
@@ -51,11 +51,12 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
+const personJsonLd = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: "Devanshu Verma",
-  url: "https://devanshuverma.in",
+  url: "https://www.devanshuverma.in",
+  image: "https://www.devanshuverma.in/images/LInkedin_heashot.png",
   jobTitle: "Frontend Developer",
   description:
     "Frontend developer with 5+ years of experience building scalable web apps using React, Next.js, Angular, and Vue.js.",
@@ -74,6 +75,15 @@ const jsonLd = {
     "Tailwind CSS",
   ],
   sameAs: ["https://www.linkedin.com/in/devthecoder/"],
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Devanshu Verma",
+  url: "https://www.devanshuverma.in",
+  description: "Portfolio of Devanshu Verma — Frontend Developer",
+  author: { "@type": "Person", name: "Devanshu Verma" },
 };
 
 export default function RootLayout({
@@ -95,7 +105,11 @@ export default function RootLayout({
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <ThemeProvider>
           <div>{children}</div>

@@ -15,7 +15,7 @@ import { CopyCodeButtons } from "./_components/CopyCodeButtons";
 
 export const revalidate = 86400; // revalidate post pages every 24 hours
 
-const SITE_URL = "https://devanshuverma.in";
+const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 
 export async function generateStaticParams() {
@@ -187,6 +187,12 @@ export default async function BlogPostPage({
       name: "Devanshu Verma",
       url: SITE_URL,
       sameAs: ["https://www.linkedin.com/in/devthecoder/"],
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Devanshu Verma",
+      url: SITE_URL,
+      image: `${SITE_URL}/images/LInkedin_heashot.png`,
     },
     ...(post.cover_image ? { image: post.cover_image } : {}),
   };
