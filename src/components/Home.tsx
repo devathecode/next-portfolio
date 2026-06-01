@@ -123,7 +123,7 @@ const HomeComponent = () => {
 
         {/* Mono label */}
         <motion.p variants={fadeUp} className="section-label mb-5">
-          Frontend Engineer · Noida, India
+          Devanshu Verma &nbsp;·&nbsp; Frontend Engineer &nbsp;·&nbsp; Noida, India
         </motion.p>
 
         {/* ── Main heading — editorial serif ── */}
@@ -132,6 +132,7 @@ const HomeComponent = () => {
           className="font-display font-bold leading-[1.0] tracking-tight mb-6
                      text-[clamp(3rem,7vw,5.5rem)] text-[var(--text-primary)]"
         >
+          <span className="sr-only">Devanshu Verma — </span>
           Crafting the <span className="text-[var(--accent)] italic">web</span>
           <br />
           one pixel

@@ -30,7 +30,7 @@ export async function generateMetadata({
   return {
     title: `${decoded} — Blog`,
     description: `All posts tagged "${decoded}" by Devanshu Verma.`,
-    alternates: { canonical: url },
+    alternates: { canonical: BLOG_URL },
     openGraph: {
       type: "website",
       url,
@@ -43,7 +43,7 @@ export async function generateMetadata({
       title: `${decoded} — Blog — Devanshu Verma`,
       description: `All posts tagged "${decoded}" by Devanshu Verma.`,
     },
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: true },
   };
 }
 

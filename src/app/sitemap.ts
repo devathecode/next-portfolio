@@ -20,27 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  // Derive unique tags → most-recently-updated post date for that tag
-  const tagMap = new Map<string, Date>();
-  for (const post of allPosts) {
-    const postDate = post.updated_at
-      ? new Date(post.updated_at)
-      : post.published_at
-        ? new Date(post.published_at)
-        : new Date();
-    for (const tag of post.tags) {
-      const existing = tagMap.get(tag);
-      if (!existing || postDate > existing) tagMap.set(tag, postDate);
-    }
-  }
-
-  const tagEntries: MetadataRoute.Sitemap = [...tagMap.entries()].map(([tag, lastModified]) => ({
-    url: `${SITE_URL}/blog/tag/${encodeURIComponent(tag)}`,
-    lastModified,
-    changeFrequency: "weekly" as const,
-    priority: 0.5,
-  }));
-
   return [
     {
       url: SITE_URL,
@@ -67,6 +46,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     ...postEntries,
-    ...tagEntries,
   ];
 }

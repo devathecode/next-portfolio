@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "Devanshu Verma | Frontend Developer",
     template: "%s — Devanshu Verma",
   },
-  description: `Frontend developer based in India with 5+ years shipping production apps across fintech, e-commerce, and SaaS. Specialising in React, Next.js, Angular, and Vue.js. Open to freelance and full-time opportunities.`,
+  description: `Devanshu Verma — React & Next.js developer with 5+ years building fast, production-grade web apps. Available for freelance projects and full-time roles.`,
   keywords: [
     "Devanshu Verma",
     "Frontend Developer India",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     url: "https://www.devanshuverma.in",
     title: "Devanshu Verma | Frontend Developer",
     description:
-      "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
+      "Devanshu Verma — React & Next.js developer with 5+ years building fast, production-grade web apps. Available for freelance and full-time roles.",
     siteName: "Devanshu Verma Portfolio",
     images: [{ url: "/images/dev.jpeg", width: 1200, height: 630, alt: "Devanshu Verma — Frontend Developer" }],
   },
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Devanshu Verma | Frontend Developer",
     description:
-      "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
+      "Devanshu Verma — React & Next.js developer with 5+ years building fast, production-grade web apps. Available for freelance and full-time roles.",
   },
   verification: {
     google: "G0CPMFouEDVl1J7WUbmQ_HmTVMQUcZL0QpraFVFx_mY",
