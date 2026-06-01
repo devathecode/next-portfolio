@@ -6,10 +6,12 @@ import { useFormStatus } from "react-dom";
 
 interface ButtonData {
   buttonText: string;
+  isPending?: boolean;
 }
 
-const Submitbutton: FC<ButtonData> = ({ buttonText }) => {
-  const { pending } = useFormStatus();
+const Submitbutton: FC<ButtonData> = ({ buttonText, isPending: externalPending }) => {
+  const { pending: formPending } = useFormStatus();
+  const pending = externalPending ?? formPending;
 
   return (
     <button
