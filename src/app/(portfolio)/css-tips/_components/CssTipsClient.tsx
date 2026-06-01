@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Download, Copy, Check, Search, X, Layers } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CheckIcon, CircleCheckIcon, CircleXIcon, CopyIcon, DownloadIcon, SearchIcon, XIcon } from "lucide-react";
 import LinkedInBadge from "./LinkedInBadge";
 import Footer from "@/components/Footer";
 import AnimateOnScroll from "@/components/AnimateOnScroll";
+import { useBrowser } from "@/components/browser/context";
 import { CSS_TIPS, CATEGORIES, type CssTip, type Category } from "./tips-data";
+import { browserLabel, runChecks, type SupportMap } from "./feature-checks";
 
 // ─── CSS syntax highlighter ───────────────────────────────────────────────────
 function highlightCSS(raw: string): string {
@@ -53,210 +55,230 @@ function highlightCSS(raw: string): string {
   return code;
 }
 
-// ─── Code block component ─────────────────────────────────────────────────────
+// ─── Code panel ───────────────────────────────────────────────────────────────
+/** Code panels stay dark in both themes, like an editor. */
+const CODE_STYLES = `
+  .css-code em { font-style: normal; }
+  .css-comment { color: #71717a; font-style: italic !important; }
+  .css-string  { color: #86efac; }
+  .css-at      { color: #f0b100; font-weight: 600; }
+  .css-prop    { color: #93c5fd; }
+  .css-val     { color: #e4e4e7; }
+`;
+
 function CssCodeBlock({ code }: { code: string }) {
   return (
-    <>
-      <style>{`
-        .css-code em { font-style: normal; }
-        .css-comment { color: #6b7280; font-style: italic !important; }
-        .css-string  { color: #fbbf24; }
-        .css-at      { color: #f59e0b; font-weight: 600; }
-        .css-prop    { color: #c084fc; }
-        .css-val     { color: #34d399; }
-      `}</style>
-      <pre
-        className="css-code text-xs sm:text-[13px] leading-relaxed text-gray-300 overflow-x-auto"
-        dangerouslySetInnerHTML={{ __html: highlightCSS(code) }}
-      />
-    </>
+    <pre
+      className="css-code overflow-x-auto font-mono text-xs leading-relaxed text-zinc-300 sm:text-[12.5px]"
+      dangerouslySetInnerHTML={{ __html: highlightCSS(code) }}
+    />
   );
 }
 
-// ─── Support badge ────────────────────────────────────────────────────────────
-const supportColor: Record<CssTip["support"], string> = {
-  "Widely available": "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-400/10",
-  "Baseline 2023":    "text-sky-600    dark:text-sky-400    bg-sky-50    dark:bg-sky-400/10",
-  "Baseline 2024":    "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-400/10",
-};
-
-// ─── Category badge colors ────────────────────────────────────────────────────
-const catColor: Record<Category, string> = {
-  Layout:           "text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-400/10",
-  Selectors:        "text-pink-700   dark:text-pink-400   bg-pink-50   dark:bg-pink-400/10",
-  "Visual Effects": "text-blue-700   dark:text-blue-400   bg-blue-50   dark:bg-blue-400/10",
-  Typography:       "text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-400/10",
-  Variables:        "text-teal-700   dark:text-teal-400   bg-teal-50   dark:bg-teal-400/10",
-  Performance:      "text-rose-700   dark:text-rose-400   bg-rose-50   dark:bg-rose-400/10",
-};
+// ─── Support line ─────────────────────────────────────────────────────────────
+function SupportLine({ supported }: { supported: boolean | undefined }) {
+  if (supported === undefined) {
+    return <span className="h-3 w-40 animate-pulse rounded bg-[var(--bg-secondary)]" aria-hidden="true" />;
+  }
+  return supported ? (
+    <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
+      <CircleCheckIcon size={14} className="text-[var(--accent)]" />
+      Works in your browser
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
+      <CircleXIcon size={14} />
+      Not supported in this browser yet
+    </span>
+  );
+}
 
 // ─── Tip card ─────────────────────────────────────────────────────────────────
 function TipCard({
   tip,
   copied,
   onCopy,
+  supported,
   index,
 }: {
   tip: CssTip;
   copied: number | null;
   onCopy: (id: number, code: string) => void;
+  supported: boolean | undefined;
   index: number;
 }) {
+  const reduce = useReducedMotion();
   const isCopied = copied === tip.id;
   const hasComparison = Boolean(tip.oldCode);
   const [view, setView] = useState<"old" | "new">("new");
   const activeCode = hasComparison && view === "old" ? tip.oldCode! : tip.code;
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 24 }}
+    <motion.article
+      layout={!reduce}
+      initial={reduce ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.45, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex flex-col rounded-xl border border-gray-200 dark:border-white/[0.07]
-                 bg-white dark:bg-white/[0.02]
-                 hover:border-yellow-600/40 dark:hover:border-yellow-600/30
-                 hover:shadow-lg hover:shadow-yellow-600/5
-                 transition-all duration-300 overflow-hidden"
+      exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+      transition={{ duration: reduce ? 0 : 0.4, delay: reduce ? 0 : Math.min(index, 8) * 0.03, ease: [0.16, 1, 0.3, 1] }}
+      className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]
+                 shadow-[var(--shadow-card)] transition-colors duration-200 hover:border-[var(--accent-line)]"
     >
-      {/* Card header */}
-      <div className="p-5 pb-3 flex items-start justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${catColor[tip.category]}`}
-          >
-            {tip.category}
-          </span>
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium ${supportColor[tip.support]}`}
-          >
-            {tip.support}
-          </span>
-        </div>
-
-        {/* Copy button */}
+      <div className="flex items-center justify-between gap-3 px-5 pt-5">
+        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[11px] text-[var(--text-muted)]">
+          <span className="text-[var(--accent)]">{tip.category}</span>
+          <span aria-hidden="true">/</span>
+          <span>{tip.support}</span>
+        </p>
         <button
+          type="button"
           onClick={() => onCopy(tip.id, activeCode)}
+          aria-label={`Copy ${view === "old" && hasComparison ? "before" : "after"} code for ${tip.title}`}
           title="Copy code"
-          className="shrink-0 p-1.5 rounded-md text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-500
-                     hover:bg-yellow-600/10 transition-all duration-150"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors
+                     hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {isCopied ? (
-              <motion.span
-                key="check"
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Check size={14} className="text-emerald-500" />
-              </motion.span>
-            ) : (
-              <motion.span
-                key="copy"
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.6, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Copy size={14} />
-              </motion.span>
-            )}
-          </AnimatePresence>
+          {isCopied ? <CheckIcon size={15} className="text-[var(--accent)]" /> : <CopyIcon size={15} />}
         </button>
       </div>
 
-      {/* Title + description */}
-      <div className="px-5 pb-4">
-        <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1.5 leading-snug">
+      <div className="px-5 pb-5 pt-2">
+        <h3 className="text-[17px] font-semibold leading-snug tracking-[-0.015em] text-[var(--text-primary)]">
           {tip.title}
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          {tip.description}
-        </p>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{tip.description}</p>
       </div>
 
-      {/* Code block */}
-      <div className="mt-auto mx-5 mb-5 rounded-lg bg-gray-950 border border-white/[0.05] overflow-hidden">
-        {/* Before / After toggle — only when oldCode exists */}
-        {hasComparison && (
-          <div className="flex items-center gap-px p-2 pb-0">
-            <button
-              onClick={() => setView("old")}
-              className={`relative px-3 py-1 rounded-md text-[11px] font-semibold transition-all duration-150
-                ${view === "old"
-                  ? "bg-red-500/15 text-red-400"
-                  : "text-gray-500 hover:text-gray-300"
+      {/* Editor panel */}
+      <div className="mx-3 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111114]">
+        <div className="flex h-9 items-end gap-0.5 border-b border-white/[0.06] px-2" role={hasComparison ? "tablist" : undefined}>
+          {hasComparison ? (
+            (["old", "new"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`-mb-px h-8 rounded-t-md border-b-2 px-2.5 font-mono text-[11px] transition-colors ${
+                  view === v
+                    ? "border-[#f0b100] text-zinc-100"
+                    : "border-transparent text-zinc-500 hover:text-zinc-300"
                 }`}
-            >
-              {view === "old" && (
-                <motion.span
-                  layoutId={`tab-bg-${tip.id}`}
-                  className="absolute inset-0 rounded-md bg-red-500/15"
-                />
-              )}
-              <span className="relative">Before</span>
-            </button>
-            <button
-              onClick={() => setView("new")}
-              className={`relative px-3 py-1 rounded-md text-[11px] font-semibold transition-all duration-150
-                ${view === "new"
-                  ? "text-emerald-400"
-                  : "text-gray-500 hover:text-gray-300"
-                }`}
-            >
-              {view === "new" && (
-                <motion.span
-                  layoutId={`tab-bg-${tip.id}`}
-                  className="absolute inset-0 rounded-md bg-emerald-500/15"
-                />
-              )}
-              <span className="relative">After</span>
-            </button>
-
-            {/* Animated dot indicator */}
-            <span
-              className={`ml-auto mr-1 w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
-                view === "old" ? "bg-red-400" : "bg-emerald-400"
-              }`}
-            />
-          </div>
-        )}
-
-        {/* Animated code area */}
-        <div className="relative overflow-hidden">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={view}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="p-4"
-            >
-              <CssCodeBlock code={activeCode} />
-            </motion.div>
-          </AnimatePresence>
+              >
+                {v === "old" ? "before.css" : "after.css"}
+              </button>
+            ))
+          ) : (
+            <span className="-mb-px h-8 border-b-2 border-[#f0b100] px-2.5 pt-2 font-mono text-[11px] text-zinc-100">
+              styles.css
+            </span>
+          )}
         </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={view}
+            initial={reduce ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -4 }}
+            transition={{ duration: reduce ? 0 : 0.16 }}
+            className="p-4"
+          >
+            <CssCodeBlock code={activeCode} />
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </motion.div>
+
+      <p className="mt-auto flex min-h-[3rem] items-center px-5 py-3 text-[13px]">
+        <SupportLine supported={supported} />
+      </p>
+    </motion.article>
+  );
+}
+
+// ─── Live support report ──────────────────────────────────────────────────────
+function SupportReport({ support, browser }: { support: SupportMap | null; browser: string }) {
+  const total = CSS_TIPS.length;
+  const passed = support ? CSS_TIPS.filter((t) => support[t.id]).length : 0;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
+      <div className="flex h-11 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-secondary)] px-5">
+        <p className="text-sm font-medium text-[var(--text-primary)]">Support report</p>
+        <p className="truncate font-mono text-[11px] text-[var(--text-muted)]">{support ? browser : "Checking…"}</p>
+      </div>
+
+      <div className="p-5 md:p-6">
+        <p className="flex items-baseline gap-2">
+          <span className="text-5xl font-semibold tabular-nums tracking-[-0.04em] text-[var(--text-primary)]">
+            {support ? passed : "–"}
+          </span>
+          <span className="text-lg text-[var(--text-muted)]">/ {total}</span>
+        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+          {!support
+            ? "Testing each feature in your browser…"
+            : passed === total
+              ? "Every tip on this page works in the browser you're using right now."
+              : `${total - passed} of these ${total - passed === 1 ? "tip needs" : "tips need"} a newer browser than the one you're using.`}
+        </p>
+
+        <ul className="mt-6 space-y-3">
+          {CATEGORIES.map((cat) => {
+            const tips = CSS_TIPS.filter((t) => t.category === cat);
+            const ok = support ? tips.filter((t) => support[t.id]).length : 0;
+            return (
+              <li key={cat} className="grid grid-cols-[7.5rem_1fr_2.5rem] items-center gap-3 text-[13px]">
+                <span className="truncate text-[var(--text-secondary)]">{cat}</span>
+                <span className="flex gap-1" aria-hidden="true">
+                  {tips.map((t) => (
+                    <span
+                      key={t.id}
+                      className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
+                        !support
+                          ? "animate-pulse bg-[var(--bg-secondary)]"
+                          : support[t.id]
+                            ? "bg-[var(--accent)]"
+                            : "bg-[var(--border)]"
+                      }`}
+                    />
+                  ))}
+                </span>
+                <span className="text-right font-mono text-xs tabular-nums text-[var(--text-muted)]">
+                  {support ? `${ok}/${tips.length}` : ""}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <p className="border-t border-[var(--border)] px-5 py-3 font-mono text-[11px] text-[var(--text-muted)] md:px-6">
+        Tested live with CSS.supports(). Nothing is looked up.
+      </p>
+    </div>
   );
 }
 
 // ─── Main client component ────────────────────────────────────────────────────
 export default function CssTipsClient() {
+  const reduce = useReducedMotion();
+  const { notify } = useBrowser();
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [copied, setCopied] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [support, setSupport] = useState<SupportMap | null>(null);
+  const [browser, setBrowser] = useState("your browser");
+
+  useEffect(() => {
+    setSupport(runChecks(CSS_TIPS.map((t) => t.id)));
+    setBrowser(browserLabel());
+  }, []);
 
   const filteredTips = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return CSS_TIPS.filter((tip) => {
-      const matchCat =
-        activeCategory === "All" || tip.category === activeCategory;
+      const matchCat = activeCategory === "All" || tip.category === activeCategory;
       const matchSearch =
         !q ||
         tip.title.toLowerCase().includes(q) ||
@@ -267,12 +289,16 @@ export default function CssTipsClient() {
     });
   }, [activeCategory, searchQuery]);
 
-  const handleCopy = useCallback((id: number, code: string) => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(id);
-      setTimeout(() => setCopied(null), 2000);
-    });
-  }, []);
+  const handleCopy = useCallback(
+    (id: number, code: string) => {
+      navigator.clipboard.writeText(code).then(() => {
+        setCopied(id);
+        notify("Code copied");
+        setTimeout(() => setCopied(null), 2000);
+      });
+    },
+    [notify],
+  );
 
   const trackDownload = () => {
     try {
@@ -418,275 +444,138 @@ export default function CssTipsClient() {
     return counts;
   }, []);
 
+  const filters: { id: Category | "All"; count: number }[] = [
+    { id: "All", count: CSS_TIPS.length },
+    ...CATEGORIES.map((cat) => ({ id: cat, count: categoryCounts[cat] ?? 0 })),
+  ];
+
+  const downloadButton = (label: string) => (
+    <button
+      type="button"
+      onClick={handleDownloadPDF}
+      disabled={downloading}
+      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold
+                 text-[var(--on-accent)] transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]
+                 disabled:cursor-wait disabled:opacity-60"
+    >
+      <DownloadIcon size={16} className={downloading ? "animate-bounce" : ""} />
+      {downloading ? "Generating PDF…" : label}
+    </button>
+  );
+
   return (
     <main>
+      <style>{CODE_STYLES}</style>
+
       {/* ── Hero ── */}
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <section className="pt-16 pb-12 md:pt-20 md:pb-16 grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+      <section className="px-5 pb-16 pt-14 md:pb-24 md:pt-20 lg:px-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <AnimateOnScroll direction="up" className="lg:col-span-7">
+            <h1
+              className="max-w-[16ch] text-balance text-[clamp(2.4rem,5.2vw,4rem)] font-semibold leading-[1.03]
+                         tracking-[-0.04em] text-[var(--text-primary)]"
+            >
+              Modern CSS <span className="text-[var(--accent)]">tips</span> and tricks
+            </h1>
+            <p className="mt-6 max-w-[34rem] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+              {CSS_TIPS.length} modern CSS features every frontend developer should know. Container
+              queries, cascade layers, :has() and more, each with a real before and after.
+            </p>
 
-          {/* ── Left col ── */}
-          <div>
-            <AnimateOnScroll direction="up">
-              <div className="flex items-center gap-2 mb-5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-600/10 border border-yellow-600/20 text-yellow-600 dark:text-yellow-500 text-xs font-semibold uppercase tracking-widest">
-                  <Layers size={11} />
-                  CSS Tips
-                </span>
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 dark:text-white leading-tight mb-5">
-                Modern{" "}
-                <span className="text-yellow-600">CSS</span>{" "}
-                Tips &amp; Tricks
-              </h1>
-
-              <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed mb-8">
-                A curated collection of modern CSS features every frontend developer
-                should know. Container queries, cascade layers, :has(), and more —
-                each with a real code example.
+            <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+              {downloadButton("Download PDF")}
+              <p className="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)]">
+                <span>{CSS_TIPS.length} tips</span>
+                <span aria-hidden="true">/</span>
+                <span>{CATEGORIES.length} topics</span>
+                <span aria-hidden="true">/</span>
+                <span>free</span>
               </p>
-            </AnimateOnScroll>
+            </div>
 
-            {/* Stats + Download row */}
-            <AnimateOnScroll direction="up" delay={0.1}>
-              <div className="flex items-center justify-between gap-4 w-full">
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-yellow-600">{CSS_TIPS.length}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-0.5">Tips</p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-yellow-600">{CATEGORIES.length}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-0.5">Categories</p>
-                  </div>
-                  <div className="w-px h-8 bg-gray-200 dark:bg-white/10" />
-                  <div className="text-center">
-                    <p className="text-2xl font-black text-yellow-600">Free</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-0.5">Always</p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={downloading}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
-                             bg-yellow-600 hover:bg-yellow-500 disabled:bg-yellow-600/60
-                             text-black text-sm font-semibold
-                             transition-all duration-200
-                             hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-600/25
-                             disabled:cursor-not-allowed disabled:translate-y-0"
-                >
-                  {downloading ? (
-                    <>
-                      <motion.span
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                        className="inline-block"
-                      >
-                        <Download size={15} />
-                      </motion.span>
-                      Generating…
-                    </>
-                  ) : (
-                    <>
-                      <Download size={15} />
-                      Download PDF
-                    </>
-                  )}
-                </button>
-              </div>
-            </AnimateOnScroll>
-
-            {/* LinkedIn official badge */}
             <LinkedInBadge />
+          </AnimateOnScroll>
+
+          <AnimateOnScroll direction="up" delay={0.1} className="lg:col-span-5">
+            <SupportReport support={support} browser={browser} />
+          </AnimateOnScroll>
+        </div>
+      </section>
+
+      {/* ── Filters + grid ── */}
+      <section aria-label="Tips" className="border-t border-[var(--border)] px-5 py-12 md:py-16 lg:px-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div
+              className="flex h-10 items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-1.5
+                         transition-colors focus-within:border-[var(--accent-line)] lg:w-72"
+            >
+              <SearchIcon size={15} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+              <input
+                type="search"
+                placeholder="Search tips"
+                aria-label="Search tips"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-full min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none
+                           placeholder:text-[var(--text-muted)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--chrome-hover)]
+                             hover:text-[var(--text-primary)]"
+                >
+                  <XIcon size={14} />
+                </button>
+              )}
+            </div>
+
+            <div
+              role="tablist"
+              aria-label="Filter by topic"
+              className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-1
+                         [scrollbar-width:none]"
+            >
+              {filters.map(({ id, count }) => {
+                const active = activeCategory === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setActiveCategory(id)}
+                    className={`relative h-8 shrink-0 whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-colors ${
+                      active ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="css-tip-filter"
+                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                        className="absolute inset-0 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]"
+                      />
+                    )}
+                    <span className="relative">
+                      {id}
+                      <span className="ml-1.5 font-mono text-xs text-[var(--text-muted)]">{count}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* ── Right col — decorative code panel ── */}
-          <AnimateOnScroll direction="right" delay={0.15} className="hidden lg:block">
-            <div className="relative">
-              {/* Glow */}
-              <div className="absolute -inset-6 bg-yellow-600/5 dark:bg-yellow-600/8 rounded-3xl blur-3xl pointer-events-none" />
+          <p className="mb-6 mt-5 min-h-[1rem] font-mono text-xs text-[var(--text-muted)]" aria-live="polite">
+            {(searchQuery || activeCategory !== "All") && filteredTips.length > 0
+              ? `Showing ${filteredTips.length} of ${CSS_TIPS.length}`
+              : ""}
+          </p>
 
-              {/* Code editor window */}
-              <div className="relative rounded-2xl border border-gray-200 dark:border-white/[0.08] bg-white dark:bg-gray-950 shadow-xl shadow-gray-200/60 dark:shadow-black/40 overflow-hidden">
-
-                {/* Window chrome */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-white/[0.06] bg-gray-50 dark:bg-white/[0.03]">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-400/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-400/80" />
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <span className="text-[11px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-white/[0.06] px-3 py-0.5 rounded-md font-mono tracking-wide">
-                      styles.css
-                    </span>
-                  </div>
-                </div>
-
-                {/* Code snippets */}
-                <div className="p-5 space-y-5">
-                  {/* Snippet 1 */}
-                  <div>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono mb-2 uppercase tracking-widest">Container Queries</p>
-                    <pre className="text-[12.5px] leading-relaxed font-mono css-code"
-                      dangerouslySetInnerHTML={{ __html: highlightCSS(
-`.wrapper {
-  container-type: inline-size;
-}
-
-@container (min-width: 400px) {
-  .card { display: grid; }
-}`
-                      )}}
-                    />
-                  </div>
-
-                  <div className="h-px bg-gray-100 dark:bg-white/[0.05]" />
-
-                  {/* Snippet 2 */}
-                  <div>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono mb-2 uppercase tracking-widest">:has() Parent Selector</p>
-                    <pre className="text-[12.5px] leading-relaxed font-mono css-code"
-                      dangerouslySetInnerHTML={{ __html: highlightCSS(
-`form:has(input:invalid) .btn {
-  opacity: 0.5;
-  pointer-events: none;
-}`
-                      )}}
-                    />
-                  </div>
-
-                  <div className="h-px bg-gray-100 dark:bg-white/[0.05]" />
-
-                  {/* Snippet 3 */}
-                  <div>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-600 font-mono mb-2 uppercase tracking-widest">Fluid Typography</p>
-                    <pre className="text-[12.5px] leading-relaxed font-mono css-code"
-                      dangerouslySetInnerHTML={{ __html: highlightCSS(
-`h1 {
-  font-size: clamp(2rem, 5vw + 1rem, 4.5rem);
-  text-wrap: balance;
-}`
-                      )}}
-                    />
-                  </div>
-                </div>
-
-                {/* Footer bar */}
-                <div className="px-5 py-3 border-t border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-white/[0.02] flex items-center justify-between">
-                  <span className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">20 tips inside →</span>
-                  <div className="flex gap-1">
-                    {CATEGORIES.map((cat) => (
-                      <span key={cat} className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${catColor[cat]}`}>
-                        {cat.split(" ")[0]}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating tip count badge */}
-              <div className="absolute -top-4 -right-4 bg-yellow-600 text-black text-xs font-black px-3 py-1.5 rounded-full shadow-lg shadow-yellow-600/30">
-                {CSS_TIPS.length} tips
-              </div>
-            </div>
-          </AnimateOnScroll>
-
-        </section>
-      </div>
-
-      {/* ── Filters + Grid ── */}
-      <div className="w-full bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10">
-
-          {/* Search + category filters */}
-          <AnimateOnScroll direction="up" delay={0.05}>
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              {/* Search */}
-              <div className="relative flex-1 max-w-sm">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Search tips…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-8 py-2 text-sm rounded-lg
-                             border border-gray-200 dark:border-white/10
-                             bg-white dark:bg-white/[0.03]
-                             text-gray-900 dark:text-white
-                             placeholder:text-gray-400
-                             focus:outline-none focus:border-yellow-600/50 dark:focus:border-yellow-600/40
-                             transition-colors duration-150"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-
-              {/* Category pills */}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setActiveCategory("All")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150
-                    ${
-                      activeCategory === "All"
-                        ? "bg-yellow-600 text-black shadow-sm"
-                        : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-yellow-600/40 hover:text-yellow-600 dark:hover:text-yellow-500 bg-white dark:bg-white/[0.02]"
-                    }`}
-                >
-                  All{" "}
-                  <span className="opacity-60 font-normal">{CSS_TIPS.length}</span>
-                </button>
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150
-                      ${
-                        activeCategory === cat
-                          ? "bg-yellow-600 text-black shadow-sm"
-                          : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400 hover:border-yellow-600/40 hover:text-yellow-600 dark:hover:text-yellow-500 bg-white dark:bg-white/[0.02]"
-                      }`}
-                  >
-                    {cat}{" "}
-                    <span className="opacity-60 font-normal">{categoryCounts[cat]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </AnimateOnScroll>
-
-          {/* Results count */}
-          <AnimatePresence>
-            {(searchQuery || activeCategory !== "All") && (
-              <motion.p
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="text-xs text-gray-400 mb-5"
-              >
-                {filteredTips.length === 0
-                  ? "No tips matched."
-                  : `Showing ${filteredTips.length} of ${CSS_TIPS.length} tips`}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          {/* Card grid */}
-          <motion.div
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
-          >
+          <motion.div layout={!reduce} className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
               {filteredTips.map((tip, i) => (
                 <TipCard
@@ -695,70 +584,45 @@ export default function CssTipsClient() {
                   index={i}
                   copied={copied}
                   onCopy={handleCopy}
+                  supported={support?.[tip.id]}
                 />
               ))}
             </AnimatePresence>
           </motion.div>
 
-          {/* Empty state */}
-          <AnimatePresence>
-            {filteredTips.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center py-20 text-center"
+          {filteredTips.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
+              <p className="font-medium text-[var(--text-primary)]">No tips match that</p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Try another word or show every topic.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setActiveCategory("All");
+                }}
+                className="mt-5 inline-flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5
+                           text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent-line)]"
               >
-                <p className="text-4xl mb-4">🔍</p>
-                <p className="text-gray-900 dark:text-white font-semibold mb-1">
-                  No tips found
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Try a different search or clear the filter.
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setActiveCategory("All");
-                  }}
-                  className="mt-4 text-sm text-yellow-600 hover:underline"
-                >
-                  Reset filters
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                Reset filters
+              </button>
+            </div>
+          )}
 
-          {/* Bottom CTA */}
           {filteredTips.length > 0 && (
-            <AnimateOnScroll direction="up" delay={0.1}>
-              <div className="mt-14 pt-10 border-t border-gray-200 dark:border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">
-                    Want all {CSS_TIPS.length} tips in one file?
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Download the full PDF — great for offline reference.
-                  </p>
-                </div>
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={downloading}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg
-                             bg-yellow-600 hover:bg-yellow-500 disabled:opacity-60
-                             text-black text-sm font-semibold
-                             transition-all duration-200 whitespace-nowrap
-                             hover:-translate-y-0.5 hover:shadow-lg hover:shadow-yellow-600/25
-                             disabled:cursor-not-allowed"
-                >
-                  <Download size={15} />
-                  {downloading ? "Generating PDF…" : "Download All as PDF"}
-                </button>
+            <div className="mt-14 flex flex-col items-start justify-between gap-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 sm:flex-row sm:items-center md:p-8">
+              <div>
+                <p className="text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                  Keep all {CSS_TIPS.length} tips offline
+                </p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  One PDF with every example, for your next code review.
+                </p>
               </div>
-            </AnimateOnScroll>
+              {downloadButton("Download all as PDF")}
+            </div>
           )}
         </div>
-      </div>
+      </section>
 
       <Footer />
     </main>

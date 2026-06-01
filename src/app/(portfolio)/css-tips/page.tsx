@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import CssTipsClient from "./_components/CssTipsClient";
 
-const TITLE       = "Modern CSS Tips & Tricks — 20 Code Examples | Devanshu Verma";
+const TITLE       = "Modern CSS Tips & Tricks: 20 Code Examples | Devanshu Verma";
 const DESCRIPTION =
-  "20 modern CSS tips every frontend developer should know — container queries, :has(), cascade layers, color-mix(), clamp(), CSS nesting, and more. Each tip includes a Before/After code example and a free PDF download.";
+  "20 modern CSS tips every frontend developer should know: container queries, :has(), cascade layers, color-mix(), clamp(), CSS nesting, and more. Each tip includes a Before/After code example and a free PDF download.";
 const URL         = "https://www.devanshuverma.in/css-tips";
-const OG_IMAGE    = "https://www.devanshuverma.in/images/dev.jpeg";
+const OG_IMAGE    = "https://www.devanshuverma.in/opengraph-image";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: TITLE },
   description: DESCRIPTION,
   keywords: [
     "modern CSS tips",

@@ -1,22 +1,16 @@
-import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
-export const playfairDisplay = Playfair_Display({
+/* Geist carries both display and body roles: one family, weight does the hierarchy. */
+export const geistSans = Geist({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-display",
-  weight: ["400", "600", "700", "900"],
+  variable: "--font-sans",
+  weight: "variable",
 });
 
-export const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
-});
-
-export const jetbrainsMono = JetBrains_Mono({
+export const geistMono = Geist_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-mono",
-  weight: ["400", "500"],
+  weight: "variable",
 });

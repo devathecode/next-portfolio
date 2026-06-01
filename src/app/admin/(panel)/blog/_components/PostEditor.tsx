@@ -16,6 +16,8 @@ import {
 import { createPostAction, updatePostAction } from "../../../actions";
 import { RichTextEditor } from "./RichTextEditor";
 import type { Post } from "@/lib/supabase";
+import { useFeedback } from "../../_components/feedback";
+import { btnGhost, btnPrimary, inputCls, labelCls } from "../../_components/ui";
 
 function toSlug(title: string): string {
   return title
@@ -26,13 +28,9 @@ function toSlug(title: string): string {
     .replace(/-+/g, "-");
 }
 
-const inputCls =
-  "w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600/70 focus:bg-gray-900 transition-colors";
-
-const labelCls = "block text-xs font-medium text-gray-500 mb-1.5";
-
 export function PostEditor({ post }: { post?: Post }) {
   const router = useRouter();
+  const { toast } = useFeedback();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -95,8 +93,10 @@ export function PostEditor({ post }: { post?: Post }) {
         : await createPostAction(fd);
       if (result?.error) {
         setError(result.error);
+        toast(result.error, "error");
       } else {
-        router.push("/admin?tab=blog");
+        toast(post ? "Post saved" : "Post created");
+        router.push("/admin/blog");
         router.refresh();
       }
     });
@@ -110,23 +110,23 @@ export function PostEditor({ post }: { post?: Post }) {
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <Link
-          href="/admin?tab=blog"
-          className="p-1.5 rounded-md text-gray-600 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+          href="/admin/blog"
+          className="p-1.5 rounded-md text-adm-subtle hover:text-adm-muted hover:bg-adm-raised transition-colors"
         >
           <ArrowLeftIcon size={16} />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-white">
+          <h1 className="text-2xl font-semibold tracking-tight text-adm-text">
             {post ? "Edit post" : "New post"}
           </h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-sm text-adm-muted mt-0.5">
             {post ? `Editing "${post.title}"` : "Write a new blog post"}
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+        <div className="mb-6 rounded-lg bg-adm-danger/10 border border-adm-danger/30 px-4 py-3 text-sm text-adm-danger">
           {error}
         </div>
       )}
@@ -135,7 +135,7 @@ export function PostEditor({ post }: { post?: Post }) {
         {/* Title */}
         <div>
           <label className={labelCls}>
-            Title <span className="text-red-500">*</span>
+            Title <span className="text-adm-danger">*</span>
           </label>
           <input
             value={title}
@@ -150,7 +150,7 @@ export function PostEditor({ post }: { post?: Post }) {
         <div>
           <label className={labelCls}>Slug</label>
           <div className="flex items-center">
-            <span className="text-sm text-gray-600 bg-gray-900 border border-r-0 border-gray-800 rounded-l-lg px-3 py-2 shrink-0">
+            <span className="text-sm text-adm-subtle bg-adm-surface border border-r-0 border-adm-border rounded-l-lg px-3 py-2 shrink-0">
               /blog/
             </span>
             <input
@@ -165,8 +165,8 @@ export function PostEditor({ post }: { post?: Post }) {
         {/* Excerpt */}
         <div>
           <label className={labelCls}>
-            Excerpt <span className="text-red-500">*</span>{" "}
-            <span className="text-gray-600">(shown on listing page &amp; used as SEO description)</span>
+            Excerpt <span className="text-adm-danger">*</span>{" "}
+            <span className="text-adm-subtle">(shown on listing page &amp; used as SEO description)</span>
           </label>
           <textarea
             value={excerpt}
@@ -180,7 +180,7 @@ export function PostEditor({ post }: { post?: Post }) {
         {/* Tags */}
         <div>
           <label className={labelCls}>
-            Tags <span className="text-gray-600">(comma separated)</span>
+            Tags <span className="text-adm-subtle">(comma separated)</span>
           </label>
           <input
             value={tags}
@@ -193,7 +193,7 @@ export function PostEditor({ post }: { post?: Post }) {
               {tagPills.map((t) => (
                 <span
                   key={t}
-                  className="bg-gray-800 text-yellow-600 rounded-full text-xs px-2.5 py-0.5"
+                  className="bg-adm-raised text-adm-accent-text rounded-full text-xs px-2.5 py-0.5"
                 >
                   {t}
                 </span>
@@ -205,10 +205,10 @@ export function PostEditor({ post }: { post?: Post }) {
         {/* Cover image */}
         <div>
           <label className={labelCls}>
-            Cover image <span className="text-gray-600">(optional)</span>
+            Cover image <span className="text-adm-subtle">(optional)</span>
           </label>
           {preview ? (
-            <div className="relative w-full h-52 rounded-xl overflow-hidden bg-gray-900 border border-gray-800">
+            <div className="relative w-full h-52 rounded-xl overflow-hidden bg-adm-surface border border-adm-border">
               <Image
                 src={preview}
                 alt="Cover preview"
@@ -219,14 +219,14 @@ export function PostEditor({ post }: { post?: Post }) {
               <button
                 type="button"
                 onClick={handleRemoveCover}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-red-500/80 transition-colors"
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-adm-text hover:bg-red-500/80 transition-colors"
               >
                 <XIcon size={13} />
               </button>
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="absolute bottom-2 right-2 text-xs bg-black/60 text-gray-300 hover:text-white px-2.5 py-1 rounded-md transition-colors"
+                className="absolute bottom-2 right-2 text-xs bg-black/60 text-adm-muted hover:text-adm-text px-2.5 py-1 rounded-md transition-colors"
               >
                 Replace
               </button>
@@ -235,8 +235,8 @@ export function PostEditor({ post }: { post?: Post }) {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-2.5 w-full rounded-xl border border-dashed border-gray-800
-                         px-4 py-8 text-sm font-medium text-gray-500 hover:text-white hover:border-gray-600 transition-colors"
+              className="flex items-center gap-2.5 w-full rounded-xl border border-dashed border-adm-border
+                         px-4 py-8 text-sm font-medium text-adm-subtle hover:text-adm-text hover:border-adm-subtle transition-colors"
             >
               <ImageIcon size={16} />
               Upload cover image
@@ -261,14 +261,14 @@ export function PostEditor({ post }: { post?: Post }) {
         </div>
 
         {/* Footer bar */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+        <div className="sticky bottom-16 z-20 -mx-4 flex items-center justify-between gap-2 border-t border-adm-border bg-adm-bg/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:bg-adm-surface/95 lg:bottom-4">
           <button
             type="button"
             onClick={() => setPublished((v) => !v)}
             className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg border transition-colors ${
               published
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                : "border-gray-700 text-gray-500 hover:text-white hover:border-gray-600"
+                ? "border-adm-success/30 bg-adm-success/10 text-adm-success hover:bg-adm-success/20"
+                : "border-adm-border text-adm-subtle hover:text-adm-text hover:border-adm-subtle"
             }`}
           >
             {published ? <EyeIcon size={14} /> : <EyeOffIcon size={14} />}
@@ -281,8 +281,7 @@ export function PostEditor({ post }: { post?: Post }) {
                 href={`/blog/${slug}${!published ? "?preview=true" : ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg border border-gray-700
-                           text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+                className={btnGhost}
               >
                 <ExternalLinkIcon size={13} />
                 Preview
@@ -292,8 +291,7 @@ export function PostEditor({ post }: { post?: Post }) {
               type="button"
               onClick={handleSave}
               disabled={pending || !title || !slug || !excerpt}
-              className="flex items-center gap-2 text-sm px-5 py-2 rounded-lg bg-yellow-600 text-black
-                         font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-40"
+              className={btnPrimary}
             >
               {pending ? (
                 <span className="w-3.5 h-3.5 border-2 border-black/40 border-t-black rounded-full animate-spin" />

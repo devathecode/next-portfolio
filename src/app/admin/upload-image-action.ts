@@ -1,6 +1,7 @@
 "use server";
 
 import { cloudinary } from "@/lib/cloudinary";
+import { requireAdminSession } from "@/lib/auth";
 
 type UploadResult = { url: string; publicId: string } | { error: string };
 
@@ -8,6 +9,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"];
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function uploadImage(formData: FormData): Promise<UploadResult> {
+  await requireAdminSession();
   const file = formData.get("file");
   if (!file || typeof file === "string") return { error: "No file provided." };
 
@@ -21,13 +23,17 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
   const bytes = await file.arrayBuffer();
   const dataUri = `data:${file.type};base64,${Buffer.from(bytes).toString("base64")}`;
 
-  const result = await cloudinary.uploader.upload(dataUri, {
-    folder: "next-portfolio/images",
-    transformation: [
-      { width: 1200, height: 1200, crop: "limit" },
-      { quality: "auto", fetch_format: "auto" },
-    ],
-  });
-
-  return { url: result.secure_url, publicId: result.public_id };
+  try {
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: "next-portfolio/images",
+      transformation: [
+        { width: 1200, height: 1200, crop: "limit" },
+        { quality: "auto", fetch_format: "auto" },
+      ],
+    });
+    return { url: result.secure_url, publicId: result.public_id };
+  } catch (err) {
+    console.error("Cloudinary upload failed:", err);
+    return { error: "Upload failed. Check the Cloudinary settings in .env.local and try again." };
+  }
 }

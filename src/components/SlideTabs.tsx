@@ -69,9 +69,11 @@ const SlideTabs: React.FC = () => {
       return;
     }
 
-    // Cache only hash-section items
+    // Only the href list is stable — re-query elements on every check, since
+    // async sections (e.g. Work's Supabase-fetched content) may not exist in
+    // the DOM yet at mount time, which would otherwise permanently cache a
+    // null and make that section unreachable by scroll-spy forever.
     const hashItems = navigationItems.filter((n) => n.href.startsWith("#"));
-    const sections = hashItems.map((item) => document.querySelector(item.href));
 
     let ticking = false;
     const handleScroll = () => {
@@ -79,14 +81,12 @@ const SlideTabs: React.FC = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        for (let i = sections.length - 1; i >= 0; i--) {
-          const section = sections[i];
+        const line = window.innerHeight / 3;
+        for (let i = hashItems.length - 1; i >= 0; i--) {
+          const section = document.querySelector(hashItems[i].href);
           if (section) {
             const rect = section.getBoundingClientRect();
-            if (
-              rect.top <= window.innerHeight / 7 &&
-              rect.bottom >= window.innerHeight / 3
-            ) {
+            if (rect.top <= line && rect.bottom >= line) {
               setActiveIndex(i);
               const tabElement = tabsRef.current[i];
               if (tabElement) {
@@ -112,6 +112,8 @@ const SlideTabs: React.FC = () => {
 
   return (
     <ul
+      role="menubar"
+      aria-label="Primary"
       onMouseLeave={() => {
         if (!isHomePage && pageTabIndex === -1) {
           setPosition((p) => ({ ...p, opacity: 0 }));
@@ -133,6 +135,7 @@ const SlideTabs: React.FC = () => {
         <Tab
           key={item.href}
           title={item.title}
+          isActive={index === activeIndex}
           setPosition={setPosition}
           onClick={() => {
             const isPageLink = !item.href.startsWith("#");
@@ -182,16 +185,21 @@ interface TabProps {
   setPosition: React.Dispatch<React.SetStateAction<Position>>;
   onClick: () => void;
   title?: string;
+  isActive?: boolean;
 }
 
 const Tab = React.forwardRef<HTMLLIElement, TabProps>(function TabComponent(
-  { children, setPosition, onClick, title },
+  { children, setPosition, onClick, title, isActive },
   ref
 ) {
   return (
     <li
       ref={ref}
+      role="menuitem"
+      tabIndex={0}
       title={title}
+      aria-label={title}
+      aria-current={isActive ? "page" : undefined}
       onMouseEnter={(e) => {
         const { width } = e.currentTarget.getBoundingClientRect();
         setPosition({
@@ -201,6 +209,12 @@ const Tab = React.forwardRef<HTMLLIElement, TabProps>(function TabComponent(
         });
       }}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className="relative cursor-pointer z-10 group px-3 md:px-4 py-2.5 rounded-full flex justify-center items-center h-9"
     >
       {children}

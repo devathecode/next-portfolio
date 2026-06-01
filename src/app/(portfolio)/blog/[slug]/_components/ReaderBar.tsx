@@ -1,0 +1,286 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { HeadphonesIcon, HistoryIcon, MinusIcon, PauseIcon, PlayIcon, PlusIcon, SquareIcon } from "lucide-react";
+import { useBrowser } from "@/components/browser/context";
+import { READ_AT, saveReading, useReading } from "@/lib/reading";
+
+const SIZES = [0.9, 1, 1.1, 1.22];
+const SIZE_KEY = "reader-size";
+/** Where in the viewport the "reading line" sits, as a share of its height. */
+const LINE = 0.3;
+/** Blocks read aloud, in document order. Code is skipped. */
+const SPEAKABLE = ":scope > p, :scope > h2, :scope > h3, :scope > blockquote, :scope > ul > li, :scope > ol > li";
+
+type Speech = "idle" | "playing" | "paused";
+
+function articleGeometry(el: HTMLElement) {
+  const top = el.getBoundingClientRect().top + window.scrollY;
+  return { top, height: Math.max(1, el.offsetHeight) };
+}
+
+/**
+ * Reading mode for a post, like the reader tools in a browser: text size,
+ * read aloud (Web Speech API), and "pick up where you left off" from this
+ * browser's reading history.
+ */
+export function ReaderBar({ slug, articleId }: { slug: string; articleId: string }) {
+  const reduce = useReducedMotion();
+  const { notify } = useBrowser();
+  const saved = useReading(slug);
+  const [size, setSize] = useState(1);
+  const [progress, setProgress] = useState(0);
+  const [speech, setSpeech] = useState<Speech>("idle");
+  const [canSpeak, setCanSpeak] = useState(false);
+  // Offered once per visit, only if the reader starts at the top
+  const [resumeAt, setResumeAt] = useState<number | null>(null);
+  const offered = useRef(false);
+  const session = useRef(0);
+  const current = useRef<HTMLElement | null>(null);
+
+  const article = useCallback(() => document.getElementById(articleId), [articleId]);
+
+  // Text size, remembered across posts
+  useEffect(() => {
+    try {
+      const stored = Number(localStorage.getItem(SIZE_KEY));
+      if (SIZES.includes(stored)) setSize(stored);
+    } catch {
+      // Storage blocked: default size
+    }
+    setCanSpeak("speechSynthesis" in window);
+  }, []);
+
+  useEffect(() => {
+    article()?.style.setProperty("--prose-scale", String(size));
+  }, [size, article]);
+
+  const changeSize = (dir: 1 | -1) => {
+    const next = SIZES[Math.min(SIZES.length - 1, Math.max(0, SIZES.indexOf(size) + dir))];
+    setSize(next);
+    try {
+      localStorage.setItem(SIZE_KEY, String(next));
+    } catch {
+      // Not remembered
+    }
+  };
+
+  // Track and remember progress through the article
+  useEffect(() => {
+    const el = article();
+    if (!el) return;
+    let frame = 0;
+    let lastSave = 0;
+    const update = () => {
+      frame = 0;
+      const { top, height } = articleGeometry(el);
+      const p = Math.min(1, Math.max(0, (window.scrollY + window.innerHeight * LINE - top) / height));
+      setProgress(p);
+      const now = Date.now();
+      if (now - lastSave > 400 || p >= READ_AT) {
+        lastSave = now;
+        if (p > 0.02) saveReading(slug, p);
+      }
+      if (p > 0.05) setResumeAt(null);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [slug, article]);
+
+  // Offer to jump back when returning to a half-read post
+  useEffect(() => {
+    if (offered.current || !saved) return;
+    offered.current = true;
+    if (saved.pos > 0.08 && saved.pos < READ_AT && window.scrollY < 200) setResumeAt(saved.pos);
+  }, [saved]);
+
+  const resume = () => {
+    const el = article();
+    if (!el || resumeAt === null) return;
+    const { top, height } = articleGeometry(el);
+    window.scrollTo({
+      top: top + resumeAt * height - window.innerHeight * LINE,
+      behavior: reduce ? "auto" : "smooth",
+    });
+    setResumeAt(null);
+  };
+
+  // ── Read aloud ──────────────────────────────────────────────
+  const mark = (el: HTMLElement | null) => {
+    current.current?.classList.remove("is-speaking");
+    current.current = el;
+    el?.classList.add("is-speaking");
+  };
+
+  const stop = useCallback(() => {
+    session.current += 1;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    mark(null);
+    setSpeech("idle");
+  }, []);
+
+  useEffect(() => stop, [stop]);
+
+  const play = () => {
+    const synth = window.speechSynthesis;
+    if (speech === "paused") {
+      synth.resume();
+      setSpeech("playing");
+      return;
+    }
+    const el = article();
+    if (!el) return;
+    const blocks = Array.from(el.querySelectorAll<HTMLElement>(SPEAKABLE)).filter((b) => b.innerText.trim());
+    if (blocks.length === 0) return;
+
+    // Start from the first block on screen, so it reads from where you are
+    const line = window.innerHeight * LINE;
+    let start = blocks.findIndex((b) => b.getBoundingClientRect().bottom > line);
+    if (start < 0) start = 0;
+
+    const id = ++session.current;
+    const voice =
+      synth.getVoices().find((v) => v.lang.startsWith("en") && /natural|google|samantha/i.test(v.name)) ??
+      synth.getVoices().find((v) => v.lang.startsWith("en"));
+
+    const speakAt = (i: number) => {
+      if (id !== session.current) return;
+      if (i >= blocks.length) {
+        stop();
+        return;
+      }
+      const block = blocks[i];
+      mark(block);
+      const r = block.getBoundingClientRect();
+      if (r.top < 80 || r.bottom > window.innerHeight - 80) {
+        block.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+      }
+      const utter = new SpeechSynthesisUtterance(block.innerText);
+      if (voice) utter.voice = voice;
+      utter.rate = 1.02;
+      utter.onend = () => speakAt(i + 1);
+      utter.onerror = (e) => {
+        // Our own cancel/stop; anything else means speech isn't available here
+        if (e.error === "interrupted" || e.error === "canceled" || id !== session.current) return;
+        stop();
+        notify("Read aloud isn't available in this browser", "info");
+      };
+      synth.speak(utter);
+    };
+
+    synth.cancel();
+    setSpeech("playing");
+    speakAt(start);
+  };
+
+  const pause = () => {
+    window.speechSynthesis.pause();
+    setSpeech("paused");
+  };
+
+  const btn =
+    "flex h-9 items-center justify-center gap-2 rounded-lg text-[var(--text-secondary)] transition-colors duration-150 " +
+    "hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)] disabled:pointer-events-none disabled:opacity-35";
+  const pct = Math.round(progress * 100);
+
+  return (
+    // Centred by the wrapper: motion owns the toolbar's transform
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 md:bottom-6">
+      <motion.div
+        role="toolbar"
+        aria-label="Reader tools"
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32, delay: 0.4 }}
+        className="pointer-events-auto flex items-center gap-1 rounded-xl border border-[var(--border)]
+                   bg-[var(--chrome-toolbar)] p-1 shadow-[var(--shadow-pop)]"
+      >
+        <AnimatePresence initial={false}>
+          {resumeAt !== null && (
+            <motion.button
+              key="resume"
+              type="button"
+              onClick={resume}
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: reduce ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="flex h-9 items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg bg-[var(--accent)] px-3
+                         text-[13px] font-semibold text-[var(--on-accent)]"
+            >
+              <HistoryIcon size={15} strokeWidth={2.2} className="shrink-0" />
+              Resume at {Math.round(resumeAt * 100)}%
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center" role="group" aria-label="Text size">
+          <button
+            type="button"
+            onClick={() => changeSize(-1)}
+            disabled={size === SIZES[0]}
+            aria-label="Smaller text"
+            title="Smaller text"
+            className={`${btn} w-9`}
+          >
+            <MinusIcon size={15} />
+          </button>
+          <span className="w-8 select-none text-center text-[15px] font-semibold text-[var(--text-primary)]" aria-hidden="true">
+            Aa
+          </span>
+          <button
+            type="button"
+            onClick={() => changeSize(1)}
+            disabled={size === SIZES[SIZES.length - 1]}
+            aria-label="Larger text"
+            title="Larger text"
+            className={`${btn} w-9`}
+          >
+            <PlusIcon size={15} />
+          </button>
+        </div>
+
+        {canSpeak && (
+          <>
+            <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
+            {speech === "playing" ? (
+              <button type="button" onClick={pause} className={`${btn} px-2.5 text-[13px] font-medium text-[var(--accent)]`}>
+                <PauseIcon size={15} />
+                Pause
+              </button>
+            ) : (
+              <button type="button" onClick={play} className={`${btn} px-2.5 text-[13px] font-medium`}>
+                {speech === "paused" ? <PlayIcon size={15} /> : <HeadphonesIcon size={15} />}
+                {speech === "paused" ? "Resume" : "Listen"}
+              </button>
+            )}
+            {speech !== "idle" && (
+              <button type="button" onClick={stop} aria-label="Stop reading aloud" title="Stop" className={`${btn} w-9`}>
+                <SquareIcon size={13} fill="currentColor" />
+              </button>
+            )}
+          </>
+        )}
+
+        <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
+        <span
+          className="w-12 text-center font-mono text-xs tabular-nums text-[var(--text-muted)]"
+          aria-label={`${pct}% read`}
+          title="Progress through the article"
+        >
+          {pct}%
+        </span>
+      </motion.div>
+    </div>
+  );
+}

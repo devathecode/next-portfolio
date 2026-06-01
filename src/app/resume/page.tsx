@@ -10,46 +10,29 @@ import {
   FileTextIcon,
   MessageSquareIcon,
 } from "lucide-react";
-
-type Message = { role: "user" | "assistant"; content: string };
+import { CHAT_SUGGESTIONS as SUGGESTIONS, splitLinks, useResumeChat } from "@/lib/use-resume-chat";
 
 // Renders plain text but converts [label](url) markdown links to <a> tags
 function MessageText({ text }: { text: string }) {
-  const parts = text.split(/(\[.*?\]\(.*?\))/g);
   return (
     <>
-      {parts.map((part, i) => {
-        const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-        if (match) {
-          return (
-            <a
-              key={i}
-              href={match[2]}
-              className="underline underline-offset-2 font-medium hover:opacity-80 transition-opacity"
-              style={{ color: "var(--accent)" }}
-            >
-              {match[1]}
-            </a>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
+      {splitLinks(text).map((part, i) =>
+        "href" in part ? (
+          <a
+            key={i}
+            href={part.href}
+            className="underline underline-offset-2 font-medium hover:opacity-80 transition-opacity"
+            style={{ color: "var(--accent)" }}
+          >
+            {part.label}
+          </a>
+        ) : (
+          <span key={i}>{part.text}</span>
+        ),
+      )}
     </>
   );
 }
-
-const SUGGESTIONS = [
-  "What frameworks do you specialise in?",
-  "Tell me about your projects",
-  "Are you open to freelance work?",
-  "What's your experience level?",
-];
-
-const WELCOME: Message = {
-  role: "assistant",
-  content:
-    "Hi! I'm Devanshu's resume assistant. Ask me anything about his skills, experience, or projects — I'm happy to help.",
-};
 
 function TypingDots() {
   return (
@@ -66,9 +49,8 @@ function TypingDots() {
 }
 
 export default function ResumePage() {
-  const [messages, setMessages] = useState<Message[]>([WELCOME]);
+  const { messages, loading, sendMessage: send } = useResumeChat();
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"pdf" | "chat">("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,52 +61,9 @@ export default function ResumePage() {
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
-
-    const userMsg: Message = { role: "user", content: text };
-    const historySnapshot = [...messages];
-
-    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: "" }]);
     setInput("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/resume-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history: historySnapshot }),
-      });
-
-      if (!res.ok || !res.body) throw new Error("Request failed");
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = {
-            role: "assistant",
-            content: updated[updated.length - 1].content + chunk,
-          };
-          return updated;
-        });
-      }
-    } catch {
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          role: "assistant",
-          content: "Sorry, something went wrong. Please try again.",
-        };
-        return updated;
-      });
-    } finally {
-      setLoading(false);
-      inputRef.current?.focus();
-    }
+    await send(text);
+    inputRef.current?.focus();
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -310,10 +249,10 @@ export default function ResumePage() {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2`}
+                className={`flex items-start ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2`}
               >
                 {msg.role === "assistant" && (
-                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="rounded-full object-cover shrink-0 mt-0.5" />
+                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5" />
                 )}
 
                 <div

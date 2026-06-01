@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { RssIcon } from "lucide-react";
+import Footer from "@/components/Footer";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 import { BlogSearch } from "./_components/BlogSearch";
 import { Pagination } from "./_components/Pagination";
+import { FeaturedPost } from "./_components/FeaturedPost";
+import { PostRow } from "./_components/PostRow";
+import { topicsOf } from "./_components/post-meta";
+import { WEBSITE_ID, personRef } from "@/lib/profile";
 
 export const revalidate = 3600; // revalidate listing page every hour
 
 const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
-const OG_IMAGE = `${SITE_URL}/images/dev.jpeg`;
+const OG_IMAGE = `${SITE_URL}/opengraph-image`;
 
-const TITLE = "Blog — Devanshu Verma";
+const TITLE = "Blog | Devanshu Verma";
 const DESCRIPTION =
   "Thoughts on web development, React, Next.js, CSS, and building things for the web.";
 
@@ -46,15 +51,6 @@ export const metadata: Metadata = {
   },
 };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 async function getPosts(): Promise<Post[]> {
   const { data } = await supabaseAdmin
     .from("posts")
@@ -64,7 +60,7 @@ async function getPosts(): Promise<Post[]> {
   return (data as Post[]) ?? [];
 }
 
-const PAGE_SIZE = 7; // 1 featured + 6 grid cards
+const PAGE_SIZE = 10; // page 1: the featured post + 9 rows
 
 export default async function BlogPage({
   searchParams,
@@ -75,19 +71,21 @@ export default async function BlogPage({
   const page = Math.max(1, parseInt(sp.page ?? "1", 10));
 
   const allPosts = await getPosts();
-  const uniqueTags = [...new Set(allPosts.flatMap((p) => p.tags))].sort();
+  const topics = topicsOf(allPosts);
 
   const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
   const currentPage = Math.min(page, totalPages || 1);
 
-  // Page 1: slot 0 = featured, slots 1..PAGE_SIZE-1 = grid
-  // Page N>1: slice of PAGE_SIZE grid posts
+  // Page 1: slot 0 = featured, slots 1..PAGE_SIZE-1 = rows
+  // Page N>1: slice of PAGE_SIZE rows
   const pagePosts =
     currentPage === 1
       ? allPosts.slice(0, PAGE_SIZE)
       : allPosts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const posts = pagePosts;
+  // Page 1 leads with the newest post as a card; the rest are list rows
+  const listed = currentPage === 1 ? posts.slice(1) : posts;
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -102,14 +100,11 @@ export default async function BlogPage({
     "@context": "https://schema.org",
     "@type": "Blog",
     url: BLOG_URL,
-    name: "Devanshu Verma — Blog",
+    name: "Devanshu Verma, Blog",
     description: DESCRIPTION,
-    author: {
-      "@type": "Person",
-      name: "Devanshu Verma",
-      url: SITE_URL,
-      sameAs: ["https://www.linkedin.com/in/devthecoder/"],
-    },
+    inLanguage: "en",
+    isPartOf: { "@id": WEBSITE_ID },
+    author: personRef,
     blogPost: posts.map((p) => ({
       "@type": "BlogPosting",
       headline: p.title,
@@ -131,217 +126,85 @@ export default async function BlogPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[var(--bg-primary)] px-4 py-20 sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-[var(--bg-primary)] px-5 pb-24 pt-14 md:pt-20 lg:px-10">
         <div className="mx-auto max-w-5xl">
-          {/* Heading */}
-          <div className="mb-12">
-            <p className="section-label mb-3">
-              Writing{allPosts.length > 0 && ` · ${allPosts.length} ${allPosts.length === 1 ? "post" : "posts"}`}
-            </p>
-            <h1 className="font-display text-4xl font-bold text-[var(--text-primary)] sm:text-5xl">
-              Blog
-            </h1>
-            <p className="mt-3 text-[var(--text-secondary)] max-w-xl">
-              {DESCRIPTION}
-            </p>
-
-            {uniqueTags.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2">
-                {uniqueTags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/blog/tag/${encodeURIComponent(tag)}`}
-                    className="rounded-full border border-[var(--border)] px-3 py-1 text-xs font-medium
-                               text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]
-                               transition-colors"
-                  >
-                    {tag}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {allPosts.length > 0 && <BlogSearch posts={allPosts} />}
-
-          {posts.length === 0 ? (
-            <p className="text-[var(--text-muted)] text-sm">No posts yet — check back soon.</p>
-          ) : (
-            <div className="space-y-8">
-              {currentPage === 1 ? (
-                <>
-                  {/* Featured — first post */}
-                  <FeaturedCard post={posts[0]} />
-
-                  {/* Grid — remaining posts on this page */}
-                  {posts.length > 1 && (
-                    <div className="grid gap-6 sm:grid-cols-2">
-                      {posts.slice(1).map((post) => (
-                        <GridCard key={post.id} post={post} />
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="grid gap-6 sm:grid-cols-2">
-                  {posts.map((post) => (
-                    <GridCard key={post.id} post={post} />
-                  ))}
-                </div>
-              )}
+          <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
+            <div>
+              <h1
+                className="text-[clamp(2.4rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]
+                           text-[var(--text-primary)]"
+              >
+                Blog
+              </h1>
+              <p className="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+                {DESCRIPTION}
+              </p>
             </div>
+            <p className="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)]">
+              <span>
+                {allPosts.length} {allPosts.length === 1 ? "post" : "posts"}
+              </span>
+              <span aria-hidden="true">/</span>
+              <a
+                href="/blog/feed.xml"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--accent)]"
+              >
+                <RssIcon size={13} />
+                RSS
+              </a>
+            </p>
+          </header>
+
+          {topics.length > 0 && (
+            // One swipeable row on phones, wrapped from sm up
+            <nav
+              aria-label="Topics"
+              className="-mx-5 mt-8 flex gap-1.5 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+            >
+              {topics.map(({ tag, count }) => (
+                <Link
+                  key={tag}
+                  href={`/blog/tag/${encodeURIComponent(tag)}`}
+                  className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[var(--border)] px-2
+                             font-mono text-xs text-[var(--text-secondary)] transition-colors
+                             hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]"
+                >
+                  {tag}
+                  <span className="text-[var(--text-muted)]">{count}</span>
+                </Link>
+              ))}
+            </nav>
           )}
 
-          <Pagination currentPage={currentPage} totalPages={totalPages} />
+          <div className="mt-10">
+            {allPosts.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center text-sm text-[var(--text-secondary)]">
+                No posts yet. The first one is on its way.
+              </p>
+            ) : (
+              <BlogSearch posts={allPosts}>
+                <div className="mt-10">
+                  {currentPage === 1 && <FeaturedPost post={posts[0]} />}
+                  {listed.length > 0 && (
+                    <section aria-label="More posts" className={currentPage === 1 ? "mt-14" : ""}>
+                      {currentPage === 1 && (
+                        <h2 className="mb-2 font-mono text-xs text-[var(--text-muted)]">Earlier posts</h2>
+                      )}
+                      <div className="border-b border-[var(--border)]">
+                        {listed.map((post) => (
+                          <PostRow key={post.id} post={post} />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                  <Pagination currentPage={currentPage} totalPages={totalPages} />
+                </div>
+              </BlogSearch>
+            )}
+          </div>
         </div>
       </main>
+      <Footer />
     </>
-  );
-}
-
-function FeaturedCard({ post }: { post: Post }) {
-  const date = formatDate(post.published_at ?? post.created_at);
-  const tags = post.tags.slice(0, 3);
-
-  return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex flex-col lg:flex-row rounded-2xl border border-[var(--border)]
-                 bg-[var(--bg-card)] overflow-hidden shadow-[var(--shadow-card)]
-                 transition-all duration-300 hover:shadow-[0_16px_48px_rgba(0,0,0,0.14)]
-                 hover:border-[var(--accent-glow)] hover:-translate-y-0.5"
-    >
-      {/* Image — top on mobile, right on desktop */}
-      <div className="relative h-56 sm:h-72 lg:h-auto lg:w-[48%] shrink-0 bg-[var(--bg-secondary)] lg:order-last">
-        {post.cover_image ? (
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--border-subtle)] flex items-center justify-center">
-            <span className="font-display text-9xl font-bold text-[var(--border)] select-none">
-              {post.title.charAt(0)}
-            </span>
-          </div>
-        )}
-        {/* Latest badge */}
-        <div className="absolute top-4 left-4">
-          <span className="section-label rounded-full bg-[var(--bg-card)]/90 backdrop-blur-sm px-3 py-1.5 shadow-sm">
-            Latest
-          </span>
-        </div>
-      </div>
-
-      {/* Text */}
-      <div className="flex flex-col justify-center gap-4 p-7 sm:p-9 lg:w-[52%]">
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-[var(--border)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--text-secondary)]"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <h2 className="font-display text-2xl sm:text-3xl lg:text-[2rem] font-bold leading-tight
-                       text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-3">
-          {post.title}
-        </h2>
-
-        {post.excerpt && (
-          <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed line-clamp-3">
-            {post.excerpt}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between pt-2 mt-auto border-t border-[var(--border-subtle)]">
-          <time dateTime={post.published_at ?? post.created_at} className="text-xs text-[var(--text-muted)]">
-            {date}
-          </time>
-          <span className="text-sm font-semibold text-[var(--accent)] flex items-center gap-1.5 group-hover:gap-2.5 transition-all duration-200">
-            Read post
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function GridCard({ post }: { post: Post }) {
-  const date = formatDate(post.published_at ?? post.created_at);
-  const tags = post.tags.slice(0, 2);
-
-  return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden
-                 shadow-[var(--shadow-card)] transition-all duration-300
-                 hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:border-[var(--accent-glow)] hover:-translate-y-1"
-    >
-      {/* Cover — 16:9 */}
-      <div className="relative aspect-video w-full bg-[var(--bg-secondary)] shrink-0">
-        {post.cover_image ? (
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            fill
-            sizes="(max-width: 640px) 100vw, 50vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--border-subtle)] flex items-center justify-center">
-            <span className="font-display text-6xl font-bold text-[var(--border)] select-none">
-              {post.title.charAt(0)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-[var(--accent-muted)] px-2.5 py-0.5 text-[11px] font-medium text-[var(--accent)]"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <h2 className="font-display text-lg font-semibold leading-snug text-[var(--text-primary)]
-                       group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-          {post.title}
-        </h2>
-
-        {post.excerpt && (
-          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 flex-1">
-            {post.excerpt}
-          </p>
-        )}
-
-        <time
-          dateTime={post.published_at ?? post.created_at}
-          className="text-xs text-[var(--text-muted)] mt-auto pt-2 border-t border-[var(--border-subtle)]"
-        >
-          {date}
-        </time>
-      </div>
-    </Link>
   );
 }

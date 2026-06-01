@@ -3,8 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { SESSION_COOKIE, requireAdminSession } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { categoryOf } from "@/lib/project-categories";
 
 export async function logoutAction() {
   const cookieStore = await cookies();
@@ -13,94 +14,99 @@ export async function logoutAction() {
 }
 
 export async function markReadAction(id: string) {
+  await requireAdminSession();
   await supabaseAdmin.from("messages").update({ is_read: true }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 export async function markUnreadAction(id: string) {
+  await requireAdminSession();
   await supabaseAdmin.from("messages").update({ is_read: false }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 export async function deleteMessageAction(id: string) {
+  await requireAdminSession();
   await supabaseAdmin.from("messages").delete().eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
 }
 
 // ── Projects ─────────────────────────────────────────────────────────────────
 
-export async function createProjectAction(formData: FormData) {
-  const techRaw = (formData.get("tech_stack") as string) ?? "";
-  const tech_stack = techRaw
+function projectPayload(formData: FormData) {
+  const tech_stack = ((formData.get("tech_stack") as string) ?? "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
 
-  await supabaseAdmin.from("projects").insert({
+  return {
     title: formData.get("title") as string,
     description: formData.get("description") as string,
-    live_url: formData.get("live_url") as string,
+    live_url: ((formData.get("live_url") as string) ?? "").trim(),
     github_url: (formData.get("github_url") as string) || null,
+    image_url: (formData.get("image_url") as string) || null,
+    category: categoryOf(formData.get("category") as string),
+    featured: formData.get("featured") === "true",
     tech_stack,
     accent: formData.get("accent") as string,
     sort_order: Number(formData.get("sort_order") ?? 0),
-  });
-  revalidatePath("/admin");
+  };
+}
+
+export async function createProjectAction(formData: FormData) {
+  await requireAdminSession();
+  await supabaseAdmin.from("projects").insert(projectPayload(formData));
+  revalidatePath("/admin", "layout");
   revalidatePath("/");
+  revalidatePath("/projects");
 }
 
 export async function updateProjectAction(id: string, formData: FormData) {
-  const techRaw = (formData.get("tech_stack") as string) ?? "";
-  const tech_stack = techRaw
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-
-  await supabaseAdmin.from("projects").update({
-    title: formData.get("title") as string,
-    description: formData.get("description") as string,
-    live_url: formData.get("live_url") as string,
-    github_url: (formData.get("github_url") as string) || null,
-    tech_stack,
-    accent: formData.get("accent") as string,
-    sort_order: Number(formData.get("sort_order") ?? 0),
-  }).eq("id", id);
-  revalidatePath("/admin");
+  await requireAdminSession();
+  await supabaseAdmin.from("projects").update(projectPayload(formData)).eq("id", id);
+  revalidatePath("/admin", "layout");
   revalidatePath("/");
+  revalidatePath("/projects");
 }
 
 export async function deleteProjectAction(id: string) {
+  await requireAdminSession();
   await supabaseAdmin.from("projects").delete().eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/");
+  revalidatePath("/projects");
 }
 
 export async function reorderProjectsAction(
   orderedIds: string[]
 ) {
+  await requireAdminSession();
   await Promise.all(
     orderedIds.map((id, index) =>
       supabaseAdmin.from("projects").update({ sort_order: index }).eq("id", id)
     )
   );
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/");
+  revalidatePath("/projects");
 }
 
 // ── Blog Posts ────────────────────────────────────────────────────────────────
 
 export async function deletePostAction(id: string) {
+  await requireAdminSession();
   await supabaseAdmin.from("posts").delete().eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/blog");
 }
 
 export async function togglePostPublishedAction(id: string, published: boolean) {
+  await requireAdminSession();
   await supabaseAdmin.from("posts").update({
     published,
     published_at: published ? new Date().toISOString() : null,
   }).eq("id", id);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/blog");
 }
 
@@ -117,6 +123,7 @@ async function uploadCoverImage(file: File): Promise<{ url: string } | { error: 
 export async function createPostAction(
   formData: FormData
 ): Promise<{ error?: string }> {
+  await requireAdminSession();
   const file = formData.get("cover_image");
   let cover_image: string | null = null;
 
@@ -144,7 +151,7 @@ export async function createPostAction(
   });
 
   if (error) return { error: error.message };
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/blog");
   return {};
 }
@@ -153,6 +160,7 @@ export async function updatePostAction(
   id: string,
   formData: FormData
 ): Promise<{ error?: string }> {
+  await requireAdminSession();
   const file = formData.get("cover_image");
   const keepUrl = formData.get("keep_cover_image") as string | null;
   let cover_image: string | null = keepUrl || null;
@@ -190,7 +198,7 @@ export async function updatePostAction(
   }).eq("id", id);
 
   if (error) return { error: error.message };
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   revalidatePath("/blog");
   revalidatePath(`/blog/${slug}`);
   return {};

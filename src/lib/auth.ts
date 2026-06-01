@@ -1,4 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const SESSION_COOKIE = "adm_sess";
 
@@ -21,4 +23,20 @@ export async function verifySessionToken(token: string) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Server Actions are dispatched globally by an ID in the `Next-Action` header,
+ * not scoped to the page path they're defined under — so middleware's
+ * `/admin/:path*` matcher does NOT protect them. Every admin Server Action
+ * must call this itself.
+ */
+export async function requireAdminSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  const payload = token ? await verifySessionToken(token) : null;
+  if (!payload) {
+    redirect("/admin/login");
+  }
+  return payload;
 }

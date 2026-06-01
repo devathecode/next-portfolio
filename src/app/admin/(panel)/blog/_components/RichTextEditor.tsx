@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 function Sep() {
-  return <span className="w-px h-5 bg-gray-800 mx-0.5 shrink-0" />;
+  return <span className="w-px h-5 bg-adm-raised mx-0.5 shrink-0" />;
 }
 
 function TBtn({
@@ -47,8 +47,8 @@ function TBtn({
       }}
       className={`flex items-center justify-center w-7 h-7 rounded-md text-sm transition-colors ${
         active
-          ? "bg-yellow-600 text-black"
-          : "text-gray-400 hover:text-white hover:bg-gray-800"
+          ? "bg-adm-accent text-adm-on-accent"
+          : "text-adm-muted hover:text-adm-text hover:bg-adm-raised"
       }`}
     >
       {children}
@@ -105,9 +105,9 @@ export function RichTextEditor({
     editor.chain().focus().toggleHeading({ level }).run();
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-950 overflow-hidden">
+    <div className="rounded-xl border border-adm-border bg-adm-surface overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-800 bg-gray-900/60">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-adm-border bg-adm-surface">
         <TBtn title="Undo" onClick={() => editor.chain().focus().undo().run()}>
           <Undo2Icon size={13} />
         </TBtn>

@@ -1,83 +1,57 @@
-function FeaturedSkeleton() {
-  return (
-    <div className="flex flex-col lg:flex-row rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden shadow-[var(--shadow-card)]">
-      {/* Image — top on mobile, right on desktop */}
-      <div className="h-56 sm:h-72 lg:h-auto lg:w-[48%] shrink-0 bg-[var(--bg-secondary)] animate-pulse lg:order-last" />
+import PageLoading from "@/components/browser/PageLoading";
 
-      {/* Text */}
-      <div className="flex flex-col justify-center gap-4 p-7 sm:p-9 lg:w-[52%]">
-        {/* Tags */}
-        <div className="flex gap-1.5">
-          <div className="h-5 w-16 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-5 w-20 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        {/* Title */}
-        <div className="space-y-2.5">
-          <div className="h-8 w-full rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-8 w-4/5 rounded-lg bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        {/* Excerpt */}
-        <div className="space-y-2">
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-3/5 rounded bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-2 mt-auto border-t border-[var(--border-subtle)]">
-          <div className="h-3 w-24 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3 w-20 rounded bg-[var(--bg-secondary)] animate-pulse" />
+const bar = "rounded-md bg-[var(--bg-secondary)] animate-pulse";
+
+function RowSkeleton() {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-5 border-t border-[var(--border)] py-7 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:gap-8">
+      <div className={`hidden h-3 w-20 sm:block ${bar}`} />
+      <div className="space-y-2.5">
+        <div className={`h-5 w-4/5 ${bar}`} />
+        <div className={`h-3.5 w-full ${bar}`} />
+        <div className={`h-3.5 w-2/3 ${bar}`} />
+        <div className="flex gap-2 pt-1.5">
+          <div className={`h-4 w-16 ${bar}`} />
+          <div className={`h-4 w-20 ${bar}`} />
         </div>
       </div>
-    </div>
-  );
-}
-
-function GridCardSkeleton() {
-  return (
-    <div className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden shadow-[var(--shadow-card)]">
-      {/* 16:9 image */}
-      <div className="aspect-video w-full bg-[var(--bg-secondary)] animate-pulse shrink-0" />
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex gap-1.5">
-          <div className="h-5 w-16 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-5 w-12 rounded-full bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        <div className="space-y-2">
-          <div className="h-5 w-full rounded-md bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-5 w-4/5 rounded-md bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        <div className="space-y-1.5 flex-1">
-          <div className="h-3.5 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3.5 w-3/4 rounded bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-        <div className="h-3 w-24 rounded bg-[var(--bg-secondary)] animate-pulse mt-auto pt-2 border-t border-[var(--border-subtle)]" />
-      </div>
+      <div className={`aspect-[16/10] w-24 rounded-xl sm:w-40 ${bar}`} />
     </div>
   );
 }
 
 export default function BlogLoading() {
   return (
-    <main className="min-h-screen bg-[var(--bg-primary)] px-4 py-20 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[var(--bg-primary)] px-5 pb-24 pt-14 md:pt-20 lg:px-10">
+      <PageLoading />
       <div className="mx-auto max-w-5xl">
-        {/* Heading */}
-        <div className="mb-12">
-          <div className="h-3 w-24 rounded bg-[var(--bg-secondary)] animate-pulse mb-3" />
-          <div className="h-10 w-32 rounded-lg bg-[var(--bg-secondary)] animate-pulse mb-3" />
-          <div className="space-y-2">
-            <div className="h-4 w-96 rounded bg-[var(--bg-secondary)] animate-pulse" />
-            <div className="h-4 w-64 rounded bg-[var(--bg-secondary)] animate-pulse" />
+        <div className={`h-12 w-36 ${bar}`} />
+        <div className="mt-5 space-y-2.5">
+          <div className={`h-4 w-full max-w-md ${bar}`} />
+          <div className={`h-4 w-56 ${bar}`} />
+        </div>
+        <div className="mt-8 flex flex-wrap gap-1.5">
+          {[72, 48, 64, 56, 88, 60, 80].map((w, i) => (
+            <div key={i} className={`h-7 ${bar}`} style={{ width: w }} />
+          ))}
+        </div>
+        <div className="mt-10 h-11 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--bg-card)]" />
+
+        <div className="mt-10 grid overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] lg:grid-cols-[1.1fr_1fr]">
+          <div className="aspect-[1200/630] animate-pulse bg-[var(--bg-secondary)] lg:aspect-auto lg:min-h-[340px]" />
+          <div className="space-y-4 p-6 sm:p-8 lg:p-9">
+            <div className={`h-3 w-40 ${bar}`} />
+            <div className={`h-8 w-full ${bar}`} />
+            <div className={`h-8 w-3/4 ${bar}`} />
+            <div className={`h-4 w-full ${bar}`} />
+            <div className={`h-4 w-5/6 ${bar}`} />
           </div>
         </div>
 
-        <div className="space-y-8">
-          <FeaturedSkeleton />
-          <div className="grid gap-6 sm:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <GridCardSkeleton key={i} />
-            ))}
-          </div>
+        <div className="mt-14 border-b border-[var(--border)]">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <RowSkeleton key={i} />
+          ))}
         </div>
       </div>
     </main>

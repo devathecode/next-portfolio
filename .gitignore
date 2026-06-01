@@ -56,3 +56,4 @@ GEMINI.md
 # Local MCP server (not part of the deployed app)
 /mcp-server/
 
+__pycache__/

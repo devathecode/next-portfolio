@@ -1,5 +1,6 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import type { ProjectCategory } from "./project-categories";
 
 export type Message = {
   id: string;
@@ -36,6 +37,9 @@ export type Project = {
   description: string;
   live_url: string;
   github_url?: string | null;
+  image_url?: string | null;
+  category?: ProjectCategory | null;
+  featured?: boolean | null;
   tech_stack: string[];
   accent: string;
   sort_order: number;

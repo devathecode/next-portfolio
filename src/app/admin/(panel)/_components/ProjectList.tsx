@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import {
   DndContext,
   closestCenter,
@@ -24,12 +24,14 @@ import {
   ChevronUpIcon,
   PlusIcon,
   PencilIcon,
-  SaveIcon,
   XIcon,
   GripVerticalIcon,
   ExternalLinkIcon,
   GithubIcon,
   CheckIcon,
+  StarIcon,
+  FolderKanbanIcon,
+  GlobeIcon,
 } from "lucide-react";
 import {
   createProjectAction,
@@ -38,6 +40,21 @@ import {
   reorderProjectsAction,
 } from "../../actions";
 import type { Project } from "@/lib/supabase";
+import { useFeedback } from "./feedback";
+import { Field, Section, focusFirstInvalid } from "./form";
+import { FormModal } from "./FormModal";
+import { ImageField } from "./ImageField";
+import {
+  EmptyState,
+  StatTile,
+  btnDangerGhost,
+  inputCls,
+} from "./ui";
+import {
+  PROJECT_CATEGORIES,
+  CATEGORY_LABELS,
+  categoryOf,
+} from "@/lib/project-categories";
 
 const ACCENT_OPTIONS = [
   { label: "Emerald", value: "from-emerald-500 to-teal-400" },
@@ -55,6 +72,9 @@ interface FormFields {
   description: string;
   live_url: string;
   github_url: string;
+  image_url: string;
+  category: string;
+  featured: string;
   tech_stack: string;
   accent: string;
   sort_order: string;
@@ -66,6 +86,9 @@ function emptyForm(nextOrder: number): FormFields {
     description: "",
     live_url: "",
     github_url: "",
+    image_url: "",
+    category: "client",
+    featured: "",
     tech_stack: "",
     accent: ACCENT_OPTIONS[0].value,
     sort_order: String(nextOrder),
@@ -78,216 +101,428 @@ function fromProject(p: Project): FormFields {
     description: p.description,
     live_url: p.live_url,
     github_url: p.github_url ?? "",
+    image_url: p.image_url ?? "",
+    category: categoryOf(p.category),
+    featured: p.featured ? "true" : "",
     tech_stack: p.tech_stack.join(", "),
     accent: p.accent,
     sort_order: String(p.sort_order),
   };
 }
 
-const inputCls =
-  "w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600/70 focus:bg-gray-900 transition-colors";
+const SUGGESTED_TECH = ["Next.js", "React", "TypeScript", "Tailwind CSS", "Node.js", "Supabase"];
 
-const labelCls = "block text-xs font-medium text-gray-500 mb-1.5";
-
-function AccentPicker({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className={labelCls}>Card accent colour</label>
-      <div className="grid grid-cols-8 gap-1.5">
-        {ACCENT_OPTIONS.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            title={o.label}
-            onClick={() => onChange(o.value)}
-            className={`relative h-7 rounded-md bg-gradient-to-r ${o.value} transition-transform hover:scale-110 focus:outline-none`}
-          >
-            {value === o.value && (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <CheckIcon size={12} className="text-white drop-shadow" />
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TechPills({ raw }: { raw: string }) {
-  const pills = raw
+const parseTech = (raw: string) =>
+  raw
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
-  if (!pills.length) return null;
-  return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
-      {pills.map((t) => (
-        <span
-          key={t}
-          className="bg-gray-800 text-yellow-600 rounded-full text-xs px-2.5 py-0.5"
-        >
-          {t}
-        </span>
-      ))}
-    </div>
-  );
+
+function isUrl(v: string) {
+  try {
+    const u = new URL(v);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
-function ProjectForm({
-  fields,
+function normalizeUrl(v: string) {
+  const t = v.trim();
+  return t && !/^https?:\/\//i.test(t) ? `https://${t}` : t;
+}
+
+type FieldErrors = Partial<Record<"title" | "description" | "live_url" | "github_url", string>>;
+
+function getErrors(f: FormFields): FieldErrors {
+  const e: FieldErrors = {};
+  const oss = f.category === "opensource";
+  if (!f.title.trim()) e.title = "Give the project a title.";
+  if (!f.description.trim()) e.description = "Add a short description.";
+  if (!oss && !f.live_url.trim()) e.live_url = "A live URL is required for this category.";
+  else if (f.live_url.trim() && !isUrl(f.live_url.trim())) e.live_url = "Enter a valid URL, e.g. https://example.com";
+  if (oss && !f.github_url.trim()) e.github_url = "A GitHub URL is required for open source projects.";
+  else if (f.github_url.trim() && !isUrl(f.github_url.trim())) e.github_url = "Enter a valid URL, e.g. https://github.com/you/repo";
+  return e;
+}
+
+function UrlInput({
+  icon: Icon,
+  value,
   onChange,
+  placeholder,
+  invalid,
+  onBlur,
 }: {
-  fields: FormFields;
-  onChange: (f: FormFields) => void;
+  icon: typeof GlobeIcon;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  invalid: boolean;
+  onBlur: () => void;
 }) {
-  const set =
-    (key: keyof FormFields) =>
-    (
-      e: React.ChangeEvent<
-        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >
-    ) =>
-      onChange({ ...fields, [key]: e.target.value });
-
   return (
-    <div className="space-y-4">
-      {/* Title */}
-      <div>
-        <label className={labelCls}>Title <span className="text-red-500">*</span></label>
-        <input
-          value={fields.title}
-          onChange={set("title")}
-          placeholder="e.g. ToS Simplifier"
-          required
-          className={inputCls}
-        />
-      </div>
-
-      {/* Description */}
-      <div>
-        <label className={labelCls}>Description <span className="text-red-500">*</span></label>
-        <textarea
-          value={fields.description}
-          onChange={set("description")}
-          placeholder="What does this project do?"
-          required
-          rows={3}
-          className={`${inputCls} resize-none`}
-        />
-      </div>
-
-      {/* URLs side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className={labelCls}>Live URL <span className="text-red-500">*</span></label>
-          <input
-            value={fields.live_url}
-            onChange={set("live_url")}
-            placeholder="https://..."
-            required
-            className={inputCls}
-          />
-        </div>
-        <div>
-          <label className={labelCls}>GitHub URL <span className="text-gray-600">(optional)</span></label>
-          <input
-            value={fields.github_url}
-            onChange={set("github_url")}
-            placeholder="https://github.com/..."
-            className={inputCls}
-          />
-        </div>
-      </div>
-
-      {/* Tech stack */}
-      <div>
-        <label className={labelCls}>Tech stack <span className="text-gray-600">(comma separated)</span></label>
-        <input
-          value={fields.tech_stack}
-          onChange={set("tech_stack")}
-          placeholder="Next.js, Tailwind CSS, TypeScript"
-          className={inputCls}
-        />
-        <TechPills raw={fields.tech_stack} />
-      </div>
-
-      {/* Accent picker */}
-      <AccentPicker
-        value={fields.accent}
-        onChange={(v) => onChange({ ...fields, accent: v })}
+    <div className="relative">
+      <Icon size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-adm-subtle" />
+      <input
+        type="url"
+        inputMode="url"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => {
+          onChange(normalizeUrl(value));
+          onBlur();
+        }}
+        placeholder={placeholder}
+        aria-invalid={invalid || undefined}
+        className={`${inputCls} pl-9 ${invalid ? "border-adm-danger focus:border-adm-danger focus:ring-adm-danger/25" : ""}`}
       />
     </div>
   );
 }
 
-function AddProjectRow({ nextOrder }: { nextOrder: number }) {
-  const [open, setOpen] = useState(false);
+function CategoryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div role="radiogroup" aria-label="Category" className="grid grid-cols-3 gap-2">
+      {PROJECT_CATEGORIES.map((c) => {
+        const on = value === c;
+        return (
+          <button
+            key={c}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(c)}
+            className={`h-9 rounded-lg border px-2 text-sm font-medium transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-adm-accent/60 ${
+              on
+                ? "border-adm-accent bg-adm-accent/10 text-adm-accent-text"
+                : "border-adm-border bg-adm-surface text-adm-muted hover:text-adm-text hover:bg-adm-raised"
+            }`}
+          >
+            {CATEGORY_LABELS[c]}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FeaturedSwitch({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className="flex w-full items-center justify-between gap-3 rounded-lg border border-adm-border bg-adm-surface px-3 py-2.5 text-left transition hover:bg-adm-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-adm-accent/60"
+    >
+      <span>
+        <span className="flex items-center gap-1.5 text-sm font-medium text-adm-text">
+          <StarIcon size={13} className={on ? "fill-adm-accent text-adm-accent" : "text-adm-subtle"} />
+          Feature on home page
+        </span>
+        <span className="mt-0.5 block text-xs text-adm-subtle">Featured projects appear in the Work section on the home page.</span>
+      </span>
+      <span
+        className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${on ? "bg-adm-accent" : "bg-adm-border"}`}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`}
+        />
+      </span>
+    </button>
+  );
+}
+
+function TechInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState("");
+  const tags = parseTech(value);
+
+  const commit = (text: string) => {
+    const add = parseTech(text).filter(
+      (t, i, arr) =>
+        !tags.some((x) => x.toLowerCase() === t.toLowerCase()) &&
+        arr.findIndex((x) => x.toLowerCase() === t.toLowerCase()) === i
+    );
+    if (add.length) onChange([...tags, ...add].join(", "));
+    setDraft("");
+  };
+
+  const suggestions = SUGGESTED_TECH.filter((s) => !tags.some((t) => t.toLowerCase() === s.toLowerCase()));
+
+  return (
+    <div>
+      <div className="flex min-h-[38px] flex-wrap items-center gap-1.5 rounded-lg border border-adm-border bg-adm-surface px-2 py-1.5 transition focus-within:border-adm-accent focus-within:ring-2 focus-within:ring-adm-accent/25">
+        {tags.map((t) => (
+          <span
+            key={t}
+            className="inline-flex items-center gap-1 rounded-md bg-adm-raised py-0.5 pl-2 pr-1 text-xs font-medium text-adm-accent-text"
+          >
+            {t}
+            <button
+              type="button"
+              aria-label={`Remove ${t}`}
+              onClick={() => onChange(tags.filter((x) => x !== t).join(", "))}
+              className="rounded p-0.5 text-adm-subtle hover:text-adm-danger"
+            >
+              <XIcon size={11} />
+            </button>
+          </span>
+        ))}
+        <input
+          value={draft}
+          onChange={(e) => (e.target.value.includes(",") ? commit(e.target.value) : setDraft(e.target.value))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(draft);
+            } else if (e.key === "Backspace" && !draft && tags.length) {
+              onChange(tags.slice(0, -1).join(", "));
+            }
+          }}
+          onBlur={() => commit(draft)}
+          placeholder={tags.length ? "Add another…" : "Type a technology, press Enter"}
+          className="min-w-[8rem] flex-1 bg-transparent px-1 py-0.5 text-sm text-adm-text placeholder:text-adm-subtle focus:outline-none"
+        />
+      </div>
+      {suggestions.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-adm-subtle">Quick add:</span>
+          {suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => commit(s)}
+              className="rounded-md border border-adm-border px-2 py-0.5 text-xs text-adm-muted transition hover:border-adm-subtle hover:text-adm-text"
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AccentPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div role="radiogroup" aria-label="Card accent colour" className="grid grid-cols-8 gap-2">
+      {ACCENT_OPTIONS.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          aria-label={o.label}
+          title={o.label}
+          onClick={() => onChange(o.value)}
+          className={`relative h-8 rounded-lg bg-gradient-to-r ${o.value} transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-adm-accent/60 ${
+            value === o.value ? "ring-2 ring-adm-text ring-offset-2 ring-offset-adm-bg" : ""
+          }`}
+        >
+          {value === o.value && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <CheckIcon size={13} className="text-white drop-shadow" />
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CardPreview({ fields }: { fields: FormFields }) {
+  const tech = parseTech(fields.tech_stack);
+  return (
+    <div className="overflow-hidden rounded-xl border border-adm-border bg-adm-surface">
+      <div className={`h-1 bg-gradient-to-r ${fields.accent}`} />
+      <div className="p-3.5">
+        <div className="flex items-center gap-2">
+          <p className={`truncate text-sm font-semibold ${fields.title ? "text-adm-text" : "text-adm-subtle"}`}>
+            {fields.title || "Project title"}
+          </p>
+          {fields.featured === "true" && <StarIcon size={12} className="shrink-0 fill-adm-accent text-adm-accent" />}
+          <span className="shrink-0 rounded bg-adm-raised px-1.5 py-0.5 text-xs text-adm-muted">
+            {CATEGORY_LABELS[categoryOf(fields.category)]}
+          </span>
+        </div>
+        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-adm-muted">
+          {fields.description || "Your description will appear here."}
+        </p>
+        {tech.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {tech.slice(0, 4).map((t) => (
+              <span key={t} className="rounded bg-adm-raised px-1.5 py-0.5 text-xs text-adm-muted">
+                {t}
+              </span>
+            ))}
+            {tech.length > 4 && <span className="py-0.5 text-xs text-adm-subtle">+{tech.length - 4}</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const DESCRIPTION_SOFT_LIMIT = 240;
+
+function ProjectForm({
+  fields,
+  onChange,
+  showErrors,
+}: {
+  fields: FormFields;
+  onChange: (f: FormFields) => void;
+  showErrors: boolean;
+}) {
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  const errors = getErrors(fields);
+  const touch = (k: string) => setTouched((s) => new Set(s).add(k));
+  const err = (k: keyof FieldErrors) => (showErrors || touched.has(k) ? errors[k] : undefined);
+  const patch = (p: Partial<FormFields>) => onChange({ ...fields, ...p });
+  const oss = fields.category === "opensource";
+  const descLen = fields.description.length;
+
+  return (
+    <div className="space-y-6">
+      <Section title="Basics">
+        <Field label="Title" required error={err("title")}>
+          <input
+            autoFocus
+            value={fields.title}
+            onChange={(e) => patch({ title: e.target.value })}
+            onBlur={() => touch("title")}
+            placeholder="e.g. ToS Simplifier"
+            aria-invalid={!!err("title") || undefined}
+            className={`${inputCls} ${err("title") ? "border-adm-danger focus:border-adm-danger focus:ring-adm-danger/25" : ""}`}
+          />
+        </Field>
+
+        <Field
+          label="Description"
+          required
+          error={err("description")}
+          aside={
+            <span className={`text-xs tabular-nums ${descLen > DESCRIPTION_SOFT_LIMIT ? "text-adm-danger" : "text-adm-subtle"}`}>
+              {descLen}/{DESCRIPTION_SOFT_LIMIT}
+            </span>
+          }
+        >
+          <textarea
+            value={fields.description}
+            onChange={(e) => patch({ description: e.target.value })}
+            onBlur={() => touch("description")}
+            placeholder="What does it do, and who is it for?"
+            rows={3}
+            aria-invalid={!!err("description") || undefined}
+            className={`${inputCls} resize-none ${err("description") ? "border-adm-danger focus:border-adm-danger focus:ring-adm-danger/25" : ""}`}
+          />
+        </Field>
+
+        <Field label="Category">
+          <CategoryPicker value={fields.category} onChange={(category) => patch({ category })} />
+        </Field>
+
+        <FeaturedSwitch on={fields.featured === "true"} onChange={(v) => patch({ featured: v ? "true" : "" })} />
+      </Section>
+
+      <Section title="Links">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Live URL" required={!oss} optional={oss} error={err("live_url")}>
+            <UrlInput
+              icon={GlobeIcon}
+              value={fields.live_url}
+              onChange={(live_url) => patch({ live_url })}
+              onBlur={() => touch("live_url")}
+              placeholder="https://example.com"
+              invalid={!!err("live_url")}
+            />
+          </Field>
+          <Field label="GitHub URL" required={oss} optional={!oss} error={err("github_url")}>
+            <UrlInput
+              icon={GithubIcon}
+              value={fields.github_url}
+              onChange={(github_url) => patch({ github_url })}
+              onBlur={() => touch("github_url")}
+              placeholder="https://github.com/you/repo"
+              invalid={!!err("github_url")}
+            />
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="Media" hint="Without an image, a live screenshot of the site is used.">
+        <ImageField value={fields.image_url} onChange={(image_url) => patch({ image_url })} />
+      </Section>
+
+      <Section title="Tech stack">
+        <TechInput value={fields.tech_stack} onChange={(tech_stack) => patch({ tech_stack })} />
+      </Section>
+
+      <Section title="Appearance">
+        <AccentPicker value={fields.accent} onChange={(accent) => patch({ accent })} />
+        <CardPreview fields={fields} />
+      </Section>
+    </div>
+  );
+}
+
+function AddProjectRow({ nextOrder, startOpen }: { nextOrder: number; startOpen: boolean }) {
+  const { toast } = useFeedback();
+  const [open, setOpen] = useState(startOpen);
   const [fields, setFields] = useState<FormFields>(() => emptyForm(nextOrder));
+  const [showErrors, setShowErrors] = useState(false);
   const [pending, startTransition] = useTransition();
 
+  const dirty = JSON.stringify(fields) !== JSON.stringify(emptyForm(nextOrder));
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setShowErrors(false);
+    setFields(emptyForm(nextOrder));
+  }, [nextOrder]);
+
   const handleSave = () => {
+    if (Object.keys(getErrors(fields)).length) {
+      setShowErrors(true);
+      focusFirstInvalid('[role="dialog"]');
+      return;
+    }
     const fd = new FormData();
-    Object.entries(fields).forEach(([k, v]) => fd.set(k, v));
+    Object.entries(fields).forEach(([k, v]) => fd.set(k, v.trim()));
     startTransition(async () => {
       await createProjectAction(fd);
-      setFields(emptyForm(nextOrder));
-      setOpen(false);
+      close();
+      toast("Project added");
     });
   };
 
   return (
-    <div
-      className={`rounded-xl border transition-all duration-200 ${
-        open
-          ? "border-yellow-600/30 bg-gray-900"
-          : "border-dashed border-gray-800 bg-transparent hover:border-gray-700"
-      }`}
-    >
+    <>
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 px-4 py-3.5 text-sm font-medium transition-colors"
+        onClick={() => setOpen(true)}
+        className="flex w-full items-center gap-2.5 rounded-xl border border-dashed border-adm-border px-4 py-3.5 text-sm font-medium text-adm-muted transition-colors hover:border-adm-subtle hover:text-adm-text"
       >
-        <span
-          className={`flex items-center justify-center w-6 h-6 rounded-full transition-colors ${
-            open ? "bg-yellow-600 text-black" : "bg-gray-800 text-gray-400"
-          }`}
-        >
-          {open ? <XIcon size={13} /> : <PlusIcon size={13} />}
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-adm-raised">
+          <PlusIcon size={13} />
         </span>
-        <span className={open ? "text-white" : "text-gray-400"}>
-          {open ? "Cancel" : "New project"}
-        </span>
+        New project
       </button>
 
       {open && (
-        <div className="px-4 pb-5">
-          <div className="border-t border-gray-800 mb-4" />
-          <ProjectForm fields={fields} onChange={setFields} />
-          <div className="flex gap-2 mt-5">
-            <button
-              onClick={handleSave}
-              disabled={pending || !fields.title || !fields.live_url}
-              className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-yellow-600 text-black
-                         font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-40"
-            >
-              {pending ? (
-                <span className="w-3.5 h-3.5 border-2 border-black/40 border-t-black rounded-full animate-spin" />
-              ) : (
-                <SaveIcon size={14} />
-              )}
-              {pending ? "Saving…" : "Save project"}
-            </button>
-          </div>
-        </div>
+        <FormModal
+          title="New project"
+          subtitle="Add a project to your portfolio."
+          saveLabel="Add project"
+          pending={pending}
+          dirty={dirty}
+          onSave={handleSave}
+          onClose={close}
+        >
+          <ProjectForm fields={fields} onChange={setFields} showErrors={showErrors} />
+        </FormModal>
       )}
-    </div>
+    </>
   );
 }
 
@@ -298,6 +533,7 @@ function ProjectRow({
   project: Project;
   isDragOverlay?: boolean;
 }) {
+  const { toast, confirm } = useFeedback();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [fields, setFields] = useState<FormFields>(() => fromProject(project));
@@ -317,20 +553,43 @@ function ProjectRow({
     transition,
   };
 
-  const handleSave = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [showErrors, setShowErrors] = useState(false);
+  const dirty = JSON.stringify(fields) !== JSON.stringify(fromProject(project));
+
+  const closeEdit = useCallback(() => {
+    setEditing(false);
+    setShowErrors(false);
+    setFields(fromProject(project));
+  }, [project]);
+
+  const handleSave = () => {
+    if (Object.keys(getErrors(fields)).length) {
+      setShowErrors(true);
+      focusFirstInvalid('[role="dialog"]');
+      return;
+    }
     const fd = new FormData();
-    Object.entries(fields).forEach(([k, v]) => fd.set(k, v));
+    Object.entries(fields).forEach(([k, v]) => fd.set(k, v.trim()));
     startTransition(async () => {
       await updateProjectAction(project.id, fd);
       setEditing(false);
+      toast("Changes saved");
     });
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm(`Delete "${project.title}"?`)) return;
-    startTransition(() => deleteProjectAction(project.id));
+    // The confirm dialog sits above the edit modal, so close the modal only after confirming.
+    const ok = await confirm({
+      title: `Delete "${project.title}"?`,
+      body: "It will be removed from your portfolio. This can't be undone.",
+    });
+    if (!ok) return;
+    setEditing(false);
+    startTransition(async () => {
+      await deleteProjectAction(project.id);
+      toast("Project deleted");
+    });
   };
 
   return (
@@ -339,9 +598,9 @@ function ProjectRow({
       style={style}
       className={`rounded-xl border transition-all duration-200 overflow-hidden ${
         isDragging
-          ? "opacity-30 border-gray-700"
-          : "border-gray-800 bg-gray-900/60"
-      } ${isDragOverlay ? "shadow-2xl shadow-black ring-1 ring-yellow-600/40 opacity-100" : ""} ${
+          ? "opacity-30 border-adm-border"
+          : "border-adm-border bg-adm-surface"
+      } ${isDragOverlay ? "shadow-2xl shadow-black/30 ring-1 ring-adm-accent/40 opacity-100" : ""} ${
         pending ? "opacity-50" : ""
       }`}
     >
@@ -358,7 +617,7 @@ function ProjectRow({
           {...attributes}
           {...listeners}
           onClick={(e) => e.stopPropagation()}
-          className="text-gray-700 hover:text-gray-500 cursor-grab active:cursor-grabbing transition-colors shrink-0 touch-none"
+          className="text-adm-subtle hover:text-adm-subtle cursor-grab active:cursor-grabbing transition-colors shrink-0 touch-none"
           aria-label="Drag to reorder"
         >
           <GripVerticalIcon size={15} />
@@ -367,22 +626,32 @@ function ProjectRow({
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <p className="font-semibold text-sm text-white truncate">
+            <p className="font-semibold text-sm text-adm-text truncate">
               {project.title}
             </p>
+            {project.featured && (
+              <StarIcon
+                size={12}
+                className="shrink-0 fill-adm-accent text-adm-accent"
+                aria-label="Featured"
+              />
+            )}
+            <span className="shrink-0 rounded bg-adm-raised px-1.5 py-0.5 text-xs text-adm-muted">
+              {CATEGORY_LABELS[categoryOf(project.category)]}
+            </span>
           </div>
           {/* Tech badges inline */}
           <div className="flex flex-wrap gap-1">
             {project.tech_stack.slice(0, 4).map((t) => (
               <span
                 key={t}
-                className="bg-gray-800 text-gray-400 rounded text-[10px] px-1.5 py-0.5"
+                className="bg-adm-raised text-adm-muted rounded text-xs px-1.5 py-0.5"
               >
                 {t}
               </span>
             ))}
             {project.tech_stack.length > 4 && (
-              <span className="text-[10px] text-gray-600 py-0.5">
+              <span className="text-xs text-adm-subtle py-0.5">
                 +{project.tech_stack.length - 4}
               </span>
             )}
@@ -394,21 +663,23 @@ function ProjectRow({
           className="flex items-center gap-1.5 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <a
-            href={project.live_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 rounded-md text-gray-600 hover:text-gray-300 hover:bg-gray-800 transition-colors"
-            title="Open live URL"
-          >
-            <ExternalLinkIcon size={13} />
-          </a>
+          {project.live_url && (
+            <a
+              href={project.live_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-md text-adm-subtle hover:text-adm-muted hover:bg-adm-raised transition-colors"
+              title="Open live URL"
+            >
+              <ExternalLinkIcon size={13} />
+            </a>
+          )}
           {project.github_url && (
             <a
               href={project.github_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-md text-gray-600 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+              className="p-1.5 rounded-md text-adm-subtle hover:text-adm-muted hover:bg-adm-raised transition-colors"
               title="Open GitHub"
             >
               <GithubIcon size={13} />
@@ -418,16 +689,25 @@ function ProjectRow({
             onClick={(e) => {
               e.stopPropagation();
               setEditing(true);
-              setExpanded(true);
             }}
-            className="p-1.5 rounded-md text-gray-600 hover:text-yellow-500 hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-adm-subtle hover:text-adm-accent-text hover:bg-adm-raised transition-colors"
             title="Edit"
+            aria-label="Edit project"
           >
             <PencilIcon size={13} />
           </button>
           <button
+            onClick={handleDelete}
+            disabled={pending}
+            className="p-1.5 rounded-md text-adm-subtle hover:text-adm-danger hover:bg-adm-raised transition-colors disabled:opacity-40"
+            title="Delete"
+            aria-label="Delete project"
+          >
+            <Trash2Icon size={13} />
+          </button>
+          <button
             onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
-            className="p-1.5 rounded-md text-gray-600 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-md text-adm-subtle hover:text-adm-muted hover:bg-adm-raised transition-colors"
           >
             {expanded
               ? <ChevronUpIcon size={13} />
@@ -438,91 +718,43 @@ function ProjectRow({
 
       {/* Expanded panel */}
       {expanded && (
-        <div className="border-t border-gray-800 px-4 py-4">
-          {editing ? (
-            <>
-              <ProjectForm fields={fields} onChange={setFields} />
-              <div className="flex gap-2 mt-5">
-                <button
-                  onClick={handleSave}
-                  disabled={pending}
-                  className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-yellow-600 text-black
-                             font-semibold hover:bg-yellow-500 transition-colors disabled:opacity-40"
-                >
-                  {pending ? (
-                    <span className="w-3.5 h-3.5 border-2 border-black/40 border-t-black rounded-full animate-spin" />
-                  ) : (
-                    <SaveIcon size={14} />
-                  )}
-                  {pending ? "Saving…" : "Save changes"}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(false);
-                    setFields(fromProject(project));
-                  }}
-                  className="flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-gray-700
-                             text-gray-400 hover:text-white hover:border-gray-600 transition-colors"
-                >
-                  <XIcon size={14} /> Discard
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={pending}
-                  className="ml-auto flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border border-red-500/20
-                             text-red-500 hover:text-red-300 hover:border-red-500/50 transition-colors disabled:opacity-40"
-                >
-                  <Trash2Icon size={14} /> Delete
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-gray-400 leading-relaxed">
-                {project.description}
-              </p>
-              <div className="flex gap-2">
-                <a
-                  href={project.live_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-gray-700
-                             text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
-                >
-                  <ExternalLinkIcon size={11} /> Live site
-                </a>
-                {project.github_url && (
-                  <a
-                    href={project.github_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-gray-700
-                               text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
-                  >
-                    <GithubIcon size={11} /> GitHub
-                  </a>
-                )}
-                <button
-                  onClick={handleDelete}
-                  disabled={pending}
-                  className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-red-500/20
-                             text-red-500 hover:text-red-300 hover:border-red-500/50 transition-colors disabled:opacity-40"
-                >
-                  <Trash2Icon size={11} /> Delete
-                </button>
-              </div>
-            </div>
-          )}
+        <div className="border-t border-adm-border px-4 py-4">
+          <p className="text-sm text-adm-muted leading-relaxed">
+            {project.description}
+          </p>
         </div>
+      )}
+
+      {editing && (
+        <FormModal
+          title={`Edit ${project.title}`}
+          subtitle="Update how this project appears on your portfolio."
+          saveLabel="Save changes"
+          pending={pending}
+          dirty={dirty}
+          onSave={handleSave}
+          onClose={closeEdit}
+          footerExtra={
+            <button type="button" onClick={handleDelete} disabled={pending} className={btnDangerGhost}>
+              <Trash2Icon size={14} /> Delete
+            </button>
+          }
+        >
+          <ProjectForm fields={fields} onChange={setFields} showErrors={showErrors} />
+        </FormModal>
       )}
     </div>
   );
 }
 
-export function ProjectList({ projects: initial }: { projects: Project[] }) {
+export function ProjectList({
+  projects: initial,
+  startOpen = false,
+}: {
+  projects: Project[];
+  startOpen?: boolean;
+}) {
+  const { toast } = useFeedback();
   const [projects, setProjects] = useState(initial);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -547,17 +779,31 @@ export function ProjectList({ projects: initial }: { projects: Project[] }) {
     const reordered = arrayMove(projects, oldIndex, newIndex);
 
     setProjects(reordered);
-    startTransition(() => reorderProjectsAction(reordered.map((p) => p.id)));
+    startTransition(async () => {
+      await reorderProjectsAction(reordered.map((p) => p.id));
+      toast("Order saved");
+    });
   };
 
   return (
-    <div className="space-y-2">
-      <AddProjectRow nextOrder={projects.length} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <StatTile label="Projects" value={projects.length} />
+        <StatTile
+          label="Featured on home page"
+          value={projects.filter((p) => p.featured).length}
+          tone="accent"
+        />
+      </div>
 
-      {projects.length > 0 && (
-        <p className="text-[11px] text-gray-600 text-right pt-1 pr-1">
-          Drag ⠿ to reorder
-        </p>
+      <AddProjectRow nextOrder={projects.length} startOpen={startOpen} />
+
+      {projects.length === 0 && (
+        <EmptyState
+          icon={FolderKanbanIcon}
+          title="No projects yet"
+          body="Use “New project” above to add the first one to your portfolio."
+        />
       )}
 
       <DndContext

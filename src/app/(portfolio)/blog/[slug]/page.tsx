@@ -12,6 +12,11 @@ import { ScrollProgress } from "./_components/ScrollProgress";
 import { TableOfContents } from "./_components/TableOfContents";
 import type { TocItem } from "./_components/TableOfContents";
 import { CopyCodeButtons } from "./_components/CopyCodeButtons";
+import { ReaderBar } from "./_components/ReaderBar";
+import { PostRow } from "../_components/PostRow";
+import Footer from "@/components/Footer";
+import { BsLinkedin } from "react-icons/bs";
+import { WEBSITE_ID, jsonLd, personRef } from "@/lib/profile";
 
 export const revalidate = 86400; // revalidate post pages every 24 hours
 
@@ -71,11 +76,20 @@ function slugify(text: string): string {
     .trim();
 }
 
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
 function extractTocAndAddIds(html: string): { html: string; toc: TocItem[] } {
   const toc: TocItem[] = [];
   const seen = new Map<string, number>();
   const result = html.replace(/<h([23])>(.*?)<\/h\1>/gi, (_match, level, inner) => {
-    const text = inner.replace(/<[^>]+>/g, "").trim();
+    const text = decodeEntities(inner.replace(/<[^>]+>/g, "")).trim();
     const base = slugify(text);
     const count = seen.get(base) ?? 0;
     seen.set(base, count + 1);
@@ -104,7 +118,7 @@ export async function generateMetadata({
   if (!post) return {};
 
   const url = `${BLOG_URL}/${post.slug}`;
-  const image = post.cover_image ?? `${SITE_URL}/images/dev.jpeg`;
+  const image = post.cover_image ?? `${SITE_URL}/opengraph-image`;
 
   return {
     title: post.title,
@@ -132,7 +146,8 @@ export async function generateMetadata({
     robots: {
       index: post.published,
       follow: true,
-      googleBot: { index: post.published, follow: true },
+      "max-snippet": -1,
+      "max-image-preview": "large",
     },
     other: { author: "Devanshu Verma" },
   };
@@ -171,7 +186,9 @@ export default async function BlogPostPage({
       "*": ["id", "class"],
     },
   });
-  const { html: contentHtml, toc } = extractTocAndAddIds(safeHtml);
+  // The page header already shows the title; drop a leading H1 that repeats it
+  const bodyHtml = safeHtml.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/, "");
+  const { html: contentHtml, toc } = extractTocAndAddIds(bodyHtml);
 
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -182,19 +199,14 @@ export default async function BlogPostPage({
     dateModified: post.updated_at,
     description: post.excerpt ?? undefined,
     wordCount,
-    author: {
-      "@type": "Person",
-      name: "Devanshu Verma",
-      url: SITE_URL,
-      sameAs: ["https://www.linkedin.com/in/devthecoder/"],
-    },
-    publisher: {
-      "@type": "Person",
-      name: "Devanshu Verma",
-      url: SITE_URL,
-      image: `${SITE_URL}/images/LInkedin_heashot.png`,
-    },
-    ...(post.cover_image ? { image: post.cover_image } : {}),
+    inLanguage: "en",
+    mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+    isPartOf: { "@id": WEBSITE_ID },
+    // Same Person entity as the site graph in the root layout
+    author: personRef,
+    publisher: personRef,
+    image: post.cover_image ?? `${SITE_URL}/opengraph-image`,
+    ...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
   };
 
   const breadcrumbJsonLd = {
@@ -210,307 +222,176 @@ export default async function BlogPostPage({
   return (
     <>
       <ScrollProgress />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleJsonLd)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbJsonLd)} />
 
-      <main className="min-h-screen bg-[var(--bg-primary)]">
-        {/* Draft preview banner */}
+      <main className="min-h-screen bg-[var(--bg-primary)] pb-32">
         {isPreview && !post.published && (
-          <div className="bg-[var(--accent-muted)] border-b border-[var(--accent)]/30 px-4 py-2 text-center text-xs text-[var(--accent)] font-medium font-mono">
-            Preview mode — this post is not published yet
+          <div className="border-b border-[var(--accent-line)] bg-[var(--accent-muted)] px-4 py-2 text-center font-mono text-xs font-medium text-[var(--accent)]">
+            Preview: this post is not published yet
           </div>
         )}
 
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        <div className="relative w-full h-[58vh] min-h-[400px] max-h-[600px] overflow-hidden">
-          {post.cover_image ? (
-            <Image
-              src={post.cover_image}
-              alt={post.title}
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0f0f0f] via-[#111] to-[#1c1505]" />
-          )}
-
-          {/* Gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/10 to-black/85" />
-
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="absolute top-6 left-4 sm:left-8 z-10">
-            <ol className="flex items-center gap-1.5 font-mono text-xs text-white/70">
-              <li>
-                <Link href="/" className="hover:text-white transition-colors duration-150">
-                  Home
-                </Link>
-              </li>
-              <li aria-hidden="true" className="select-none text-white/40">/</li>
-              <li>
-                <Link href="/blog" className="hover:text-white transition-colors duration-150">
-                  Blog
-                </Link>
-              </li>
-              <li aria-hidden="true" className="select-none text-white/40">/</li>
-              <li className="text-white/90 truncate max-w-[140px] sm:max-w-[260px]">
-                {post.title}
-              </li>
-            </ol>
-          </nav>
-
-          {/* Tags + title anchored to bottom of hero */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-10 pt-24">
-            <div className="mx-auto max-w-3xl">
-              {post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {post.tags.map((tag) => (
+        <div className="mx-auto max-w-6xl px-5 lg:px-10">
+          {/* ── Header ─────────────────────────────────────────── */}
+          {/* Same columns as the article grid, so the details line up with the TOC */}
+          <header className="grid gap-x-12 pt-10 md:pt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-x-20">
+            <nav aria-label="Breadcrumb" className="lg:col-span-2">
+              <ol className="flex flex-wrap items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
+                <li>
+                  <Link href="/blog" className="transition-colors hover:text-[var(--accent)]">
+                    Blog
+                  </Link>
+                </li>
+                {post.tags.slice(0, 3).map((tag) => (
+                  <li key={tag} className="flex items-center gap-1.5">
+                    <span aria-hidden="true">/</span>
                     <Link
-                      key={tag}
                       href={`/blog/tag/${encodeURIComponent(tag)}`}
-                      className="rounded-full border border-[var(--accent)]/35
-                                 bg-[var(--accent)]/15 px-2.5 py-0.5 text-xs
-                                 font-medium text-[var(--accent)] backdrop-blur-sm
-                                 hover:bg-[var(--accent)]/30 transition-colors"
+                      className="transition-colors hover:text-[var(--accent)]"
                     >
-                      {tag}
+                      #{tag}
                     </Link>
-                  ))}
-                </div>
-              )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+
+            <div className="min-w-0">
               <h1
-                className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold
-                           leading-tight text-white"
-                style={{ textShadow: "0 2px 24px rgba(0,0,0,0.55)" }}
+                className="mt-6 text-balance text-[clamp(2rem,4.4vw,3.5rem)] font-semibold leading-[1.06]
+                           tracking-[-0.035em] text-[var(--text-primary)]"
               >
                 {post.title}
               </h1>
-            </div>
-          </div>
-        </div>
 
-        {/* ── Article ──────────────────────────────────────────── */}
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-
-          <div className="flex gap-12 xl:gap-16">
-
-            {/* ── Main content column ── */}
-            <div className="min-w-0 flex-1">
-
-              {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 py-6 border-b border-[var(--border)]">
-                <div className="flex items-center gap-2.5">
-                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={32} height={32} className="rounded-full object-cover shrink-0" />
-                  <span className="text-sm font-semibold text-[var(--text-primary)]">
-                    Devanshu Verma
-                  </span>
-                </div>
-                <span className="text-[var(--border)]">·</span>
-                <time
-                  dateTime={post.published_at ?? post.created_at}
-                  className="font-mono text-xs text-[var(--text-muted)]"
-                >
-                  {date}
-                </time>
-                <span className="text-[var(--border)]">·</span>
-                <span className="font-mono text-xs text-[var(--text-muted)]">{readTime}</span>
-              </div>
-
-              {/* Mobile share bar — shown below meta on small screens */}
-              <div className="lg:hidden mt-5 pb-5 border-b border-[var(--border)]">
-                <ShareBar url={postUrl} title={post.title} layout="horizontal" />
-              </div>
-
-              {/* Excerpt pull-quote */}
               {post.excerpt && (
-                <p className="mt-8 border-l-[3px] border-[var(--accent)] pl-5 text-lg
-                              italic leading-relaxed text-[var(--text-secondary)]">
+                <p className="mt-6 max-w-[62ch] text-lg leading-relaxed text-[var(--text-secondary)]">
                   {post.excerpt}
                 </p>
               )}
+            </div>
 
-              {/* Content */}
+            <dl
+              className="mt-8 grid grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-4 border-t border-[var(--border)] pt-5
+                         lg:mt-8 lg:grid-cols-1 lg:gap-y-3.5 lg:self-start lg:border-l lg:border-t-0 lg:pb-1 lg:pl-5 lg:pt-1"
+            >
+              <div className="col-span-3 flex items-center gap-2.5 lg:col-span-1">
+                <dt className="sr-only">Author</dt>
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]">
+                  <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="32px" className="object-cover" />
+                </span>
+                <dd className="text-sm font-medium text-[var(--text-primary)]">Devanshu Verma</dd>
+              </div>
+              {[
+                { label: "Published", value: <time dateTime={post.published_at ?? post.created_at}>{date}</time> },
+                { label: "Reading time", value: readTime },
+                { label: "Length", value: `${wordCount.toLocaleString("en-US")} words` },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <dt className="font-mono text-[11px] text-[var(--text-muted)]">{label}</dt>
+                  <dd className="mt-0.5 whitespace-nowrap text-sm text-[var(--text-secondary)]">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </header>
+
+          {post.cover_image && (
+            <figure
+              className="relative mt-10 aspect-[1200/630] overflow-hidden rounded-2xl border border-[var(--border)]
+                         bg-[var(--bg-secondary)] shadow-[var(--shadow-card)] md:mt-14"
+            >
+              <Image
+                src={post.cover_image}
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 1152px) 100vw, 1072px"
+                className="object-cover"
+              />
+            </figure>
+          )}
+
+          {/* ── Article + sidebar ──────────────────────────────── */}
+          <div className="mt-12 grid gap-12 md:mt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
+            <article className="min-w-0 max-w-[72ch]">
               <div
-                className="blog-prose mt-10"
+                id="article-body"
+                className="blog-prose"
                 dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
               <CopyCodeButtons />
-
               <ReadTracker slug={post.slug} title={post.title} />
 
-              {/* Related posts */}
-              {relatedPosts.length > 0 && (
-                <div className="mt-16 border-t border-[var(--border)] pt-10">
-                  <p className="section-label mb-6">Related posts</p>
-                  <div className="grid gap-5 sm:grid-cols-3">
-                    {relatedPosts.map((rp) => (
-                      <Link
-                        key={rp.id}
-                        href={`/blog/${rp.slug}`}
-                        className="group flex flex-col gap-3 rounded-xl border border-[var(--border)]
-                                   bg-[var(--bg-card)] overflow-hidden p-4 shadow-[var(--shadow-card)]
-                                   transition-all duration-200 hover:border-[var(--accent-glow)]
-                                   hover:-translate-y-0.5"
-                      >
-                        {rp.cover_image && (
-                          <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-[var(--bg-secondary)]">
-                            <Image
-                              src={rp.cover_image}
-                              alt={rp.title}
-                              fill
-                              sizes="(max-width: 640px) 100vw, 33vw"
-                              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                            />
-                          </div>
-                        )}
-                        <p className="text-sm font-semibold leading-snug text-[var(--text-primary)]
-                                      group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-                          {rp.title}
-                        </p>
-                        {rp.tags.length > 0 && (
-                          <span className="text-[11px] font-mono text-[var(--text-muted)]">
-                            {rp.tags[0]}
-                          </span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Author + LinkedIn cards */}
-              <div className="mt-16 mb-20 grid gap-4 sm:grid-cols-2 border-t border-[var(--border)] pt-10">
-                {/* Author card */}
-                <div className="flex items-center gap-4 rounded-2xl border border-[var(--border)]
-                                bg-[var(--bg-card)] p-5 shadow-[var(--shadow-card)]">
-                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={56} height={56} className="rounded-full object-cover shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-[var(--text-primary)]">Devanshu Verma</p>
-                    <p className="mt-0.5 text-xs text-[var(--text-muted)] leading-relaxed">
-                      Frontend developer. Building things for the web with React &amp; Next.js.
-                    </p>
-                    <Link
-                      href="/blog"
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-medium
-                                 text-[var(--accent)] hover:underline underline-offset-3"
-                    >
-                      More posts →
-                    </Link>
-                  </div>
-                </div>
-
-                {/* LinkedIn profile card */}
-                <a
-                  href="https://www.linkedin.com/in/devthecoder/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-4 rounded-2xl border border-[#0A66C2]/25
-                             bg-[#0A66C2]/6 p-5 shadow-[var(--shadow-card)] transition-all duration-200
-                             hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/10"
-                >
-                  <div className="relative shrink-0">
-                    <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={56} height={56} className="rounded-full object-cover" />
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center
-                                     justify-center rounded-full bg-[#0A66C2] border-2 border-[var(--bg-card)]">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-[#0A66C2]">Devanshu Verma</p>
-                      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-                           className="shrink-0 text-[#0A66C2] opacity-50 group-hover:opacity-100 transition-opacity"
-                           aria-hidden="true">
-                        <path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5"
-                              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                    <p className="mt-0.5 text-xs text-[#0A66C2]/70 leading-relaxed">
-                      Frontend Developer · Open to opportunities
-                    </p>
-                    <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#0A66C2]
-                                     px-3 py-1 text-[11px] font-semibold text-white
-                                     group-hover:bg-[#0A66C2] transition-colors">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                      Connect on LinkedIn
-                    </span>
-                  </div>
-                </a>
+              <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-8">
+                <p className="text-sm font-medium text-[var(--text-primary)]">Found this useful? Pass it on.</p>
+                <ShareBar url={postUrl} title={post.title} />
               </div>
-            </div>
 
-            {/* ── Sticky sidebar — hidden below lg ── */}
-            <aside className="hidden lg:block w-40 xl:w-44 shrink-0">
-              <div className="sticky top-8 pt-6 space-y-8">
-                {/* Table of Contents */}
-                {toc.length > 0 && (
-                  <>
-                    <TableOfContents items={toc} />
-                    <div className="border-t border-[var(--border)]" />
-                  </>
-                )}
-
-                {/* Share */}
-                <ShareBar url={postUrl} title={post.title} layout="vertical" />
-
-                {/* Divider */}
-                <div className="border-t border-[var(--border)]" />
-
-                {/* LinkedIn profile mini-card */}
-                <div>
-                  <span className="section-label mb-3 block">Author</span>
+              {/* Author */}
+              <section
+                aria-label="About the author"
+                className="mt-10 flex flex-col gap-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6
+                           shadow-[var(--shadow-card)] sm:flex-row sm:items-center"
+              >
+                <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)]">
+                  <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="56px" className="object-cover" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[11px] text-[var(--text-muted)]">Written by</p>
+                  <p className="mt-0.5 font-semibold text-[var(--text-primary)]">Devanshu Verma</p>
+                  <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                    Frontend engineer building web apps with React, Next.js, Angular and Vue.
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Link
+                    href="/#contact"
+                    className="inline-flex h-10 items-center rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold
+                               text-[var(--on-accent)] transition-opacity hover:opacity-90 active:scale-[0.98]"
+                  >
+                    Get in touch
+                  </Link>
                   <a
                     href="https://www.linkedin.com/in/devthecoder/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex flex-col items-center gap-3 rounded-2xl border border-[#0A66C2]/25
-                               bg-[#0A66C2]/6 p-4 text-center transition-all duration-200
-                               hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/10"
+                    aria-label="Devanshu on LinkedIn"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)]
+                               text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)]
+                               hover:text-[var(--text-primary)]"
                   >
-                    <div className="relative shrink-0">
-                      <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={56} height={56} className="rounded-full object-cover" />
-                      <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center
-                                       justify-center rounded-full bg-[#0A66C2] border-2 border-[var(--bg-card)]">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                        </svg>
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-[#0A66C2] leading-snug">
-                        Devanshu Verma
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[#0A66C2]/60 leading-relaxed">
-                        Frontend Developer
-                      </p>
-                    </div>
-                    <span className="w-full inline-flex items-center justify-center gap-1.5
-                                     rounded-lg bg-[#0A66C2] px-2.5 py-1.5 text-[10px]
-                                     font-semibold text-white group-hover:bg-[#0A66C2] transition-colors">
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                      </svg>
-                      Connect
-                    </span>
+                    <BsLinkedin size={15} />
                   </a>
                 </div>
+              </section>
+
+              {relatedPosts.length > 0 && (
+                <section aria-labelledby="keep-reading" className="mt-16">
+                  <h2 id="keep-reading" className="mb-2 font-mono text-xs text-[var(--text-muted)]">
+                    Keep reading
+                  </h2>
+                  <div className="border-b border-[var(--border)]">
+                    {relatedPosts.map((rp) => (
+                      <PostRow key={rp.id} post={rp} heading="h3" />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </article>
+
+            <aside className="hidden lg:block">
+              <div className="sticky top-[calc(var(--chrome-h)_+_1.5rem)] max-h-[calc(100dvh_-_var(--chrome-h)_-_7rem)] space-y-8 overflow-y-auto overscroll-contain pb-4">
+                <TableOfContents items={toc} />
+                <ShareBar url={postUrl} title={post.title} layout="vertical" />
               </div>
             </aside>
-
           </div>
         </div>
+
+        <ReaderBar slug={post.slug} articleId="article-body" />
       </main>
+      <Footer />
     </>
   );
 }

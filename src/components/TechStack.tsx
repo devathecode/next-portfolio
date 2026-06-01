@@ -1,201 +1,158 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { CSSProperties, FC } from "react";
-import { FaReact, FaNodeJs, FaDocker } from "react-icons/fa";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
-  SiTailwindcss,
-  SiNextdotjs,
-  SiGraphql,
-  SiTypescript,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+import type { IconType } from "react-icons";
+import {
   SiAngular,
-  SiVuedotjs,
+  SiDocker,
+  SiGraphql,
+  SiNextdotjs,
+  SiNodedotjs,
   SiNuxtdotjs,
+  SiReact,
   SiSalesforce,
+  SiTailwindcss,
+  SiTypescript,
+  SiVuedotjs,
 } from "react-icons/si";
 
-type Icon = React.FC<{ size?: number }>;
-
-const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
-
-const primary = [
-  {
-    name: "React",
-    category: "UI Library",
-    Icon: FaReact as Icon,
-    iconColor: "#61DAFB",
-    glowBg: "rgba(97,218,251,0.07)",
-    desc: "Component architecture & reactive state",
-  },
-  {
-    name: "Next.js",
-    category: "Framework",
-    Icon: SiNextdotjs as Icon,
-    iconColor: "var(--text-primary)" as string,
-    glowBg: "rgba(128,128,128,0.05)",
-    desc: "Full-stack apps & server rendering",
-  },
-  {
-    name: "TypeScript",
-    category: "Language",
-    Icon: SiTypescript as Icon,
-    iconColor: "#3178C6",
-    glowBg: "rgba(49,120,198,0.07)",
-    desc: "Type safety & developer tooling",
-  },
-  {
-    name: "Angular",
-    category: "Framework",
-    Icon: SiAngular as Icon,
-    iconColor: "#DD0031",
-    glowBg: "rgba(221,0,49,0.07)",
-    desc: "Enterprise SPA development",
-  },
+const STACK: { name: string; role: string; Icon: IconType; color: string }[] = [
+  { name: "React", role: "UI library", Icon: SiReact, color: "#61DAFB" },
+  { name: "Next.js", role: "Framework", Icon: SiNextdotjs, color: "var(--text-primary)" },
+  { name: "TypeScript", role: "Language", Icon: SiTypescript, color: "#3178C6" },
+  { name: "Angular", role: "Framework", Icon: SiAngular, color: "#DD0031" },
+  { name: "Vue.js", role: "Framework", Icon: SiVuedotjs, color: "#42B883" },
+  { name: "Nuxt", role: "Framework", Icon: SiNuxtdotjs, color: "#00DC82" },
+  { name: "Tailwind CSS", role: "Styling", Icon: SiTailwindcss, color: "#38BDF8" },
+  { name: "GraphQL", role: "Data layer", Icon: SiGraphql, color: "#E10098" },
+  { name: "Node.js", role: "Runtime", Icon: SiNodedotjs, color: "#5FA04E" },
+  { name: "Docker", role: "Tooling", Icon: SiDocker, color: "#2496ED" },
+  { name: "Salesforce LWC", role: "Platform", Icon: SiSalesforce, color: "#00A1E0" },
 ];
 
-const secondary = [
-  { name: "Vue.js",         Icon: SiVuedotjs as Icon,    color: "#42B883" },
-  { name: "Nuxt.js",        Icon: SiNuxtdotjs as Icon,   color: "#00DC82" },
-  { name: "Tailwind CSS",   Icon: SiTailwindcss as Icon, color: "#38BDF8" },
-  { name: "GraphQL",        Icon: SiGraphql as Icon,     color: "#E10098" },
-  { name: "Node.js",        Icon: FaNodeJs as Icon,      color: "#68A063" },
-  { name: "Docker",         Icon: FaDocker as Icon,      color: "#2496ED" },
-  { name: "Salesforce LWC", Icon: SiSalesforce as Icon,  color: "#00A1E0" },
-];
+/* Dock entrance: icons pop in one after another */
+const dockVariants = { hidden: {}, shown: { transition: { staggerChildren: 0.045, delayChildren: 0.1 } } };
+const itemVariants = {
+  hidden: { opacity: 0, y: 14, scale: 0.85 },
+  shown: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 420, damping: 24 } },
+} as const;
 
-function PrimaryCard({ tech, i }: { tech: (typeof primary)[0]; i: number }) {
-  const accentLine =
-    tech.iconColor === "var(--text-primary)" ? "var(--accent)" : tech.iconColor;
+/* Dock geometry, in px */
+const BASE = 52;
+const PEAK = 80;
+const REACH = 150;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.55, delay: i * 0.08, ease }}
-      whileHover="hover"
-      className="relative rounded-3xl border border-[var(--border)] bg-[var(--bg-card)]
-                 p-5 flex flex-col gap-4 overflow-hidden cursor-default"
-    >
-      {/* Radial glow on hover */}
-      <motion.div
-        variants={{ hover: { opacity: 1 } }}
-        initial={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(circle at 20% 20%, ${tech.glowBg} 0%, transparent 65%)`,
-        }}
-      />
-
-      {/* Icon + category */}
-      <div className="flex items-start justify-between relative">
-        <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center"
-          style={{ background: tech.glowBg, color: tech.iconColor } as CSSProperties}
-        >
-          <tech.Icon size={26} />
-        </div>
-        <span
-          className="font-mono text-[9px] uppercase tracking-[0.15em]
-                     text-[var(--text-muted)] border border-[var(--border)]
-                     rounded-full px-2.5 py-1"
-        >
-          {tech.category}
-        </span>
-      </div>
-
-      {/* Name + desc */}
-      <div className="relative">
-        <p className="font-display font-bold text-xl text-[var(--text-primary)] leading-none mb-1.5">
-          {tech.name}
-        </p>
-        <p className="text-[12px] text-[var(--text-muted)] leading-relaxed">
-          {tech.desc}
-        </p>
-      </div>
-
-      {/* Animated bottom border */}
-      <motion.div
-        variants={{ hover: { scaleX: 1 } }}
-        initial={{ scaleX: 0 }}
-        transition={{ duration: 0.35 }}
-        className="absolute bottom-0 left-0 right-0 h-[2px] origin-left"
-        style={{ background: accentLine }}
-      />
-    </motion.div>
-  );
+/** Magnification only makes sense with a real hover-capable pointer. */
+function useFinePointer() {
+  const [fine, setFine] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setFine(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setFine(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return fine;
 }
 
-function SecondaryPill({ tech }: { tech: (typeof secondary)[0] }) {
+export default function TechStack() {
+  const mouseX = useMotionValue(Infinity);
+  const reduce = useReducedMotion();
+  const finePointer = useFinePointer();
+  const still = !!reduce || !finePointer;
+
   return (
-    <div
-      className="flex items-center gap-3 px-5 py-3 rounded-2xl
-                 border border-[var(--border)] bg-[var(--bg-card)]
-                 whitespace-nowrap select-none shrink-0"
-    >
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: `${tech.color}18`, color: tech.color } as CSSProperties}
-      >
-        <tech.Icon size={15} />
+    <div className="mt-24 md:mt-32">
+      <h3 className="text-center text-xl font-semibold tracking-[-0.02em] text-[var(--text-primary)] md:text-2xl">
+        The stack I ship with
+      </h3>
+
+      <div className="mt-8 flex justify-center md:mt-14">
+        <motion.ul
+          aria-label="Technologies"
+          initial={reduce ? false : "hidden"}
+          whileInView="shown"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={dockVariants}
+          onPointerMove={(e) => {
+            if (!still && e.pointerType === "mouse") mouseX.set(e.clientX);
+          }}
+          onPointerLeave={() => mouseX.set(Infinity)}
+          className="flex max-w-full flex-wrap items-end justify-center gap-2 rounded-2xl border border-[var(--border)]
+                     bg-[var(--bg-card)] p-3 shadow-[var(--shadow-card)]
+                     md:h-[76px] md:flex-nowrap"
+        >
+          {STACK.map((item) => (
+            <DockItem key={item.name} item={item} mouseX={mouseX} still={still} />
+          ))}
+        </motion.ul>
       </div>
-      <span className="font-mono text-[11px] text-[var(--text-secondary)]">
-        {tech.name}
-      </span>
     </div>
   );
 }
 
-const TechStack: FC = () => {
-  const doubled = [...secondary, ...secondary];
+function DockItem({
+  item,
+  mouseX,
+  still,
+}: {
+  item: (typeof STACK)[number];
+  mouseX: MotionValue<number>;
+  still: boolean;
+}) {
+  const ref = useRef<HTMLLIElement>(null);
+
+  // Distance from the pointer to this icon's centre drives its size
+  const distance = useTransform(mouseX, (x) => {
+    const box = ref.current?.getBoundingClientRect();
+    if (!box || !Number.isFinite(x)) return REACH;
+    return x - (box.left + box.width / 2);
+  });
+  const target = useTransform(distance, [-REACH, 0, REACH], [BASE, PEAK, BASE]);
+  const size = useSpring(target, { mass: 0.1, stiffness: 180, damping: 14 });
 
   return (
-    <section className="mt-20 pt-14 border-t border-[var(--border)]">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6, ease }}
-        className="flex items-center gap-4 mb-10"
+    <motion.li
+      ref={ref}
+      tabIndex={0}
+      variants={itemVariants}
+      style={
+        (still
+          ? { "--brand": item.color }
+          : { width: size, height: size, "--brand": item.color }) as unknown as CSSProperties
+      }
+      className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border)]
+                 md:h-[52px] md:w-[52px]
+                 bg-[var(--bg-secondary)] text-[var(--text-secondary)] outline-none
+                 focus-visible:border-[var(--accent)]"
+    >
+      <item.Icon
+        aria-hidden="true"
+        className="h-[46%] w-[46%] transition-colors duration-200 group-hover:text-[var(--brand)] group-focus:text-[var(--brand)]"
+      />
+      <span className="sr-only">
+        {item.name}, {item.role}
+      </span>
+
+      {/* Tooltip */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2.5 -translate-x-1/2 whitespace-nowrap
+                   rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2.5 py-1 text-xs
+                   opacity-0 shadow-[var(--shadow-card)] transition-opacity duration-150
+                   group-hover:opacity-100 group-focus:opacity-100"
       >
-        <p className="section-label">Technologies I work with</p>
-        <div className="h-px flex-1 bg-[var(--border)]" />
-      </motion.div>
-
-      {/* Featured tech cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {primary.map((tech, i) => (
-          <PrimaryCard key={tech.name} tech={tech} i={i} />
-        ))}
-      </div>
-
-      {/* Secondary marquee */}
-      <div className="relative overflow-hidden">
-        <div
-          className="absolute left-0 inset-y-0 w-20 z-10 pointer-events-none"
-          style={{
-            background: "linear-gradient(to right, var(--bg-primary), transparent)",
-          }}
-        />
-        <div
-          className="absolute right-0 inset-y-0 w-20 z-10 pointer-events-none"
-          style={{
-            background: "linear-gradient(to left, var(--bg-primary), transparent)",
-          }}
-        />
-        <div
-          className="flex gap-2.5 animate-[marquee_35s_linear_infinite]"
-          style={{ width: "max-content" }}
-        >
-          {doubled.map((tech, i) => (
-            <SecondaryPill key={`${tech.name}-${i}`} tech={tech} />
-          ))}
-        </div>
-      </div>
-    </section>
+        <span className="font-medium text-[var(--text-primary)]">{item.name}</span>
+        <span className="ml-1.5 text-[var(--text-muted)]">{item.role}</span>
+      </span>
+    </motion.li>
   );
-};
-
-export default TechStack;
+}

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
+import Footer from "@/components/Footer";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
+import { PostRow } from "../../_components/PostRow";
 
 export const revalidate = 3600;
 
@@ -28,22 +30,22 @@ export async function generateMetadata({
   const url = `${BLOG_URL}/tag/${tag}`;
 
   return {
-    title: `${decoded} — Blog`,
+    title: `${decoded} posts`,
     description: `All posts tagged "${decoded}" by Devanshu Verma.`,
-    alternates: { canonical: url },
+    alternates: { canonical: BLOG_URL },
     openGraph: {
       type: "website",
       url,
-      title: `${decoded} — Blog — Devanshu Verma`,
+      title: `${decoded} posts | Devanshu Verma`,
       description: `All posts tagged "${decoded}" by Devanshu Verma.`,
       siteName: "Devanshu Verma",
     },
     twitter: {
       card: "summary",
-      title: `${decoded} — Blog — Devanshu Verma`,
+      title: `${decoded} posts | Devanshu Verma`,
       description: `All posts tagged "${decoded}" by Devanshu Verma.`,
     },
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: true },
   };
 }
 
@@ -55,15 +57,6 @@ async function getPostsByTag(tag: string): Promise<Post[]> {
     .contains("tags", [tag])
     .order("published_at", { ascending: false });
   return (data as Post[]) ?? [];
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
 
 export default async function TagPage({
@@ -93,105 +86,46 @@ export default async function TagPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[var(--bg-primary)] px-4 py-20 sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-[var(--bg-primary)] px-5 pb-24 pt-14 md:pt-20 lg:px-10">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-12">
-            <Link
-              href="/blog"
-              className="font-mono text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-            >
-              ← All posts
+          <nav aria-label="Breadcrumb" className="font-mono text-xs text-[var(--text-muted)]">
+            <Link href="/blog" className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--accent)]">
+              <ArrowLeftIcon size={13} />
+              All posts
             </Link>
-            <div className="mt-5">
-              <p className="section-label mb-3">Tag</p>
-              <h1 className="font-display text-4xl font-bold text-[var(--text-primary)] sm:text-5xl">
-                {decoded}
-              </h1>
-              <p className="mt-3 text-sm text-[var(--text-secondary)]">
-                {posts.length} {posts.length === 1 ? "post" : "posts"}
-              </p>
-            </div>
-          </div>
+          </nav>
+
+          <header className="mt-6">
+            <h1
+              className="text-[clamp(2.4rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]
+                         text-[var(--text-primary)]"
+            >
+              <span className="text-[var(--text-muted)]">#</span>
+              {decoded}
+            </h1>
+            <p className="mt-4 text-[17px] text-[var(--text-secondary)]">
+              {posts.length} {posts.length === 1 ? "post" : "posts"} on this topic.
+            </p>
+          </header>
 
           {posts.length === 0 ? (
-            <p className="text-[var(--text-muted)] text-sm">No posts found for this tag.</p>
+            <p className="mt-12 rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center text-sm text-[var(--text-secondary)]">
+              Nothing tagged {decoded} yet.{" "}
+              <Link href="/blog" className="font-medium text-[var(--accent)] hover:underline">
+                Browse every post
+              </Link>
+              .
+            </p>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="mt-12 border-b border-[var(--border)]">
               {posts.map((post) => (
-                <TagPostCard key={post.id} post={post} activeTag={decoded} />
+                <PostRow key={post.id} post={post} activeTag={decoded} />
               ))}
             </div>
           )}
         </div>
       </main>
+      <Footer />
     </>
-  );
-}
-
-function TagPostCard({ post, activeTag }: { post: Post; activeTag: string }) {
-  const date = formatDate(post.published_at ?? post.created_at);
-
-  return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] overflow-hidden
-                 shadow-[var(--shadow-card)] transition-all duration-300
-                 hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:border-[var(--accent-glow)] hover:-translate-y-1"
-    >
-      <div className="relative aspect-video w-full bg-[var(--bg-secondary)] shrink-0">
-        {post.cover_image ? (
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            fill
-            sizes="(max-width: 640px) 100vw, 50vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          />
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--bg-secondary)] to-[var(--border-subtle)] flex items-center justify-center">
-            <span className="font-display text-6xl font-bold text-[var(--border)] select-none">
-              {post.title.charAt(0)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        {post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {post.tags.slice(0, 2).map((t) => (
-              <span
-                key={t}
-                className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                  t === activeTag
-                    ? "bg-[var(--accent)] text-black"
-                    : "bg-[var(--accent-muted)] text-[var(--accent)]"
-                }`}
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <h2 className="font-display text-lg font-semibold leading-snug text-[var(--text-primary)]
-                       group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-          {post.title}
-        </h2>
-
-        {post.excerpt && (
-          <p className="text-sm text-[var(--text-secondary)] line-clamp-2 flex-1">
-            {post.excerpt}
-          </p>
-        )}
-
-        <time
-          dateTime={post.published_at ?? post.created_at}
-          className="text-xs text-[var(--text-muted)] mt-auto pt-2 border-t border-[var(--border-subtle)]"
-        >
-          {date}
-        </time>
-      </div>
-    </Link>
   );
 }

@@ -18,10 +18,12 @@ declare global {
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
 const inputClass =
-  "block w-full rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] " +
-  "px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] " +
-  "focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/30 " +
-  "transition-colors duration-200 autofill:bg-[var(--bg-secondary)]";
+  "block w-full rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] " +
+  "px-3.5 py-2.5 text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] " +
+  "focus:outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-muted)] " +
+  "transition-[border-color,box-shadow] duration-200";
+
+const labelClass = "text-[13px] font-medium text-[var(--text-secondary)]";
 
 export default function ContactForm() {
   const router = useRouter();
@@ -62,7 +64,7 @@ export default function ContactForm() {
           strategy="afterInteractive"
         />
       )}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Honeypot: off-screen field bots fill, real users never see */}
         <div
           style={{
@@ -86,8 +88,8 @@ export default function ContactForm() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="name" className="font-mono text-xs text-[var(--text-muted)]">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="name" className={labelClass}>
               Name *
             </label>
             <input
@@ -101,8 +103,8 @@ export default function ContactForm() {
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="font-mono text-xs text-[var(--text-muted)]">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="email" className={labelClass}>
               Email *
             </label>
             <input
@@ -117,8 +119,8 @@ export default function ContactForm() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="message" className="font-mono text-xs text-[var(--text-muted)]">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="message" className={labelClass}>
             Message *
           </label>
           <textarea
@@ -133,13 +135,31 @@ export default function ContactForm() {
         </div>
 
         {state && "error" in state && (
-          <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+          <p
+            role="alert"
+            aria-live="assertive"
+            className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+          >
             {state.error}
           </p>
         )}
 
-        <div className="pt-2">
-          <Submitbutton buttonText="Send Message" isPending={isPending} />
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
+          <Submitbutton buttonText="Send message" isPending={isPending} />
+          {SITE_KEY && (
+            /* Required when the floating reCAPTCHA badge is hidden (see globals.css) */
+            <p className="max-w-[46ch] text-xs leading-relaxed text-[var(--text-muted)]">
+              This site is protected by reCAPTCHA and the Google{" "}
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[var(--text-secondary)]">
+                Privacy Policy
+              </a>{" "}
+              and{" "}
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[var(--text-secondary)]">
+                Terms of Service
+              </a>{" "}
+              apply.
+            </p>
+          )}
         </div>
       </form>
     </>

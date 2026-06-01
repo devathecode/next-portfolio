@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -8,148 +8,136 @@ import {
   Trash2Icon,
   EyeIcon,
   EyeOffIcon,
-  PlusIcon,
   FileTextIcon,
+  PlusIcon,
 } from "lucide-react";
 import { deletePostAction, togglePostPublishedAction } from "../../actions";
 import type { Post } from "@/lib/supabase";
-
-function formatDate(iso: string | null) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { useFeedback } from "./feedback";
+import { Badge, EmptyState, StatTile, btnIcon, btnPrimary, formatDate } from "./ui";
 
 function PostRow({ post }: { post: Post }) {
+  const { toast, confirm } = useFeedback();
   const [pending, startTransition] = useTransition();
 
-  const handleDelete = () => {
-    if (!confirm(`Delete "${post.title}"? This cannot be undone.`)) return;
-    startTransition(() => deletePostAction(post.id));
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: `Delete "${post.title}"?`,
+      body: "The post will be removed from your blog. This can't be undone.",
+    });
+    if (!ok) return;
+    startTransition(async () => {
+      await deletePostAction(post.id);
+      toast("Post deleted");
+    });
   };
 
   const handleToggle = () => {
-    startTransition(() =>
-      togglePostPublishedAction(post.id, !post.published)
-    );
+    startTransition(async () => {
+      await togglePostPublishedAction(post.id, !post.published);
+      toast(post.published ? "Post moved to drafts" : "Post published");
+    });
   };
 
   return (
-    <div
-      className={`flex items-center gap-4 rounded-xl border border-gray-800 bg-gray-900/60 p-3 transition-opacity ${
-        pending ? "opacity-40 pointer-events-none" : ""
+    <li
+      className={`flex items-center gap-4 p-3 transition-opacity sm:p-4 ${
+        pending ? "pointer-events-none opacity-50" : ""
       }`}
     >
-      {/* Cover thumbnail */}
-      <div className="shrink-0 w-16 h-12 rounded-lg overflow-hidden bg-gray-800 border border-gray-700">
+      <div className="h-14 w-20 shrink-0 overflow-hidden rounded-lg border border-adm-border bg-adm-raised">
         {post.cover_image ? (
           <Image
             src={post.cover_image}
-            alt={post.title}
-            width={64}
-            height={48}
-            className="w-full h-full object-cover"
+            alt=""
+            width={80}
+            height={56}
+            className="h-full w-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <FileTextIcon size={18} className="text-gray-600" />
+          <div className="flex h-full w-full items-center justify-center text-adm-subtle">
+            <FileTextIcon size={18} />
           </div>
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm text-white truncate">{post.title}</p>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span
-            className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
-              post.published
-                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                : "bg-gray-800 text-gray-500 border border-gray-700"
-            }`}
-          >
+      <div className="min-w-0 flex-1">
+        <Link
+          href={`/admin/blog/${post.id}`}
+          className="block truncate text-sm font-semibold text-adm-text hover:text-adm-accent-text"
+        >
+          {post.title}
+        </Link>
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <Badge tone={post.published ? "success" : "neutral"}>
             {post.published ? "Published" : "Draft"}
-          </span>
-          {post.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="bg-gray-800 text-gray-500 rounded text-[10px] px-1.5 py-0.5"
-            >
-              {tag}
-            </span>
+          </Badge>
+          {post.tags.slice(0, 2).map((t) => (
+            <Badge key={t}>{t}</Badge>
           ))}
+          <span className="text-xs text-adm-subtle">
+            {post.published
+              ? `Published ${formatDate(post.published_at)}`
+              : `Created ${formatDate(post.created_at)}`}
+          </span>
         </div>
-        <p className="text-[11px] text-gray-600 mt-0.5">
-          {post.published ? `Published ${formatDate(post.published_at)}` : `Created ${formatDate(post.created_at)}`}
-        </p>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex shrink-0 items-center">
         <button
           onClick={handleToggle}
           title={post.published ? "Unpublish" : "Publish"}
-          className={`p-1.5 rounded-md transition-colors ${
-            post.published
-              ? "text-emerald-500 hover:text-emerald-300 hover:bg-gray-800"
-              : "text-gray-600 hover:text-yellow-500 hover:bg-gray-800"
-          }`}
+          aria-label={post.published ? "Unpublish" : "Publish"}
+          className={btnIcon}
         >
-          {post.published ? <EyeIcon size={14} /> : <EyeOffIcon size={14} />}
+          {post.published ? <EyeIcon size={16} /> : <EyeOffIcon size={16} />}
         </button>
-        <Link
-          href={`/admin/blog/${post.id}`}
-          title="Edit"
-          className="p-1.5 rounded-md text-gray-600 hover:text-yellow-500 hover:bg-gray-800 transition-colors"
-        >
-          <PencilIcon size={14} />
+        <Link href={`/admin/blog/${post.id}`} title="Edit" aria-label="Edit" className={btnIcon}>
+          <PencilIcon size={16} />
         </Link>
         <button
           onClick={handleDelete}
           title="Delete"
-          className="p-1.5 rounded-md text-gray-600 hover:text-red-400 hover:bg-gray-800 transition-colors"
+          aria-label="Delete"
+          className={`${btnIcon} hover:!text-adm-danger`}
         >
-          <Trash2Icon size={14} />
+          <Trash2Icon size={16} />
         </button>
       </div>
-    </div>
+    </li>
   );
 }
 
 export function PostList({ posts }: { posts: Post[] }) {
-  return (
-    <div className="space-y-2">
-      {/* New post button */}
-      <Link
-        href="/admin/blog/new"
-        className="flex items-center gap-2.5 w-full rounded-xl border border-dashed border-gray-800
-                   px-4 py-3.5 text-sm font-medium text-gray-400 hover:text-white hover:border-gray-700
-                   transition-colors bg-transparent"
-      >
-        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-800 text-gray-400">
-          <PlusIcon size={13} />
-        </span>
-        New post
-      </Link>
+  if (posts.length === 0) {
+    return (
+      <EmptyState
+        icon={FileTextIcon}
+        title="No posts yet"
+        body="Write your first article. You can save it as a draft and publish it later."
+        action={
+          <Link href="/admin/blog/new" className={btnPrimary}>
+            <PlusIcon size={16} /> New post
+          </Link>
+        }
+      />
+    );
+  }
 
-      {posts.length === 0 ? (
-        <div className="text-center py-16 text-gray-700">
-          <FileTextIcon size={40} className="mx-auto mb-3 opacity-40" />
-          <p className="text-sm">No posts yet.</p>
-          <p className="text-xs mt-1 text-gray-600">
-            Click &ldquo;New post&rdquo; above to write your first blog post.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {posts.map((post) => (
-            <PostRow key={post.id} post={post} />
-          ))}
-        </div>
-      )}
+  const published = posts.filter((p) => p.published).length;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-3 gap-3">
+        <StatTile label="Total" value={posts.length} />
+        <StatTile label="Published" value={published} tone="accent" />
+        <StatTile label="Drafts" value={posts.length - published} />
+      </div>
+      <ul className="divide-y divide-adm-border overflow-hidden rounded-xl border border-adm-border bg-adm-surface">
+        {posts.map((p) => (
+          <PostRow key={p.id} post={p} />
+        ))}
+      </ul>
     </div>
   );
 }

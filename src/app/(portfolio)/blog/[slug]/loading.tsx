@@ -1,82 +1,58 @@
+import PageLoading from "@/components/browser/PageLoading";
+
+const bar = "rounded-md bg-[var(--bg-secondary)] animate-pulse";
+
 export default function BlogPostLoading() {
   return (
-    <main className="min-h-screen bg-[var(--bg-primary)]">
-      {/* Hero */}
-      <div className="relative w-full h-[58vh] min-h-[400px] max-h-[600px] bg-[var(--bg-secondary)] animate-pulse">
-        {/* Tags + title at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-10">
-          <div className="mx-auto max-w-3xl space-y-4">
-            <div className="flex gap-1.5">
-              <div className="h-5 w-16 rounded-full bg-white/10" />
-              <div className="h-5 w-20 rounded-full bg-white/10" />
-              <div className="h-5 w-14 rounded-full bg-white/10" />
+    <main className="min-h-screen bg-[var(--bg-primary)] pb-32">
+      <PageLoading />
+      <div className="mx-auto max-w-6xl px-5 lg:px-10">
+        {/* Header: title column + details column, same grid as the article */}
+        <div className="grid gap-x-12 pt-10 md:pt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-x-20">
+          <div className={`h-3 w-48 lg:col-span-2 ${bar}`} />
+          <div>
+            <div className="mt-7 space-y-3">
+              <div className={`h-12 w-full ${bar}`} />
+              <div className={`h-12 w-full ${bar}`} />
+              <div className={`h-12 w-3/4 ${bar}`} />
             </div>
-            <div className="space-y-3">
-              <div className="h-10 w-full rounded-lg bg-white/10" />
-              <div className="h-10 w-3/4 rounded-lg bg-white/10" />
+            <div className="mt-6 max-w-[62ch] space-y-2.5">
+              <div className={`h-4 w-full ${bar}`} />
+              <div className={`h-4 w-4/5 ${bar}`} />
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        {/* Meta row */}
-        <div className="flex items-center gap-3 py-6 border-b border-[var(--border)]">
-          <div className="h-8 w-8 rounded-full bg-[var(--bg-secondary)] animate-pulse shrink-0" />
-          <div className="h-4 w-32 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3 w-1 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3 w-24 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3 w-1 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-3 w-16 rounded bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-
-        {/* Excerpt pull-quote */}
-        <div className="mt-8 pl-5 border-l-[3px] border-[var(--bg-secondary)] space-y-2">
-          <div className="h-5 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-5 w-5/6 rounded bg-[var(--bg-secondary)] animate-pulse" />
-        </div>
-
-        {/* Content lines */}
-        <div className="mt-10 space-y-3">
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-5/6 rounded bg-[var(--bg-secondary)] animate-pulse" />
-
-          <div className="h-7 w-52 rounded-md bg-[var(--bg-secondary)] animate-pulse mt-10 mb-2" />
-
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-4/5 rounded bg-[var(--bg-secondary)] animate-pulse" />
-
-          <div className="h-28 w-full rounded-xl bg-[var(--bg-secondary)] animate-pulse mt-6" />
-
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-11/12 rounded bg-[var(--bg-secondary)] animate-pulse" />
-
-          <div className="h-7 w-44 rounded-md bg-[var(--bg-secondary)] animate-pulse mt-10 mb-2" />
-
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-full rounded bg-[var(--bg-secondary)] animate-pulse" />
-          <div className="h-4 w-3/4 rounded bg-[var(--bg-secondary)] animate-pulse" />
-
-          <div className="space-y-2 pl-4 mt-3">
-            <div className="h-4 w-5/6 rounded bg-[var(--bg-secondary)] animate-pulse" />
-            <div className="h-4 w-4/5 rounded bg-[var(--bg-secondary)] animate-pulse" />
-            <div className="h-4 w-11/12 rounded bg-[var(--bg-secondary)] animate-pulse" />
-          </div>
-        </div>
-
-        {/* Footer skeleton */}
-        <div className="mb-20 mt-16 border-t border-[var(--border)] pt-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-full bg-[var(--bg-secondary)] animate-pulse shrink-0" />
-              <div className="space-y-1.5">
-                <div className="h-4 w-32 rounded bg-[var(--bg-secondary)] animate-pulse" />
-                <div className="h-3 w-44 rounded bg-[var(--bg-secondary)] animate-pulse" />
+          <div className="mt-8 space-y-4 border-t border-[var(--border)] pt-5 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-1">
+            <div className="flex items-center gap-2.5">
+              <div className={`h-8 w-8 rounded-lg ${bar}`} />
+              <div className={`h-3.5 w-28 ${bar}`} />
+            </div>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <div className={`h-2.5 w-16 ${bar}`} />
+                <div className={`h-3.5 w-24 ${bar}`} />
               </div>
-            </div>
-            <div className="h-4 w-20 rounded bg-[var(--bg-secondary)] animate-pulse" />
+            ))}
+          </div>
+        </div>
+
+        {/* Cover */}
+        <div className="mt-10 aspect-[1200/630] animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--bg-secondary)] md:mt-14" />
+
+        {/* Body + sidebar */}
+        <div className="mt-12 grid gap-12 md:mt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
+          <div className="max-w-[72ch] space-y-3">
+            {[100, 96, 92, 98, 60].map((w, i) => (
+              <div key={i} className={`h-4 ${bar}`} style={{ width: `${w}%` }} />
+            ))}
+            <div className={`!mt-10 h-7 w-1/2 ${bar}`} />
+            {[100, 94, 97, 72].map((w, i) => (
+              <div key={i} className={`h-4 ${bar}`} style={{ width: `${w}%` }} />
+            ))}
+          </div>
+          <div className="hidden space-y-3 border-l border-[var(--border)] pl-3.5 lg:block">
+            {[80, 64, 90, 56, 72].map((w, i) => (
+              <div key={i} className={`h-3 ${bar}`} style={{ width: `${w}%` }} />
+            ))}
           </div>
         </div>
       </div>

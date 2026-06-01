@@ -1,135 +1,103 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Fuse from "fuse.js";
+import { SearchIcon, XIcon } from "lucide-react";
 import type { Post } from "@/lib/supabase";
+import { PostRow } from "./PostRow";
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function SearchCard({ post }: { post: Post }) {
-  const date = formatDate(post.published_at ?? post.created_at);
-  return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]
-                 p-4 transition-all duration-200 hover:border-[var(--accent-glow)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
-    >
-      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-secondary)]">
-        {post.cover_image ? (
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            fill
-            sizes="96px"
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <span className="font-display text-2xl font-bold text-[var(--border)]">
-              {post.title.charAt(0)}
-            </span>
-          </div>
-        )}
-      </div>
-      <div className="flex min-w-0 flex-col gap-1">
-        <h3 className="font-display text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-2">
-          {post.title}
-        </h3>
-        {post.excerpt && (
-          <p className="text-xs text-[var(--text-secondary)] line-clamp-1">{post.excerpt}</p>
-        )}
-        <div className="flex flex-wrap items-center gap-2 mt-auto">
-          <time className="text-[11px] text-[var(--text-muted)]">{date}</time>
-          {post.tags.slice(0, 2).map((t) => (
-            <span key={t} className="rounded-full bg-[var(--accent-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--accent)]">
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-export function BlogSearch({ posts }: { posts: Post[] }) {
+/**
+ * Find-in-list for the blog. While there's a query the results replace the
+ * server-rendered list (children); "/" focuses the field from anywhere.
+ */
+export function BlogSearch({ posts, children }: { posts: Post[]; children: ReactNode }) {
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const fuse = useMemo(
-    () =>
-      new Fuse(posts, {
-        keys: ["title", "excerpt", "tags"],
-        threshold: 0.35,
-        includeScore: true,
-      }),
-    [posts]
+    () => new Fuse(posts, { keys: ["title", "excerpt", "tags"], threshold: 0.35 }),
+    [posts],
+  );
+  const results = useMemo(
+    () => (query.trim() ? fuse.search(query).map((r) => r.item) : null),
+    [query, fuse],
   );
 
-  const results = useMemo(() => {
-    if (!query.trim()) return null;
-    return fuse.search(query).map((r) => r.item);
-  }, [query, fuse]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || t?.closest("input, textarea, [contenteditable]")) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="mb-10">
-      <div className="relative">
-        <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
+    <>
+      <div
+        className="flex h-11 items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-2
+                   transition-colors duration-150 focus-within:border-[var(--accent-line)]"
+      >
+        <SearchIcon size={16} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
         <input
+          ref={inputRef}
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search posts…"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-card)] py-2.5 pl-10 pr-4
-                     text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]
-                     focus:border-[var(--accent)] focus:outline-none transition-colors"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setQuery("");
+              e.currentTarget.blur();
+            }
+          }}
+          placeholder={`Search ${posts.length} posts`}
+          aria-label="Search posts"
+          className="h-full min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none
+                     placeholder:text-[var(--text-muted)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
-        {query && (
+        {query ? (
           <button
-            onClick={() => setQuery("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            type="button"
+            onClick={() => {
+              setQuery("");
+              inputRef.current?.focus();
+            }}
             aria-label="Clear search"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors
+                       hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
           >
-            ✕
+            <XIcon size={15} />
           </button>
+        ) : (
+          <kbd className="kbd hidden sm:inline-flex" aria-hidden="true">
+            /
+          </kbd>
         )}
       </div>
 
-      {results !== null && (
-        <div className="mt-4">
+      {results === null ? (
+        children
+      ) : (
+        <section aria-live="polite" className="mt-10">
+          <p className="mb-2 font-mono text-xs text-[var(--text-muted)]">
+            {results.length} {results.length === 1 ? "result" : "results"} for &ldquo;{query}&rdquo;
+          </p>
           {results.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)] py-4 text-center">
-              No posts found for &ldquo;{query}&rdquo;
+            <p className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-14 text-center text-sm text-[var(--text-secondary)]">
+              Nothing matches that. Try a topic like <span className="font-mono">react</span> or{" "}
+              <span className="font-mono">npm</span>.
             </p>
           ) : (
-            <div className="space-y-3">
-              <p className="text-xs text-[var(--text-muted)]">
-                {results.length} {results.length === 1 ? "result" : "results"} for &ldquo;{query}&rdquo;
-              </p>
+            <div className="border-b border-[var(--border)]">
               {results.map((post) => (
-                <SearchCard key={post.id} post={post} />
+                <PostRow key={post.id} post={post} />
               ))}
             </div>
           )}
-        </div>
+        </section>
       )}
-    </div>
+    </>
   );
 }

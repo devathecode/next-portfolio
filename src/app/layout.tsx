@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-context";
-import { playfairDisplay, inter, jetbrainsMono } from "@/utils/fonts";
+import { geistSans, geistMono } from "@/utils/fonts";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { SITE_URL } from "@/lib/site";
+import { PROFILE, jsonLd, siteJsonLd } from "@/lib/profile";
+
+const bingVerification = process.env.NEXT_PUBLIC_BING_VERIFICATION;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.devanshuverma.in"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Devanshu Verma | Frontend Developer",
-    template: "%s — Devanshu Verma",
+    default: `${PROFILE.name} | ${PROFILE.headline}`,
+    template: `%s | ${PROFILE.name}`,
   },
-  description: `Frontend developer based in India with 5+ years shipping production apps across fintech, e-commerce, and SaaS. Specialising in React, Next.js, Angular, and Vue.js. Open to freelance and full-time opportunities.`,
+  description: PROFILE.summary,
+  applicationName: PROFILE.name,
   keywords: [
     "Devanshu Verma",
     "Frontend Developer India",
@@ -23,67 +28,51 @@ export const metadata: Metadata = {
     "freelance web developer India",
     "web development portfolio",
   ],
-  authors: [{ name: "Devanshu Verma", url: "https://www.devanshuverma.in" }],
+  authors: [{ name: PROFILE.name, url: SITE_URL }],
+  creator: PROFILE.name,
+  publisher: PROFILE.name,
+  category: "technology",
+  // No site-wide canonical here: pages set their own, so none inherits the homepage's
   alternates: {
-    canonical: "https://www.devanshuverma.in",
+    types: { "application/rss+xml": `${SITE_URL}/blog/feed.xml` },
   },
   openGraph: {
     type: "website",
-    url: "https://www.devanshuverma.in",
-    title: "Devanshu Verma | Frontend Developer",
-    description:
-      "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
-    siteName: "Devanshu Verma Portfolio",
-    images: [{ url: "/images/dev.jpeg", width: 1200, height: 630, alt: "Devanshu Verma — Frontend Developer" }],
+    locale: "en_US",
+    url: SITE_URL,
+    title: `${PROFILE.name} | ${PROFILE.headline}`,
+    description: PROFILE.summary,
+    siteName: PROFILE.name,
+    // An 8s loop of the preview card. iMessage and Discord play it inline;
+    // everywhere else shows the still from opengraph-image.ts. Not resolved
+    // against metadataBase like images are, so the URL must be absolute.
+    videos: [
+      {
+        url: `${SITE_URL}/og/home-loop.mp4`,
+        secureUrl: `${SITE_URL}/og/home-loop.mp4`,
+        type: "video/mp4",
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Devanshu Verma | Frontend Developer",
-    description:
-      "Frontend developer from India building scalable web apps with React, Next.js, Angular & Vue.js.",
+    title: `${PROFILE.name} | ${PROFILE.headline}`,
+    description: PROFILE.summary,
+  },
+  // Let search and AI answers quote full snippets and large image previews.
+  // No index/follow here, so it never contradicts a page's own noindex.
+  robots: {
+    "max-snippet": -1,
+    "max-image-preview": "large",
+    "max-video-preview": -1,
   },
   verification: {
     google: "G0CPMFouEDVl1J7WUbmQ_HmTVMQUcZL0QpraFVFx_mY",
-    // If it's a different service, you can use custom or other keys:
-    // other: {
-    //   'me-verification': ['your-custom-code'],
-    // },
+    // Bing Webmaster Tools also feeds ChatGPT search and Copilot
+    ...(bingVerification ? { other: { "msvalidate.01": bingVerification } } : {}),
   },
-};
-
-const personJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: "Devanshu Verma",
-  url: "https://www.devanshuverma.in",
-  image: "https://www.devanshuverma.in/images/LInkedin_heashot.png",
-  jobTitle: "Frontend Developer",
-  description:
-    "Frontend developer with 5+ years of experience building scalable web apps using React, Next.js, Angular, and Vue.js.",
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Noida",
-    addressRegion: "Uttar Pradesh",
-    addressCountry: "IN",
-  },
-  knowsAbout: [
-    "React",
-    "Next.js",
-    "Angular",
-    "Vue.js",
-    "TypeScript",
-    "Tailwind CSS",
-  ],
-  sameAs: ["https://www.linkedin.com/in/devthecoder/"],
-};
-
-const websiteJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Devanshu Verma",
-  url: "https://www.devanshuverma.in",
-  description: "Portfolio of Devanshu Verma — Frontend Developer",
-  author: { "@type": "Person", name: "Devanshu Verma" },
 };
 
 export default function RootLayout({
@@ -94,7 +83,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${playfairDisplay.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
         style={{ fontFamily: "var(--font-body)" }}
       >
         {/* Runs synchronously before React hydrates — prevents dark-mode flash */}
@@ -103,14 +92,7 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}})()`,
           }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(siteJsonLd())} />
         <ThemeProvider>
           <div>{children}</div>
         </ThemeProvider>

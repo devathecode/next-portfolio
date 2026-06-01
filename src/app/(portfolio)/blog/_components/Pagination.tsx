@@ -1,36 +1,31 @@
-"use client";
-
 import Link from "next/link";
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
 }
 
+const stepCls =
+  "inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 text-sm " +
+  "font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]";
+
 export function Pagination({ currentPage, totalPages }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const prev = currentPage > 1 ? currentPage - 1 : null;
   const next = currentPage < totalPages ? currentPage + 1 : null;
-
   const pageHref = (p: number) => (p === 1 ? "/blog" : `/blog?page=${p}`);
 
   return (
-    <div className="mt-12 flex items-center justify-between border-t border-[var(--border)] pt-8">
+    <nav aria-label="Pagination" className="mt-12 flex items-center justify-between gap-4">
       {prev !== null ? (
-        <Link
-          href={pageHref(prev)}
-          className="flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-2
-                     text-sm font-medium text-[var(--text-secondary)]
-                     hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M12 7H2M6 3L2 7l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          Previous
+        <Link href={pageHref(prev)} className={stepCls}>
+          <ArrowLeftIcon size={15} />
+          Newer
         </Link>
       ) : (
-        <div />
+        <span />
       )}
 
       <div className="flex items-center gap-1">
@@ -38,10 +33,12 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
           <Link
             key={p}
             href={pageHref(p)}
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+            aria-current={p === currentPage ? "page" : undefined}
+            aria-label={`Page ${p}`}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg font-mono text-sm transition-colors ${
               p === currentPage
-                ? "bg-[var(--accent)] text-black"
-                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                ? "bg-[var(--accent)] font-semibold text-[var(--on-accent)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
             }`}
           >
             {p}
@@ -50,20 +47,13 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       </div>
 
       {next !== null ? (
-        <Link
-          href={pageHref(next)}
-          className="flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-2
-                     text-sm font-medium text-[var(--text-secondary)]
-                     hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-        >
-          Next
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+        <Link href={pageHref(next)} className={stepCls}>
+          Older
+          <ArrowRightIcon size={15} />
         </Link>
       ) : (
-        <div />
+        <span />
       )}
-    </div>
+    </nav>
   );
 }

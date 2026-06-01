@@ -7,9 +7,15 @@ interface ProjectImageProps {
   liveUrl: string;
   alt: string;
   href: string;
+  className?: string;
 }
 
-export default function ProjectImage({ liveUrl, alt, href }: ProjectImageProps) {
+export default function ProjectImage({
+  liveUrl,
+  alt,
+  href,
+  className = "h-44",
+}: ProjectImageProps) {
   const [src, setSrc] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -29,7 +35,7 @@ export default function ProjectImage({ liveUrl, alt, href }: ProjectImageProps) 
 
   return (
     <a href={href} target="_blank" rel="noopener noreferrer" tabIndex={-1} aria-label={alt}>
-      <div className="relative w-full h-44 overflow-hidden bg-[var(--bg-secondary)]">
+      <div className={`relative w-full overflow-hidden bg-[var(--bg-secondary)] ${className}`}>
         {(!src || !loaded) && (
           <div className="absolute inset-0 overflow-hidden bg-[var(--bg-secondary)]">
             <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.4s_infinite] bg-gradient-to-r from-transparent via-[var(--border)]/60 to-transparent" />

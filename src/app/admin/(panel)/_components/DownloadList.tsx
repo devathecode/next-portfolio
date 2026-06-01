@@ -1,125 +1,182 @@
 "use client";
 
-import { useState } from "react";
-import { PdfDownload } from "@/lib/supabase";
-import { Monitor, Smartphone, Tablet, Globe, ChevronDown, ChevronUp } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
+import type { PdfDownload } from "@/lib/supabase";
+import {
+  MonitorIcon,
+  SmartphoneIcon,
+  TabletIcon,
+  ChevronDownIcon,
+  DownloadCloudIcon,
+} from "lucide-react";
+import { EmptyState, StatTile, formatDate } from "./ui";
 
-const DeviceIcon = ({ device }: { device: string | null }) => {
-  if (device === "Mobile")  return <Smartphone  size={13} className="text-sky-400"     />;
-  if (device === "Tablet")  return <Tablet       size={13} className="text-violet-400"  />;
-  return                           <Monitor      size={13} className="text-emerald-400" />;
-};
+type DeviceFilter = "All" | "Desktop" | "Mobile" | "Tablet";
+const FILTERS: DeviceFilter[] = ["All", "Desktop", "Mobile", "Tablet"];
 
-function Row({ d }: { d: PdfDownload }) {
-  const [open, setOpen] = useState(false);
-  const date = new Date(d.created_at);
+function DeviceIcon({ device }: { device: string | null }) {
+  const cls = "text-adm-subtle";
+  if (device === "Mobile") return <SmartphoneIcon size={15} className={cls} />;
+  if (device === "Tablet") return <TabletIcon size={15} className={cls} />;
+  return <MonitorIcon size={15} className={cls} />;
+}
+
+function Details({ d }: { d: PdfDownload }) {
+  const fields = [
+    ["IP", d.ip],
+    ["Device", d.device],
+    ["Screen", d.screen_resolution],
+    ["Viewport", d.viewport],
+    ["Language", d.language],
+    ["Timezone", d.timezone],
+    ["Connection", d.connection_type],
+    ["Referrer", d.referrer],
+    ["UTM source", d.utm_source],
+    ["UTM medium", d.utm_medium],
+    ["UTM campaign", d.utm_campaign],
+    ["Page URL", d.page_url],
+  ] as const;
 
   return (
-    <>
-      <tr
-        className="border-b border-gray-800 hover:bg-white/[0.02] cursor-pointer transition-colors"
-        onClick={() => setOpen((v) => !v)}
-      >
-        {/* Date */}
-        <td className="py-3 px-4 text-xs text-gray-400 whitespace-nowrap">
-          <span className="text-gray-200">{date.toLocaleDateString()}</span>
-          <span className="block text-gray-600">{date.toLocaleTimeString()}</span>
-        </td>
-
-        {/* Device + Browser + OS */}
-        <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            <DeviceIcon device={d.device} />
-            <span className="text-xs text-gray-300">{d.browser ?? "—"}</span>
-            <span className="text-gray-700 text-xs">/</span>
-            <span className="text-xs text-gray-500">{d.os ?? "—"}</span>
-          </div>
-        </td>
-
-        {/* Screen */}
-        <td className="py-3 px-4 text-xs text-gray-500 hidden md:table-cell">
-          {d.screen_resolution ?? "—"}
-        </td>
-
-        {/* Language */}
-        <td className="py-3 px-4 text-xs text-gray-500 hidden lg:table-cell">
-          {d.language ?? "—"}
-        </td>
-
-        {/* IP */}
-        <td className="py-3 px-4 text-xs font-mono text-gray-600 hidden xl:table-cell">
-          {d.ip ?? "—"}
-        </td>
-
-        {/* Expand toggle */}
-        <td className="py-3 px-4 text-right text-gray-600">
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </td>
-      </tr>
-
-      {open && (
-        <tr className="border-b border-gray-800 bg-white/[0.015]">
-          <td colSpan={6} className="px-4 py-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {[
-                { label: "IP",           value: d.ip },
-                { label: "Browser",      value: d.browser },
-                { label: "OS",           value: d.os },
-                { label: "Device",       value: d.device },
-                { label: "Screen",       value: d.screen_resolution },
-                { label: "Viewport",     value: d.viewport },
-                { label: "Language",     value: d.language },
-                { label: "Timezone",     value: d.timezone },
-                { label: "Connection",   value: d.connection_type },
-                { label: "Referrer",     value: d.referrer },
-                { label: "UTM Source",   value: d.utm_source },
-                { label: "UTM Medium",   value: d.utm_medium },
-                { label: "UTM Campaign", value: d.utm_campaign },
-                { label: "Page URL",     value: d.page_url },
-              ].map(({ label, value }) => (
-                <div key={label} className="bg-gray-900 rounded-lg px-3 py-2 border border-gray-800">
-                  <p className="text-[10px] text-gray-600 uppercase tracking-wider mb-0.5">{label}</p>
-                  <p className="text-xs text-gray-300 break-all font-mono">{value ?? <span className="text-gray-700">—</span>}</p>
-                </div>
-              ))}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
+      {fields.map(([label, value]) => (
+        <div key={label} className="min-w-0">
+          <dt className="text-xs text-adm-subtle">{label}</dt>
+          <dd className="break-all text-sm text-adm-text">
+            {value ?? <span className="text-adm-subtle">Not recorded</span>}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
 export function DownloadList({ downloads }: { downloads: PdfDownload[] }) {
+  const [filter, setFilter] = useState<DeviceFilter>("All");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const counts = useMemo(
+    () => ({
+      Desktop: downloads.filter((d) => d.device === "Desktop").length,
+      Mobile: downloads.filter((d) => d.device === "Mobile").length,
+      Tablet: downloads.filter((d) => d.device === "Tablet").length,
+    }),
+    [downloads]
+  );
+
   if (downloads.length === 0) {
     return (
-      <div className="text-center py-20 text-gray-700">
-        <Globe size={40} className="mx-auto mb-3 opacity-40" />
-        <p className="text-sm">No downloads yet.</p>
-        <p className="text-xs mt-1 text-gray-600">
-          PDF downloads from the CSS Tips page will appear here.
-        </p>
-      </div>
+      <EmptyState
+        icon={DownloadCloudIcon}
+        title="No downloads yet"
+        body="Downloads of the CSS Tips PDF will be listed here."
+      />
     );
   }
 
+  const rows = filter === "All" ? downloads : downloads.filter((d) => d.device === filter);
+
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-800">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-800 bg-white/[0.02]">
-            <th className="text-left py-2.5 px-4 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">Date</th>
-            <th className="text-left py-2.5 px-4 text-[10px] uppercase tracking-widest text-gray-600 font-semibold">Browser / OS</th>
-            <th className="text-left py-2.5 px-4 text-[10px] uppercase tracking-widest text-gray-600 font-semibold hidden md:table-cell">Screen</th>
-            <th className="text-left py-2.5 px-4 text-[10px] uppercase tracking-widest text-gray-600 font-semibold hidden lg:table-cell">Language</th>
-            <th className="text-left py-2.5 px-4 text-[10px] uppercase tracking-widest text-gray-600 font-semibold hidden xl:table-cell">IP</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {downloads.map((d) => <Row key={d.id} d={d} />)}
-        </tbody>
-      </table>
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile label="Total downloads" value={downloads.length} tone="accent" />
+        <StatTile label="Desktop" value={counts.Desktop} />
+        <StatTile label="Mobile" value={counts.Mobile} />
+        <StatTile label="Tablet" value={counts.Tablet} />
+      </div>
+
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by device">
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            aria-pressed={filter === f}
+            className={`h-8 rounded-lg border px-3 text-sm font-medium transition ${
+              filter === f
+                ? "border-adm-accent bg-adm-accent/15 text-adm-accent-text"
+                : "border-adm-border bg-adm-surface text-adm-muted hover:text-adm-text"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-adm-border bg-adm-surface">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-adm-border text-left text-xs text-adm-subtle">
+              <th className="px-4 py-2.5 font-medium">Date</th>
+              <th className="px-4 py-2.5 font-medium">Browser and OS</th>
+              <th className="hidden px-4 py-2.5 font-medium md:table-cell">Screen</th>
+              <th className="hidden px-4 py-2.5 font-medium lg:table-cell">Language</th>
+              <th className="w-10 px-4 py-2.5" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-adm-border">
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-10 text-center text-adm-muted">
+                  No {filter.toLowerCase()} downloads.
+                </td>
+              </tr>
+            )}
+            {rows.map((d) => {
+              const open = openId === d.id;
+              return (
+                <Fragment key={d.id}>
+                  <tr
+                    onClick={() => setOpenId(open ? null : d.id)}
+                    className="cursor-pointer transition hover:bg-adm-raised"
+                  >
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <p className="text-adm-text">{formatDate(d.created_at)}</p>
+                      <p className="text-xs text-adm-subtle">
+                        {new Date(d.created_at).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="flex items-center gap-2 text-adm-text">
+                        <DeviceIcon device={d.device} />
+                        {d.browser ?? "Unknown"}
+                        <span className="text-adm-subtle">on {d.os ?? "unknown OS"}</span>
+                      </span>
+                    </td>
+                    <td className="hidden px-4 py-3 text-adm-muted md:table-cell">
+                      {d.screen_resolution ?? "-"}
+                    </td>
+                    <td className="hidden px-4 py-3 text-adm-muted lg:table-cell">
+                      {d.language ?? "-"}
+                    </td>
+                    <td className="px-4 py-3 text-adm-subtle">
+                      <button
+                        aria-label={open ? "Hide details" : "Show details"}
+                        aria-expanded={open}
+                        className="inline-flex"
+                      >
+                        <ChevronDownIcon
+                          size={16}
+                          className={`transition-transform ${open ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    </td>
+                  </tr>
+                  {open && (
+                    <tr className="bg-adm-raised">
+                      <td colSpan={5} className="px-4 py-4">
+                        <Details d={d} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

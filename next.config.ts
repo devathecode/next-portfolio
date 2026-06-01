@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.microlink.io" },
     ],
   },
+  // The PDF routes read the embedded fonts from disk at runtime.
+  outputFileTracingIncludes: {
+    "/admin/quotations/[id]/pdf": ["./public/fonts/**"],
+    "/admin/contracts/[id]/pdf": ["./public/fonts/**"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",

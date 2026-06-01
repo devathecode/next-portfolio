@@ -1,99 +1,67 @@
+import { BsLinkedin } from "react-icons/bs";
+import { ArrowUpRightIcon } from "lucide-react";
 import AnimateOnScroll from "./AnimateOnScroll";
 import ContactForm from "./ContactForm";
-import { MailIcon } from "lucide-react";
+import CopyEmail from "./CopyEmail";
+import { CONTACT_EMAIL, LINKEDIN_URL } from "@/lib/site";
 
 const ContactComponent = () => {
   return (
     <section
       id="contact"
-      className="relative overflow-hidden py-24 px-5 lg:px-10"
+      className="border-t border-[var(--border)] px-5 py-24 md:py-32 lg:px-10"
     >
-      {/* Ambient orb */}
-      <div
-        aria-hidden="true"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                   w-[600px] h-[400px] bg-amber-500/4 dark:bg-amber-400/5
-                   rounded-full blur-[150px] pointer-events-none"
-      />
-
-      <div className="max-w-7xl mx-auto">
-        {/* Section heading */}
-        <AnimateOnScroll direction="up" className="mb-16">
-          <p className="section-label mb-4">Get in touch</p>
-          <div className="flex items-end gap-6">
-            <h2
-              className="font-display font-bold leading-none tracking-tight
-                         text-[clamp(2.4rem,5vw,4rem)] text-[var(--text-primary)]"
-            >
-              Contact
-            </h2>
-            <div className="h-px flex-1 max-w-xs bg-[var(--border)] mb-3" />
-          </div>
-          <p className="text-[var(--text-secondary)] text-base mt-4 max-w-lg">
-            Whether you have a project in mind, a role to discuss, or just want
-            to say hello — my inbox is always open.
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+        {/* Intro + direct channels */}
+        <AnimateOnScroll direction="up" className="lg:col-span-5">
+          <h2
+            className="max-w-[14ch] text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-semibold leading-[1.05]
+                       tracking-[-0.035em] text-[var(--text-primary)]"
+          >
+            Have a web app in mind?
+          </h2>
+          <p className="mt-5 max-w-[44ch] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+            A project, a role, or just a hello. My inbox is open and I usually reply
+            within 24 hours.
           </p>
+
+          <div className="mt-10 max-w-md space-y-3">
+            <CopyEmail />
+            <a
+              href={LINKEDIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]
+                         px-4 py-3.5 text-sm text-[var(--text-secondary)] transition-colors duration-200
+                         hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]"
+            >
+              <BsLinkedin size={15} className="shrink-0 text-[var(--text-muted)]" />
+              <span className="flex-1">Connect on LinkedIn</span>
+              <ArrowUpRightIcon
+                size={15}
+                className="text-[var(--text-muted)] transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+              />
+            </a>
+          </div>
         </AnimateOnScroll>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
-
-          {/* Left: direct email card */}
-          <AnimateOnScroll direction="fade" delay={0.1} className="lg:col-span-4">
-            <div
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]
-                         p-6 space-y-5"
-            >
-              <div
-                className="inline-flex items-center justify-center w-10 h-10 rounded-xl
-                           bg-[var(--accent-muted)] text-[var(--accent)]"
-              >
-                <MailIcon size={18} />
-              </div>
-
-              <div>
-                <p className="font-mono text-xs text-[var(--text-muted)] mb-1">Email me directly</p>
-                <a
-                  href="mailto:code.devanshu@gmail.com"
-                  className="font-medium text-[var(--text-primary)] hover:text-[var(--accent)]
-                             transition-colors duration-200 break-all text-sm"
-                >
-                  code.devanshu@gmail.com
-                </a>
-              </div>
-
-              <div className="h-px bg-[var(--border)]" />
-
-              <div>
-                <p className="font-mono text-xs text-[var(--text-muted)] mb-2">Also on</p>
-                <a
-                  href="https://www.linkedin.com/in/devthecoder/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-sm text-[var(--text-secondary)]
-                             hover:text-[var(--accent)] transition-colors duration-200"
-                >
-                  LinkedIn →
-                </a>
-              </div>
+        {/* Compose window */}
+        <AnimateOnScroll direction="up" delay={0.1} className="lg:col-span-7">
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
+            <div className="flex h-11 items-center border-b border-[var(--border)] bg-[var(--bg-secondary)] px-5">
+              <p className="text-sm font-medium text-[var(--text-primary)]">New message</p>
             </div>
-          </AnimateOnScroll>
-
-          {/* Right: form */}
-          <AnimateOnScroll direction="up" delay={0.15} className="lg:col-span-8">
-            <div
-              className="rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]
-                         p-6 md:p-8"
-            >
-              <p className="font-display text-xl font-semibold text-[var(--text-primary)] mb-1">
-                Send a message
-              </p>
-              <p className="text-sm text-[var(--text-secondary)] mb-6">
-                I&apos;ll get back to you within 24 hours.
-              </p>
+            <div className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3 text-sm">
+              <span className="w-6 text-[var(--text-muted)]">To</span>
+              <span className="truncate rounded-md bg-[var(--accent-muted)] px-2 py-0.5 font-mono text-[13px] text-[var(--accent)]">
+                {CONTACT_EMAIL}
+              </span>
+            </div>
+            <div className="p-5 md:p-7">
               <ContactForm />
             </div>
-          </AnimateOnScroll>
-        </div>
+          </div>
+        </AnimateOnScroll>
       </div>
     </section>
   );

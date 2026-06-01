@@ -1,11 +1,6 @@
-import Header from "@/components/Header";
+import BrowserShell from "@/components/browser/BrowserShell";
 import { ReactNode } from "react";
 
 export default function PortfolioLayout({ children }: { children: ReactNode }) {
-  return (
-    <>
-      <Header />
-      {children}
-    </>
-  );
+  return <BrowserShell>{children}</BrowserShell>;
 }

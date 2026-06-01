@@ -104,7 +104,7 @@ export default function ThankYouPage() {
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full
                        border border-[var(--accent)] text-[var(--accent)]
                        font-semibold text-sm
-                       hover:bg-[var(--accent)] hover:text-black
+                       hover:bg-[var(--accent)] hover:text-[var(--on-accent)]
                        transition-all duration-200 group"
           >
             <ArrowLeftIcon

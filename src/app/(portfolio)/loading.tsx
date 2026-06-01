@@ -1,15 +1,17 @@
+import PageLoading from "@/components/browser/PageLoading";
+
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div
-          className="h-10 w-10 rounded-full border-2 border-[var(--border)] border-t-[var(--accent)] animate-spin"
-          aria-label="Loading"
-        />
-        <p className="font-mono text-xs text-[var(--text-muted)] tracking-widest uppercase">
-          Loading…
-        </p>
-      </div>
+    <div
+      role="status"
+      className="flex min-h-[calc(100dvh_-_var(--chrome-h))] items-center justify-center bg-[var(--bg-primary)]"
+    >
+      <span
+        aria-hidden="true"
+        className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]"
+      />
+      <span className="sr-only">Loading…</span>
+      <PageLoading />
     </div>
   );
 }

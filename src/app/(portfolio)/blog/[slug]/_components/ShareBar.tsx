@@ -1,42 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sendGAEvent } from "@next/third-parties/google";
-
-function IconCopy() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="4.5" y="4.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M9.5 4.5V3A1.5 1.5 0 0 0 8 1.5H3A1.5 1.5 0 0 0 1.5 3v5A1.5 1.5 0 0 0 3 9.5h1.5"
-            stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconCheck() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <path d="M2.5 7.5L5.5 10.5L11.5 4" stroke="currentColor" strokeWidth="1.6"
-            strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconX() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 300 300" fill="currentColor" aria-hidden="true">
-      <path d="M178.57 127.15L290.27 0h-26.46l-97.03 110.38L89.34 0H0l117.13 166.93L0 300.25h26.46l102.4-116.59 81.8 116.59H300M35.02 19.61h40.56l187.31 262.13h-40.59" />
-    </svg>
-  );
-}
-
-function IconLinkedIn() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  );
-}
+import { CheckIcon, LinkIcon, Share2Icon } from "lucide-react";
+import { BsLinkedin } from "react-icons/bs";
+import { FaXTwitter } from "react-icons/fa6";
+import { useBrowser } from "@/components/browser/context";
 
 interface ShareBarProps {
   url: string;
@@ -45,10 +14,16 @@ interface ShareBarProps {
 }
 
 export function ShareBar({ url, title, layout = "horizontal" }: ShareBarProps) {
+  const { notify } = useBrowser();
   const [copied, setCopied] = useState(false);
+  const [canShare, setCanShare] = useState(false);
   const slug = url.split("/").pop() ?? url;
 
-  const handleCopy = async () => {
+  useEffect(() => setCanShare(typeof navigator.share === "function"), []);
+
+  const track = (platform: string) => sendGAEvent("event", "blog_share", { platform, post_slug: slug });
+
+  const copy = async () => {
     try {
       await navigator.clipboard.writeText(url);
     } catch {
@@ -60,104 +35,56 @@ export function ShareBar({ url, title, layout = "horizontal" }: ShareBarProps) {
       document.body.removeChild(ta);
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2200);
-    sendGAEvent("event", "blog_share", { platform: "copy", post_slug: slug });
+    notify("Link copied");
+    setTimeout(() => setCopied(false), 2000);
+    track("copy");
+  };
+
+  const nativeShare = async () => {
+    try {
+      await navigator.share({ title, url });
+      track("native");
+    } catch {
+      // Dismissed
+    }
   };
 
   const xUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}&via=devthecoder`;
   const liUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
 
-  if (layout === "vertical") {
-    return (
-      <div className="flex flex-col gap-2">
-        <span className="section-label mb-2">Share</span>
-
-        <button
-          onClick={handleCopy}
-          className={`flex w-full items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-xs
-                      font-medium transition-all duration-150 ${
-                        copied
-                          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-                          : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                      }`}
-        >
-          {copied ? <IconCheck /> : <IconCopy />}
-          {copied ? "Copied!" : "Copy link"}
-        </button>
-
-        <a
-          href={xUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => sendGAEvent("event", "blog_share", { platform: "x", post_slug: slug })}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border)]
-                     bg-[var(--bg-card)] px-3.5 py-2.5 text-xs font-medium
-                     text-[var(--text-secondary)] transition-colors
-                     hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"
-        >
-          <IconX />
-          Post on X
-        </a>
-
-        <a
-          href={liUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => sendGAEvent("event", "blog_share", { platform: "linkedin", post_slug: slug })}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-[#0A66C2]/30
-                     bg-[#0A66C2]/6 px-3.5 py-2.5 text-xs font-medium text-[#0A66C2]
-                     transition-colors hover:border-[#0A66C2]/60 hover:bg-[#0A66C2]/12"
-        >
-          <IconLinkedIn />
-          LinkedIn
-        </a>
-      </div>
-    );
-  }
-
-  // horizontal (mobile inline)
-  const btnBase =
-    "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-150";
+  const vertical = layout === "vertical";
+  const item = vertical
+    ? "flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--text-secondary)] transition-colors " +
+      "hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+    : "inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 text-[13px] " +
+      "font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]";
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="section-label mr-1">Share</span>
+    <div className={vertical ? "flex flex-col" : "flex flex-wrap items-center gap-2"}>
+      {vertical && <p className="mb-2 px-2.5 font-mono text-[11px] text-[var(--text-muted)]">Share</p>}
 
-      <button
-        onClick={handleCopy}
-        className={`${btnBase} ${
-          copied
-            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-            : "border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
-        }`}
-      >
-        {copied ? <IconCheck /> : <IconCopy />}
-        {copied ? "Copied!" : "Copy link"}
+      <button type="button" onClick={copy} className={item}>
+        {copied ? (
+          <CheckIcon size={15} className="text-[var(--accent)]" />
+        ) : (
+          <LinkIcon size={15} className="text-[var(--text-muted)]" />
+        )}
+        {copied ? "Copied" : "Copy link"}
       </button>
-
-      <a
-        href={xUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => sendGAEvent("event", "blog_share", { platform: "x", post_slug: slug })}
-        className={`${btnBase} border-[var(--border)] bg-[var(--bg-card)] text-[var(--text-secondary)]
-                    hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]`}
-      >
-        <IconX />
+      <a href={xUrl} target="_blank" rel="noopener noreferrer" onClick={() => track("x")} className={item}>
+        <FaXTwitter size={13} className="text-[var(--text-muted)]" />
         Post on X
       </a>
-
-      <a
-        href={liUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={() => sendGAEvent("event", "blog_share", { platform: "linkedin", post_slug: slug })}
-        className={`${btnBase} border-[#0A66C2]/30 bg-[#0A66C2]/6 text-[#0A66C2]
-                    hover:border-[#0A66C2]/60 hover:bg-[#0A66C2]/12`}
-      >
-        <IconLinkedIn />
-        Share on LinkedIn
+      <a href={liUrl} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")} className={item}>
+        <BsLinkedin size={13} className="text-[var(--text-muted)]" />
+        LinkedIn
       </a>
+      {canShare && (
+        <button type="button" onClick={nativeShare} className={item}>
+          <Share2Icon size={15} className="text-[var(--text-muted)]" />
+          More
+        </button>
+      )}
     </div>
   );
 }

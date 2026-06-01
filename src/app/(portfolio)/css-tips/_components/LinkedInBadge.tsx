@@ -1,56 +1,28 @@
-"use client";
-
 import Image from "next/image";
-import AnimateOnScroll from "@/components/AnimateOnScroll";
 import { BsLinkedin } from "react-icons/bs";
+import { LINKEDIN_URL } from "@/lib/site";
 
+/** Author row under the CSS tips hero, with a follow link. */
 export default function LinkedInBadge() {
   return (
-    <AnimateOnScroll direction="up" delay={0.18}>
-      <div className="mt-8 flex items-center gap-3 p-3 pr-4 rounded-xl w-full
-                      border border-gray-200 dark:border-white/[0.07]
-                      bg-white/70 dark:bg-white/[0.03]
-                      backdrop-blur-sm">
-        {/* Avatar */}
-        <div className="relative shrink-0">
-          <Image
-            src="/images/dev.png"
-            alt="Devanshu Verma"
-            width={44}
-            height={44}
-            className="rounded-full object-cover ring-2 ring-yellow-600/30"
-          />
-          {/* LinkedIn dot */}
-          <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0A66C2] flex items-center justify-center ring-2 ring-white dark:ring-gray-950">
-            <BsLinkedin size={8} className="text-white" />
-          </span>
-        </div>
-
-        {/* Text */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
-            Devanshu Verma
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-tight">
-            Sharing CSS &amp; frontend tips weekly
-          </p>
-        </div>
-
-        {/* Follow button */}
-        <a
-          href="https://www.linkedin.com/in/devthecoder/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg
-                     bg-[#0A66C2] hover:bg-[#004182]
-                     text-white text-xs font-semibold
-                     transition-all duration-200
-                     hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#0A66C2]/30"
-        >
-          <BsLinkedin size={11} />
-          Follow
-        </a>
+    <div className="mt-10 flex max-w-md items-center gap-3 border-t border-[var(--border)] pt-6">
+      <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]">
+        <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="40px" className="object-cover" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-[var(--text-primary)]">Devanshu Verma</p>
+        <p className="text-[13px] text-[var(--text-secondary)]">Sharing CSS and frontend tips weekly</p>
       </div>
-    </AnimateOnScroll>
+      <a
+        href={LINKEDIN_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3
+                   text-[13px] font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent-line)]"
+      >
+        <BsLinkedin size={13} className="text-[var(--text-muted)]" />
+        Follow
+      </a>
+    </div>
   );
 }
