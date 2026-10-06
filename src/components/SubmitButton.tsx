@@ -17,20 +17,17 @@ const Submitbutton: FC<ButtonData> = ({ buttonText, isPending: externalPending }
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex h-11 items-center gap-2.5 rounded-lg bg-[var(--accent)] px-5
-                 text-sm font-semibold text-[var(--on-accent)] transition-opacity duration-200
-                 hover:opacity-90 active:scale-[0.98]
-                 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+      className="btn btn-plate"
     >
       {pending ? (
         <>
-          <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <span aria-hidden="true" className="h-3.5 w-3.5 animate-spin border-2 border-current border-t-transparent" />
           Sending…
         </>
       ) : (
         <>
           {buttonText}
-          <SendIcon size={14} />
+          <SendIcon size={15} strokeWidth={2.2} />
         </>
       )}
     </button>

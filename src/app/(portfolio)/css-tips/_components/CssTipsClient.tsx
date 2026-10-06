@@ -5,8 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CheckIcon, CircleCheckIcon, CircleXIcon, CopyIcon, DownloadIcon, SearchIcon, XIcon } from "lucide-react";
 import LinkedInBadge from "./LinkedInBadge";
 import Footer from "@/components/Footer";
-import AnimateOnScroll from "@/components/AnimateOnScroll";
-import { useBrowser } from "@/components/browser/context";
+import { useSite } from "@/components/site/context";
 import { CSS_TIPS, CATEGORIES, type CssTip, type Category } from "./tips-data";
 import { browserLabel, runChecks, type SupportMap } from "./feature-checks";
 
@@ -59,17 +58,17 @@ function highlightCSS(raw: string): string {
 /** Code panels stay dark in both themes, like an editor. */
 const CODE_STYLES = `
   .css-code em { font-style: normal; }
-  .css-comment { color: #71717a; font-style: italic !important; }
-  .css-string  { color: #86efac; }
-  .css-at      { color: #f0b100; font-weight: 600; }
-  .css-prop    { color: #93c5fd; }
-  .css-val     { color: #e4e4e7; }
+  .css-comment { color: #8f8574; }
+  .css-string  { color: #b9c48a; }
+  .css-at      { color: #e3a84b; font-weight: 600; }
+  .css-prop    { color: #f08a5d; }
+  .css-val     { color: #ede4d3; }
 `;
 
 function CssCodeBlock({ code }: { code: string }) {
   return (
     <pre
-      className="css-code overflow-x-auto font-mono text-xs leading-relaxed text-zinc-300 sm:text-[12.5px]"
+      className="css-code overflow-x-auto font-mono text-xs leading-relaxed text-[#cfc5b3] sm:text-[12.5px]"
       dangerouslySetInnerHTML={{ __html: highlightCSS(code) }}
     />
   );
@@ -78,11 +77,11 @@ function CssCodeBlock({ code }: { code: string }) {
 // ─── Support line ─────────────────────────────────────────────────────────────
 function SupportLine({ supported }: { supported: boolean | undefined }) {
   if (supported === undefined) {
-    return <span className="h-3 w-40 animate-pulse rounded bg-[var(--bg-secondary)]" aria-hidden="true" />;
+    return <span className="h-3 w-40 animate-pulse bg-[var(--bg-secondary)]" aria-hidden="true" />;
   }
   return supported ? (
     <span className="inline-flex items-center gap-1.5 text-[var(--text-secondary)]">
-      <CircleCheckIcon size={14} className="text-[var(--accent)]" />
+      <CircleCheckIcon size={15} strokeWidth={2.2} className="text-[var(--accent)]" />
       Works in your browser
     </span>
   ) : (
@@ -120,11 +119,11 @@ function TipCard({
       animate={{ opacity: 1, y: 0 }}
       exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
       transition={{ duration: reduce ? 0 : 0.4, delay: reduce ? 0 : Math.min(index, 8) * 0.03, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]
-                 shadow-[var(--shadow-card)] transition-colors duration-200 hover:border-[var(--accent-line)]"
+      className="flex flex-col overflow-hidden bg-[var(--bg-card)] shadow-[inset_0_0_0_1.5px_var(--border)]
+                 transition-shadow duration-100 hover:shadow-[inset_0_0_0_2px_var(--text-primary)]"
     >
       <div className="flex items-center justify-between gap-3 px-5 pt-5">
-        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 font-mono text-[11px] text-[var(--text-muted)]">
+        <p className="t-label flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[var(--text-muted)]">
           <span className="text-[var(--accent)]">{tip.category}</span>
           <span aria-hidden="true">/</span>
           <span>{tip.support}</span>
@@ -134,23 +133,23 @@ function TipCard({
           onClick={() => onCopy(tip.id, activeCode)}
           aria-label={`Copy ${view === "old" && hasComparison ? "before" : "after"} code for ${tip.title}`}
           title="Copy code"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors
-                     hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center text-[var(--text-muted)] transition-colors duration-100
+                     hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
         >
           {isCopied ? <CheckIcon size={15} className="text-[var(--accent)]" /> : <CopyIcon size={15} />}
         </button>
       </div>
 
       <div className="px-5 pb-5 pt-2">
-        <h3 className="text-[17px] font-semibold leading-snug tracking-[-0.015em] text-[var(--text-primary)]">
+        <h3 className="font-display text-[1.9rem] uppercase leading-[0.95] text-[var(--text-primary)]">
           {tip.title}
         </h3>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{tip.description}</p>
+        <p className="mt-3 text-[15px] leading-relaxed text-[var(--text-secondary)]">{tip.description}</p>
       </div>
 
       {/* Editor panel */}
-      <div className="mx-3 overflow-hidden rounded-xl border border-white/[0.06] bg-[#111114]">
-        <div className="flex h-9 items-end gap-0.5 border-b border-white/[0.06] px-2" role={hasComparison ? "tablist" : undefined}>
+      <div className="mx-3 overflow-hidden bg-[#15120f]">
+        <div className="flex h-10 items-end gap-0.5 border-b border-[#2c2620] px-2" role={hasComparison ? "tablist" : undefined}>
           {hasComparison ? (
             (["old", "new"] as const).map((v) => (
               <button
@@ -159,17 +158,17 @@ function TipCard({
                 role="tab"
                 aria-selected={view === v}
                 onClick={() => setView(v)}
-                className={`-mb-px h-8 rounded-t-md border-b-2 px-2.5 font-mono text-[11px] transition-colors ${
+                className={`-mb-px h-9 border-b-2 px-2.5 font-mono text-[11px] transition-colors duration-100 ${
                   view === v
-                    ? "border-[#f0b100] text-zinc-100"
-                    : "border-transparent text-zinc-500 hover:text-zinc-300"
+                    ? "border-[#d4471c] text-[#ede4d3]"
+                    : "border-transparent text-[#8f8574] hover:text-[#cfc5b3]"
                 }`}
               >
                 {v === "old" ? "before.css" : "after.css"}
               </button>
             ))
           ) : (
-            <span className="-mb-px h-8 border-b-2 border-[#f0b100] px-2.5 pt-2 font-mono text-[11px] text-zinc-100">
+            <span className="-mb-px h-9 border-b-2 border-[#d4471c] px-2.5 pt-2.5 font-mono text-[11px] text-[#ede4d3]">
               styles.css
             </span>
           )}
@@ -188,7 +187,7 @@ function TipCard({
         </AnimatePresence>
       </div>
 
-      <p className="mt-auto flex min-h-[3rem] items-center px-5 py-3 text-[13px]">
+      <p className="mt-auto flex min-h-[3rem] items-center px-5 py-3 text-[14px]">
         <SupportLine supported={supported} />
       </p>
     </motion.article>
@@ -201,20 +200,20 @@ function SupportReport({ support, browser }: { support: SupportMap | null; brows
   const passed = support ? CSS_TIPS.filter((t) => support[t.id]).length : 0;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
-      <div className="flex h-11 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-secondary)] px-5">
-        <p className="text-sm font-medium text-[var(--text-primary)]">Support report</p>
-        <p className="truncate font-mono text-[11px] text-[var(--text-muted)]">{support ? browser : "Checking…"}</p>
+    <div className="field-ink cut-b overflow-hidden">
+      <div className="flex h-14 items-center justify-between gap-3 border-b border-[var(--border)] px-5">
+        <p className="font-display text-[1.6rem] uppercase leading-none text-[var(--text-primary)]">Support report</p>
+        <p className="t-label truncate text-[var(--text-muted)]">{support ? browser : "Checking…"}</p>
       </div>
 
       <div className="p-5 md:p-6">
         <p className="flex items-baseline gap-2">
-          <span className="text-5xl font-semibold tabular-nums tracking-[-0.04em] text-[var(--text-primary)]">
+          <span className="font-display text-[5.5rem] leading-[0.8] text-[var(--accent)]">
             {support ? passed : "–"}
           </span>
-          <span className="text-lg text-[var(--text-muted)]">/ {total}</span>
+          <span className="font-display text-[2rem] leading-none text-[var(--text-muted)]">/ {total}</span>
         </p>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+        <p className="mt-3 text-[15px] text-[var(--text-secondary)]">
           {!support
             ? "Testing each feature in your browser…"
             : passed === total
@@ -227,23 +226,23 @@ function SupportReport({ support, browser }: { support: SupportMap | null; brows
             const tips = CSS_TIPS.filter((t) => t.category === cat);
             const ok = support ? tips.filter((t) => support[t.id]).length : 0;
             return (
-              <li key={cat} className="grid grid-cols-[7.5rem_1fr_2.5rem] items-center gap-3 text-[13px]">
+              <li key={cat} className="grid grid-cols-[8rem_1fr_2.5rem] items-center gap-3 text-[14px]">
                 <span className="truncate text-[var(--text-secondary)]">{cat}</span>
                 <span className="flex gap-1" aria-hidden="true">
                   {tips.map((t) => (
                     <span
                       key={t.id}
-                      className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
+                      className={`h-2 flex-1 transition-colors duration-300 ${
                         !support
                           ? "animate-pulse bg-[var(--bg-secondary)]"
                           : support[t.id]
                             ? "bg-[var(--accent)]"
-                            : "bg-[var(--border)]"
+                            : "bg-[var(--bg-secondary)]"
                       }`}
                     />
                   ))}
                 </span>
-                <span className="text-right font-mono text-xs tabular-nums text-[var(--text-muted)]">
+                <span className="t-label text-right text-[var(--text-muted)]">
                   {support ? `${ok}/${tips.length}` : ""}
                 </span>
               </li>
@@ -252,7 +251,7 @@ function SupportReport({ support, browser }: { support: SupportMap | null; brows
         </ul>
       </div>
 
-      <p className="border-t border-[var(--border)] px-5 py-3 font-mono text-[11px] text-[var(--text-muted)] md:px-6">
+      <p className="border-t border-[var(--border)] px-5 py-3.5 text-[13px] text-[var(--text-muted)] md:px-6">
         Tested live with CSS.supports(). Nothing is looked up.
       </p>
     </div>
@@ -262,7 +261,7 @@ function SupportReport({ support, browser }: { support: SupportMap | null; brows
 // ─── Main client component ────────────────────────────────────────────────────
 export default function CssTipsClient() {
   const reduce = useReducedMotion();
-  const { notify } = useBrowser();
+  const { notify } = useSite();
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [copied, setCopied] = useState<number | null>(null);
@@ -454,11 +453,9 @@ export default function CssTipsClient() {
       type="button"
       onClick={handleDownloadPDF}
       disabled={downloading}
-      className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold
-                 text-[var(--on-accent)] transition-opacity duration-200 hover:opacity-90 active:scale-[0.98]
-                 disabled:cursor-wait disabled:opacity-60"
+      className="btn btn-plate shrink-0 disabled:cursor-wait"
     >
-      <DownloadIcon size={16} className={downloading ? "animate-bounce" : ""} />
+      <DownloadIcon size={16} strokeWidth={2.2} className={downloading ? "animate-bounce" : ""} />
       {downloading ? "Generating PDF…" : label}
     </button>
   );
@@ -468,23 +465,20 @@ export default function CssTipsClient() {
       <style>{CODE_STYLES}</style>
 
       {/* ── Hero ── */}
-      <section className="px-5 pb-16 pt-14 md:pb-24 md:pt-20 lg:px-10">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-12 lg:gap-16">
-          <AnimateOnScroll direction="up" className="lg:col-span-7">
-            <h1
-              className="max-w-[16ch] text-balance text-[clamp(2.4rem,5.2vw,4rem)] font-semibold leading-[1.03]
-                         tracking-[-0.04em] text-[var(--text-primary)]"
-            >
-              Modern CSS <span className="text-[var(--accent)]">tips</span> and tricks
+      <section data-act="CSS tips" data-field="ochre" className="field-ochre grain px-5 pb-16 pt-12 md:pb-24 md:pt-16 lg:px-10">
+        <div className="mx-auto grid max-w-[90rem] items-center gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-7">
+            <h1 className="t-title cut-in-up max-w-[12ch]">
+              Modern CSS <span className="offset-word text-[var(--cardinal)]">tips</span> and tricks
             </h1>
-            <p className="mt-6 max-w-[34rem] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+            <p className="mt-7 max-w-[36rem] text-[18px] leading-relaxed text-[var(--text-primary)] md:text-[19px]">
               {CSS_TIPS.length} modern CSS features every frontend developer should know. Container
               queries, cascade layers, :has() and more, each with a real before and after.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
               {downloadButton("Download PDF")}
-              <p className="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)]">
+              <p className="t-label flex items-center gap-3 text-[var(--text-secondary)]">
                 <span>{CSS_TIPS.length} tips</span>
                 <span aria-hidden="true">/</span>
                 <span>{CATEGORIES.length} topics</span>
@@ -494,30 +488,30 @@ export default function CssTipsClient() {
             </div>
 
             <LinkedInBadge />
-          </AnimateOnScroll>
+          </div>
 
-          <AnimateOnScroll direction="up" delay={0.1} className="lg:col-span-5">
+          <div className="cut-in-right lg:col-span-5">
             <SupportReport support={support} browser={browser} />
-          </AnimateOnScroll>
+          </div>
         </div>
       </section>
 
       {/* ── Filters + grid ── */}
-      <section aria-label="Tips" className="border-t border-[var(--border)] px-5 py-12 md:py-16 lg:px-10">
-        <div className="mx-auto max-w-7xl">
+      <section aria-label="Tips" data-act="Tips" data-field="paper" className="field-paper px-5 py-14 md:py-20 lg:px-10">
+        <div className="mx-auto max-w-[90rem]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div
-              className="flex h-10 items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-1.5
-                         transition-colors focus-within:border-[var(--accent-line)] lg:w-72"
+              className="flex h-12 items-center gap-2.5 bg-[var(--bg-card)] pl-4 pr-1.5 shadow-[inset_0_0_0_1.5px_var(--border)]
+                         transition-shadow duration-100 focus-within:shadow-[inset_0_0_0_2.5px_var(--text-primary)] lg:w-80"
             >
-              <SearchIcon size={15} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+              <SearchIcon size={17} strokeWidth={2.2} className="shrink-0 text-[var(--text-primary)]" aria-hidden="true" />
               <input
                 type="search"
                 placeholder="Search tips"
                 aria-label="Search tips"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-full min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none
+                className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-[var(--text-primary)] outline-none
                            placeholder:text-[var(--text-muted)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
               />
               {searchQuery && (
@@ -525,7 +519,7 @@ export default function CssTipsClient() {
                   type="button"
                   onClick={() => setSearchQuery("")}
                   aria-label="Clear search"
-                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--chrome-hover)]
+                  className="flex h-9 w-9 items-center justify-center text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]
                              hover:text-[var(--text-primary)]"
                 >
                   <XIcon size={14} />
@@ -536,8 +530,7 @@ export default function CssTipsClient() {
             <div
               role="tablist"
               aria-label="Filter by topic"
-              className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)] p-1
-                         [scrollbar-width:none]"
+              className="flex max-w-full gap-1 overflow-x-auto [scrollbar-width:none]"
             >
               {filters.map(({ id, count }) => {
                 const active = activeCategory === id;
@@ -548,28 +541,19 @@ export default function CssTipsClient() {
                     role="tab"
                     aria-selected={active}
                     onClick={() => setActiveCategory(id)}
-                    className={`relative h-8 shrink-0 whitespace-nowrap rounded-lg px-3 text-[13px] font-medium transition-colors ${
-                      active ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                    className={`t-label relative h-12 shrink-0 whitespace-nowrap px-3.5 transition-colors duration-100 ${
+                      active ? "bg-[var(--ink)] text-[var(--bone-ink)]" : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
                     }`}
                   >
-                    {active && (
-                      <motion.span
-                        layoutId="css-tip-filter"
-                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
-                        className="absolute inset-0 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]"
-                      />
-                    )}
-                    <span className="relative">
-                      {id}
-                      <span className="ml-1.5 font-mono text-xs text-[var(--text-muted)]">{count}</span>
-                    </span>
+                    {id}
+                    <span className={`ml-2 ${active ? "text-[var(--ochre-lit)]" : "text-[var(--accent)]"}`}>{count}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <p className="mb-6 mt-5 min-h-[1rem] font-mono text-xs text-[var(--text-muted)]" aria-live="polite">
+          <p className="t-label mb-6 mt-5 min-h-[1rem] text-[var(--text-muted)]" aria-live="polite">
             {(searchQuery || activeCategory !== "All") && filteredTips.length > 0
               ? `Showing ${filteredTips.length} of ${CSS_TIPS.length}`
               : ""}
@@ -591,17 +575,16 @@ export default function CssTipsClient() {
           </motion.div>
 
           {filteredTips.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center">
-              <p className="font-medium text-[var(--text-primary)]">No tips match that</p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">Try another word or show every topic.</p>
+            <div className="border-y border-[var(--border)] px-6 py-16 text-center">
+              <p className="t-card text-[var(--text-primary)]">No tips match that</p>
+              <p className="mt-2 text-[16px] text-[var(--text-secondary)]">Try another word or show every topic.</p>
               <button
                 type="button"
                 onClick={() => {
                   setSearchQuery("");
                   setActiveCategory("All");
                 }}
-                className="mt-5 inline-flex h-9 items-center rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5
-                           text-sm font-medium text-[var(--text-primary)] transition-colors hover:border-[var(--accent-line)]"
+                className="btn btn-line btn-sm mt-6"
               >
                 Reset filters
               </button>
@@ -609,12 +592,12 @@ export default function CssTipsClient() {
           )}
 
           {filteredTips.length > 0 && (
-            <div className="mt-14 flex flex-col items-start justify-between gap-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6 sm:flex-row sm:items-center md:p-8">
+            <div className="field-ink cut-b mt-16 flex flex-col items-start justify-between gap-5 p-6 sm:flex-row sm:items-center md:p-8">
               <div>
-                <p className="text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+                <p className="t-card text-[var(--text-primary)]">
                   Keep all {CSS_TIPS.length} tips offline
                 </p>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                <p className="mt-2 text-[16px] text-[var(--text-secondary)]">
                   One PDF with every example, for your next code review.
                 </p>
               </div>

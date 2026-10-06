@@ -5,22 +5,19 @@ import ContactForm from "./ContactForm";
 import CopyEmail from "./CopyEmail";
 import { CONTACT_EMAIL, LINKEDIN_URL } from "@/lib/site";
 
+/** The contact act, on ochre: the invitation, the direct lines, and the form on a sheet of bone. */
 const ContactComponent = () => {
   return (
     <section
       id="contact"
-      className="border-t border-[var(--border)] px-5 py-24 md:py-32 lg:px-10"
+      data-act="Contact"
+      data-field="ochre"
+      className="field-ochre grain px-5 py-24 md:py-32 lg:px-10"
     >
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
-        {/* Intro + direct channels */}
-        <AnimateOnScroll direction="up" className="lg:col-span-5">
-          <h2
-            className="max-w-[14ch] text-balance text-[clamp(2rem,4.2vw,3.25rem)] font-semibold leading-[1.05]
-                       tracking-[-0.035em] text-[var(--text-primary)]"
-          >
-            Have a web app in mind?
-          </h2>
-          <p className="mt-5 max-w-[44ch] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+      <div className="mx-auto grid max-w-[90rem] grid-cols-1 gap-14 lg:grid-cols-12 lg:gap-10">
+        <AnimateOnScroll direction="left" className="lg:col-span-5">
+          <h2 className="t-act max-w-[9ch]">Have a web app in mind?</h2>
+          <p className="mt-8 max-w-[40ch] text-[18px] leading-relaxed text-[var(--text-primary)]">
             A project, a role, or just a hello. My inbox is open and I usually reply
             within 24 hours.
           </p>
@@ -31,33 +28,31 @@ const ContactComponent = () => {
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]
-                         px-4 py-3.5 text-sm text-[var(--text-secondary)] transition-colors duration-200
-                         hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]"
+              className="group flex h-14 items-center gap-3 px-4 text-[16px] font-medium text-[var(--text-primary)]
+                         shadow-[inset_0_0_0_2px_var(--text-primary)] transition-colors duration-100
+                         hover:bg-[var(--ink)] hover:text-[var(--bone-ink)]"
             >
-              <BsLinkedin size={15} className="shrink-0 text-[var(--text-muted)]" />
+              <BsLinkedin size={17} className="shrink-0" />
               <span className="flex-1">Connect on LinkedIn</span>
               <ArrowUpRightIcon
-                size={15}
-                className="text-[var(--text-muted)] transition-transform duration-200 group-hover:-translate-y-px group-hover:translate-x-px"
+                size={17}
+                strokeWidth={2.2}
+                className="transition-transform duration-100 group-hover:-translate-y-px group-hover:translate-x-px"
               />
             </a>
           </div>
         </AnimateOnScroll>
 
-        {/* Compose window */}
-        <AnimateOnScroll direction="up" delay={0.1} className="lg:col-span-7">
-          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]">
-            <div className="flex h-11 items-center border-b border-[var(--border)] bg-[var(--bg-secondary)] px-5">
-              <p className="text-sm font-medium text-[var(--text-primary)]">New message</p>
+        {/* The sheet */}
+        <AnimateOnScroll direction="right" className="lg:col-span-7">
+          <div className="field-paper cut-a rotate-[0.6deg]">
+            <div className="field-ink flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-4 md:px-8">
+              <p className="font-display text-[1.75rem] uppercase leading-none">New message</p>
+              <p className="t-label ml-auto truncate text-[var(--text-muted)]">
+                To <span className="normal-case tracking-[0.02em] text-[var(--accent)]">{CONTACT_EMAIL}</span>
+              </p>
             </div>
-            <div className="flex items-center gap-3 border-b border-[var(--border)] px-5 py-3 text-sm">
-              <span className="w-6 text-[var(--text-muted)]">To</span>
-              <span className="truncate rounded-md bg-[var(--accent-muted)] px-2 py-0.5 font-mono text-[13px] text-[var(--accent)]">
-                {CONTACT_EMAIL}
-              </span>
-            </div>
-            <div className="p-5 md:p-7">
+            <div className="-rotate-[0.6deg] p-6 md:p-8">
               <ContactForm />
             </div>
           </div>

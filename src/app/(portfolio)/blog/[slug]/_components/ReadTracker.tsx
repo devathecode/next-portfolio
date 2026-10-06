@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { sendGAEvent } from "@next/third-parties/google";
+import { trackEvent } from "@/lib/analytics";
 
 interface ReadTrackerProps {
   slug: string;
@@ -20,7 +20,7 @@ export function ReadTracker({ slug, title }: ReadTrackerProps) {
       ([entry]) => {
         if (entry.isIntersecting && !fired.current) {
           fired.current = true;
-          sendGAEvent("event", "blog_read_complete", {
+          trackEvent("blog_read_complete", {
             post_slug: slug,
             post_title: title,
           });

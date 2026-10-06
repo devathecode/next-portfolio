@@ -4,7 +4,7 @@ import type { Post } from "@/lib/supabase";
 import ReadState from "@/components/ReadState";
 import { postDate, readMinutes } from "./post-meta";
 
-/** One entry in a reading list: date gutter, title and excerpt, thumbnail. */
+/** One entry in a reading list: date gutter, title in caps and excerpt, a small print. */
 export function PostRow({
   post,
   heading: Heading = "h2",
@@ -20,39 +20,30 @@ export function PostRow({
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group grid grid-cols-[minmax(0,1fr)_auto] gap-5 border-t border-[var(--border)] py-7
-                 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:gap-8"
+      className="group grid grid-cols-[minmax(0,1fr)_auto] gap-5 border-t border-[var(--border)] py-8
+                 sm:grid-cols-[8rem_minmax(0,1fr)_auto] sm:gap-8"
     >
-      <time dateTime={date.iso} className="hidden pt-1 font-mono text-xs text-[var(--text-muted)] sm:block">
+      <time dateTime={date.iso} className="t-label hidden pt-2 text-[var(--text-muted)] sm:block">
         {date.label}
       </time>
 
       <div className="min-w-0">
         <Heading
-          className="text-lg font-semibold leading-snug tracking-[-0.02em] text-[var(--text-primary)]
-                     transition-colors duration-150 group-hover:text-[var(--accent)] md:text-xl"
+          className="font-display text-[1.85rem] uppercase leading-[0.95] text-[var(--text-primary)] transition-colors duration-100
+                     group-hover:text-[var(--accent)] md:text-[2.2rem]"
         >
           {post.title}
         </Heading>
         {post.excerpt && (
-          <p className="mt-2 line-clamp-2 max-w-[65ch] text-[15px] leading-relaxed text-[var(--text-secondary)]">
-            {post.excerpt}
-          </p>
+          <p className="mt-3 line-clamp-2 max-w-[65ch] text-[16px] leading-relaxed text-[var(--text-secondary)]">{post.excerpt}</p>
         )}
-        <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] text-[var(--text-muted)]">
+        <div className="t-label mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[var(--text-muted)]">
           <time dateTime={date.iso} className="sm:hidden">
             {date.label}
           </time>
           <span>{readMinutes(post.content)} min read</span>
           {post.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className={`rounded-md border px-1.5 py-0.5 ${
-                tag === activeTag
-                  ? "border-[var(--accent-line)] bg-[var(--accent-muted)] text-[var(--accent)]"
-                  : "border-[var(--border)] text-[var(--text-secondary)]"
-              }`}
-            >
+            <span key={tag} className={tag === activeTag ? "bg-[var(--ink)] px-1.5 py-0.5 text-[var(--bone-ink)]" : "text-[var(--text-secondary)]"}>
               {tag}
             </span>
           ))}
@@ -61,17 +52,8 @@ export function PostRow({
       </div>
 
       {post.cover_image ? (
-        <div
-          className="relative aspect-[16/10] w-24 shrink-0 self-start overflow-hidden rounded-xl border border-[var(--border)]
-                     bg-[var(--bg-secondary)] sm:w-40"
-        >
-          <Image
-            src={post.cover_image}
-            alt=""
-            fill
-            sizes="160px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          />
+        <div className="cut-c relative aspect-[16/10] w-24 shrink-0 self-start overflow-hidden bg-[#eee6d6] sm:w-44">
+          <Image src={post.cover_image} alt="" fill sizes="176px" className="print object-cover" />
         </div>
       ) : (
         <span aria-hidden="true" />

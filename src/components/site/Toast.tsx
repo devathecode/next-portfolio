@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { CheckIcon, InfoIcon } from "lucide-react";
 
 export interface ToastState {
@@ -19,22 +19,21 @@ export default function Toast({ toast }: { toast: ToastState | null }) {
     >
       <AnimatePresence>
         {toast && (
-          <motion.div
+          <m.div
             key={toast.id}
-            initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            initial={reduce ? false : { y: 16, rotate: -2 }}
+            animate={{ y: 0, rotate: 0 }}
             exit={{ opacity: 0, y: reduce ? 0 : 8 }}
-            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 30 }}
-            className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)]
-                       px-4 py-2.5 text-sm text-[var(--text-primary)] shadow-[var(--shadow-pop)]"
+            transition={reduce ? { duration: 0 } : { duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className="field-ink cut-a flex items-center gap-2.5 px-5 py-3 text-[15px] font-medium shadow-[inset_0_0_0_2px_var(--bone-ink)]"
           >
             {toast.kind === "success" ? (
-              <CheckIcon size={15} className="text-[var(--accent)]" />
+              <CheckIcon size={16} strokeWidth={2.4} className="text-[var(--accent)]" />
             ) : (
               <InfoIcon size={15} className="text-[var(--text-muted)]" />
             )}
             {toast.message}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

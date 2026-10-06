@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { ArrowRightIcon } from "lucide-react";
-import ProjectCard, { SPAN_CLASS, cardSpans } from "./ProjectCard";
+import ProjectCard from "./ProjectCard";
+import JitterLine from "./sequence/JitterLine";
 import OpenSourceList from "./OpenSourceList";
+import ToolGrid from "./ToolGrid";
 import type { Project } from "@/lib/supabase";
 import {
   PROJECT_CATEGORIES,
@@ -37,7 +39,8 @@ export default function ProjectsExplorer({
   const counts = useMemo(() => {
     const map: Record<ProjectCategory, number> = {
       client: 0,
-      utility: 0,
+      personal: 0,
+      tool: 0,
       opensource: 0,
     };
     projects.forEach((p) => {
@@ -60,28 +63,28 @@ export default function ProjectsExplorer({
     filter === "all"
       ? projects
       : projects.filter((p) => categoryOf(p.category) === filter);
-  const cards = visible.filter((p) => categoryOf(p.category) !== "opensource");
-  const openSource = visible.filter((p) => categoryOf(p.category) === "opensource");
-  const spans = cardSpans(cards.length);
+  const inCategory = (...cats: ProjectCategory[]) => visible.filter((p) => cats.includes(categoryOf(p.category)));
+  // Built work reads as full scenes; tools and open source get lighter layouts below
+  const cards = inCategory("client", "personal");
+  const tools = inCategory("tool");
+  const openSource = inCategory("opensource");
+  // Headings only help when more than one group is on screen
+  const grouped = [cards, tools, openSource].filter((g) => g.length > 0).length > 1;
 
-  const fade = reduce
+  // A filter change is a cut: the new list jumps in, the old one is gone at once
+  const cut = reduce
     ? { initial: false as const, animate: {}, exit: {} }
     : {
-        initial: { opacity: 0, y: 16 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -8 },
+        initial: { x: 24, rotate: 0.4 },
+        animate: { x: 0, rotate: 0 },
+        exit: { opacity: 0, transition: { duration: 0.06 } },
       };
 
   return (
     <div>
-      {/* Filter: a segmented control, only useful when more than one category exists */}
+      {/* Filter: only useful when more than one category exists */}
       {presentCategories.length > 1 && (
-        <div
-          role="tablist"
-          aria-label="Filter projects by category"
-          className="mb-8 inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-[var(--border)]
-                     bg-[var(--bg-secondary)] p-1"
-        >
+        <div role="tablist" aria-label="Filter projects by category" className="mb-6 flex max-w-full flex-wrap gap-x-2 gap-y-1">
           {tabs.map((tab) => {
             const active = filter === tab.id;
             return (
@@ -90,30 +93,14 @@ export default function ProjectsExplorer({
                 role="tab"
                 aria-selected={active}
                 onClick={() => setFilter(tab.id)}
-                className={`relative h-8 rounded-lg px-3.5 text-[13.5px] font-medium
-                            transition-colors duration-200 active:scale-[0.98]
-                            ${
-                              active
-                                ? "text-[var(--text-primary)]"
-                                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                            }`}
+                className={`jitter-host t-label relative flex h-11 items-center gap-2 px-3 transition-colors duration-100 ${
+                  active ? "text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                }`}
               >
-                {active && (
-                  <motion.span
-                    layoutId="project-filter-pill"
-                    transition={
-                      reduce
-                        ? { duration: 0 }
-                        : { type: "spring", stiffness: 420, damping: 34 }
-                    }
-                    className="absolute inset-0 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] shadow-[var(--shadow-card)]"
-                  />
-                )}
-                <span className="relative">
-                  {tab.label}
-                  <span className="ml-1.5 font-mono text-xs text-[var(--text-muted)]">
-                    {tab.count}
-                  </span>
+                {tab.label}
+                <span className="text-[var(--accent)]">{tab.count}</span>
+                <span className={`absolute inset-x-3 bottom-1 text-[var(--accent)] ${active ? "" : "opacity-0"}`}>
+                  <JitterLine key={active ? "on" : "off"} boil={active} />
                 </span>
               </button>
             );
@@ -122,47 +109,48 @@ export default function ProjectsExplorer({
       )}
 
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key={filter} {...fade} transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}>
+        <m.div key={filter} {...cut} transition={{ duration: reduce ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}>
           {visible.length === 0 && (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-14 text-center text-sm text-[var(--text-secondary)]">
+            <p className="border-y border-[var(--border)] py-14 text-center text-[16px] text-[var(--text-secondary)]">
               Nothing here yet. New projects are added regularly.
             </p>
           )}
 
           {cards.length > 0 && (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-6">
+            <div className="border-b border-[var(--border)]">
               {cards.map((project, i) => (
-                <div key={project.id} className={SPAN_CLASS[spans[i]]}>
-                  <ProjectCard project={project} span={spans[i]} priority={priorityFirst && i === 0} />
-                </div>
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  index={i}
+                  lead={i === 0 && filter === "all"}
+                  priority={priorityFirst && i === 0}
+                />
               ))}
             </div>
           )}
 
+          {tools.length > 0 && (
+            <div className={cards.length > 0 ? "mt-20" : ""}>
+              {grouped && <h3 className="t-card mb-6 text-[var(--text-primary)]">Free tools</h3>}
+              <ToolGrid projects={tools} />
+            </div>
+          )}
+
           {openSource.length > 0 && (
-            <div className={cards.length > 0 ? "mt-12" : ""}>
-              {cards.length > 0 && (
-                <h3 className="mb-4 text-lg font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-                  Open source contributions
-                </h3>
-              )}
+            <div className={cards.length > 0 || tools.length > 0 ? "mt-20" : ""}>
+              {grouped && <h3 className="t-card mb-6 text-[var(--text-primary)]">Open source contributions</h3>}
               <OpenSourceList projects={openSource} />
             </div>
           )}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {showAllLink && totalCount > projects.length && (
-        <div className="mt-10">
-          <Link
-            href="/projects"
-            className="group inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border)]
-                       bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-primary)]
-                       transition-colors duration-200 hover:border-[var(--accent-line)] active:scale-[0.98]"
-          >
-            All projects
-            <span className="font-mono text-xs text-[var(--text-muted)]">{totalCount}</span>
-            <ArrowRightIcon size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+        <div className="mt-14">
+          <Link href="/projects" className="btn btn-plate group">
+            All {totalCount} projects
+            <ArrowRightIcon size={16} strokeWidth={2.2} className="transition-transform duration-100 group-hover:translate-x-0.5" />
           </Link>
         </div>
       )}

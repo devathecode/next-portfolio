@@ -16,6 +16,7 @@ import { ReaderBar } from "./_components/ReaderBar";
 import { PostRow } from "../_components/PostRow";
 import Footer from "@/components/Footer";
 import { BsLinkedin } from "react-icons/bs";
+import { ArrowLeftIcon } from "lucide-react";
 import { WEBSITE_ID, jsonLd, personRef } from "@/lib/profile";
 
 export const revalidate = 86400; // revalidate post pages every 24 hours
@@ -100,8 +101,18 @@ function extractTocAndAddIds(html: string): { html: string; toc: TocItem[] } {
   return { html: result, toc };
 }
 
+/**
+ * Posts saved from the rich text editor are already HTML; only Markdown
+ * posts go through marked. Parsing editor HTML as Markdown breaks it: a
+ * blank line inside a code block ends the HTML block, and a following
+ * "# comment" line renders as a heading.
+ */
+function toHtml(content: string): string {
+  return content.trimStart().startsWith("<") ? content : (marked.parse(content) as string);
+}
+
 function postStats(content: string): { wordCount: number; readTime: string } {
-  const wordCount = (marked.parse(content) as string)
+  const wordCount = toHtml(content)
     .replace(/<[^>]+>/g, " ")
     .split(/\s+/)
     .filter(Boolean).length;
@@ -173,7 +184,7 @@ export default async function BlogPostPage({
   const date = formatDate(post.published_at ?? post.created_at);
   const { wordCount, readTime } = postStats(post.content);
   const postUrl = `${BLOG_URL}/${post.slug}`;
-  const rawHtml = marked.parse(post.content) as string;
+  const rawHtml = toHtml(post.content);
   const safeHtml = sanitizeHtml(rawHtml, {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       "img", "h1", "h2", "h3", "h4", "details", "summary", "pre", "code",
@@ -187,7 +198,13 @@ export default async function BlogPostPage({
     },
   });
   // The page header already shows the title; drop a leading H1 that repeats it
-  const bodyHtml = safeHtml.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/, "");
+  const bodyHtml = safeHtml
+    .replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/, "")
+    // Editor checklists arrive as "[ ] item" text; set them as check squares
+    .replace(/<li>(\s*<p>)?\s*\[( |x|X)\]\s*/g, (_, p = "", mark: string) => {
+      const done = mark.trim() !== "";
+      return `<li class="task">${p}<span class="task-box"${done ? " data-done" : ""} aria-hidden="true"></span><span class="sr-only">${done ? "Done: " : "To do: "}</span>`;
+    });
   const { html: contentHtml, toc } = extractTocAndAddIds(bodyHtml);
 
   const articleJsonLd = {
@@ -225,95 +242,89 @@ export default async function BlogPostPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleJsonLd)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbJsonLd)} />
 
-      <main className="min-h-screen bg-[var(--bg-primary)] pb-32">
+      <main className="pb-32">
         {isPreview && !post.published && (
-          <div className="border-b border-[var(--accent-line)] bg-[var(--accent-muted)] px-4 py-2 text-center font-mono text-xs font-medium text-[var(--accent)]">
+          <div className="t-label bg-[var(--ochre)] px-4 py-2.5 text-center text-[var(--ink-ink)]">
             Preview: this post is not published yet
           </div>
         )}
 
-        <div className="mx-auto max-w-6xl px-5 lg:px-10">
-          {/* ── Header ─────────────────────────────────────────── */}
-          {/* Same columns as the article grid, so the details line up with the TOC */}
-          <header className="grid gap-x-12 pt-10 md:pt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-x-20">
-            <nav aria-label="Breadcrumb" className="lg:col-span-2">
-              <ol className="flex flex-wrap items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
-                <li>
-                  <Link href="/blog" className="transition-colors hover:text-[var(--accent)]">
-                    Blog
-                  </Link>
-                </li>
-                {post.tags.slice(0, 3).map((tag) => (
-                  <li key={tag} className="flex items-center gap-1.5">
-                    <span aria-hidden="true">/</span>
-                    <Link
-                      href={`/blog/tag/${encodeURIComponent(tag)}`}
-                      className="transition-colors hover:text-[var(--accent)]"
-                    >
-                      #{tag}
-                    </Link>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-
-            <div className="min-w-0">
-              <h1
-                className="mt-6 text-balance text-[clamp(2rem,4.4vw,3.5rem)] font-semibold leading-[1.06]
-                           tracking-[-0.035em] text-[var(--text-primary)]"
+        {/* ── Title card: words left, cover print right ─────────── */}
+        <header data-act="Title" data-field="cardinal" className="field-cardinal grain relative overflow-hidden px-5 pb-14 pt-10 md:pb-20 md:pt-14 lg:px-10">
+          <div
+            className={`relative mx-auto grid max-w-6xl gap-y-10 ${
+              post.cover_image ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-14 xl:gap-x-20" : ""
+            }`}
+          >
+            <div className="lg:col-span-2">
+              <Link
+                href="/blog"
+                className="t-label group inline-flex h-10 items-center gap-2 text-[var(--text-primary)] decoration-2 underline-offset-4 hover:underline"
               >
+                <ArrowLeftIcon size={15} strokeWidth={2.2} className="transition-transform duration-100 group-hover:-translate-x-0.5" />
+                All posts
+              </Link>
+            </div>
+
+            <div className="-mt-4 min-w-0 lg:col-start-1">
+              <h1 className={`t-act cut-in-up max-w-[20ch] ${post.cover_image ? "lg:!text-[clamp(3rem,4.6vw,4.4rem)]" : ""}`}>
                 {post.title}
               </h1>
 
               {post.excerpt && (
-                <p className="mt-6 max-w-[62ch] text-lg leading-relaxed text-[var(--text-secondary)]">
-                  {post.excerpt}
-                </p>
+                <p className="mt-7 max-w-[60ch] text-[19px] leading-relaxed text-[var(--text-primary)]">{post.excerpt}</p>
+              )}
+
+              {post.tags.length > 0 && (
+                <ul aria-label="Topics" className="mt-7 flex flex-wrap gap-2">
+                  {post.tags.slice(0, 3).map((tag) => (
+                    <li key={tag}>
+                      <Link
+                        href={`/blog/tag/${encodeURIComponent(tag)}`}
+                        className="t-label inline-flex h-8 items-center bg-[var(--ink)] px-3 text-[var(--bone-ink)] transition-colors duration-100 hover:bg-[var(--bone-ink)] hover:text-[var(--ink-ink)]"
+                      >
+                        {tag}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
-            <dl
-              className="mt-8 grid grid-cols-[repeat(3,max-content)] gap-x-8 gap-y-4 border-t border-[var(--border)] pt-5
-                         lg:mt-8 lg:grid-cols-1 lg:gap-y-3.5 lg:self-start lg:border-l lg:border-t-0 lg:pb-1 lg:pl-5 lg:pt-1"
-            >
-              <div className="col-span-3 flex items-center gap-2.5 lg:col-span-1">
+            {post.cover_image && (
+              <figure className="cut-a relative rotate-[1.1deg] bg-[#eee6d6] p-2 md:p-2.5 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:self-center">
+                <div className="relative aspect-[1200/630] overflow-hidden bg-[#e3d9c5]">
+                  <Image src={post.cover_image} alt="" fill priority sizes="(min-width: 1152px) 560px, (min-width: 1024px) 48vw, 100vw" className="object-cover" />
+                </div>
+              </figure>
+            )}
+
+            <dl className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t-2 border-[var(--text-primary)] pt-5 text-[15px] text-[var(--text-primary)] lg:col-start-1 lg:self-start">
+              <div className="flex items-center gap-3">
                 <dt className="sr-only">Author</dt>
-                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]">
-                  <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="32px" className="object-cover" />
+                <span className="cut-a relative h-9 w-9 shrink-0 overflow-hidden bg-[#eee6d6]">
+                  <Image src="/images/dev.webp" alt="" fill sizes="36px" className="object-cover object-top grayscale contrast-125 mix-blend-multiply" />
                 </span>
-                <dd className="text-sm font-medium text-[var(--text-primary)]">Devanshu Verma</dd>
+                <dd className="font-semibold">Devanshu Verma</dd>
               </div>
               {[
                 { label: "Published", value: <time dateTime={post.published_at ?? post.created_at}>{date}</time> },
                 { label: "Reading time", value: readTime },
                 { label: "Length", value: `${wordCount.toLocaleString("en-US")} words` },
               ].map(({ label, value }) => (
-                <div key={label}>
-                  <dt className="font-mono text-[11px] text-[var(--text-muted)]">{label}</dt>
-                  <dd className="mt-0.5 whitespace-nowrap text-sm text-[var(--text-secondary)]">{value}</dd>
+                <div key={label} className="flex items-center gap-3">
+                  <span aria-hidden="true" className="h-1.5 w-1.5 bg-[var(--text-primary)]" />
+                  <dt className="sr-only">{label}</dt>
+                  <dd className="whitespace-nowrap">{value}</dd>
                 </div>
               ))}
             </dl>
-          </header>
+          </div>
+        </header>
 
-          {post.cover_image && (
-            <figure
-              className="relative mt-10 aspect-[1200/630] overflow-hidden rounded-2xl border border-[var(--border)]
-                         bg-[var(--bg-secondary)] shadow-[var(--shadow-card)] md:mt-14"
-            >
-              <Image
-                src={post.cover_image}
-                alt=""
-                fill
-                priority
-                sizes="(max-width: 1152px) 100vw, 1072px"
-                className="object-cover"
-              />
-            </figure>
-          )}
-
+        <div data-act="Article" data-field="paper" className="field-paper mx-auto max-w-6xl px-5 lg:px-10">
           {/* ── Article + sidebar ──────────────────────────────── */}
-          <div className="mt-12 grid gap-12 md:mt-16 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
+          <div className="mt-14 grid gap-12 md:mt-20 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
             <article className="min-w-0 max-w-[72ch]">
               <div
                 id="article-body"
@@ -323,33 +334,27 @@ export default async function BlogPostPage({
               <CopyCodeButtons />
               <ReadTracker slug={post.slug} title={post.title} />
 
-              <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--border)] pt-8">
-                <p className="text-sm font-medium text-[var(--text-primary)]">Found this useful? Pass it on.</p>
+              <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t-2 border-[var(--text-primary)] pt-8">
+                <p className="t-card text-[var(--text-primary)]">Found this useful? Pass it on.</p>
                 <ShareBar url={postUrl} title={post.title} />
               </div>
 
               {/* Author */}
               <section
                 aria-label="About the author"
-                className="mt-10 flex flex-col gap-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-6
-                           shadow-[var(--shadow-card)] sm:flex-row sm:items-center"
+                className="field-ink cut-b mt-10 flex flex-col gap-5 p-6 sm:flex-row sm:items-center md:p-7"
               >
-                <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-secondary)]">
-                  <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="56px" className="object-cover" />
+                <span className="cut-a relative h-16 w-16 shrink-0 overflow-hidden bg-[#eee6d6]">
+                  <Image src="/images/dev.webp" alt="" fill sizes="64px" className="object-cover object-top grayscale contrast-125 mix-blend-multiply" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono text-[11px] text-[var(--text-muted)]">Written by</p>
-                  <p className="mt-0.5 font-semibold text-[var(--text-primary)]">Devanshu Verma</p>
-                  <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  <p className="font-display text-[1.9rem] uppercase leading-none text-[var(--text-primary)]">Devanshu Verma</p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-[var(--text-secondary)]">
                     Frontend engineer building web apps with React, Next.js, Angular and Vue.
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <Link
-                    href="/#contact"
-                    className="inline-flex h-10 items-center rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold
-                               text-[var(--on-accent)] transition-opacity hover:opacity-90 active:scale-[0.98]"
-                  >
+                  <Link href="/#contact" className="btn btn-plate btn-sm">
                     Get in touch
                   </Link>
                   <a
@@ -357,9 +362,7 @@ export default async function BlogPostPage({
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Devanshu on LinkedIn"
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)]
-                               text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)]
-                               hover:text-[var(--text-primary)]"
+                    className="btn btn-line btn-sm w-10 px-0"
                   >
                     <BsLinkedin size={15} />
                   </a>
@@ -368,7 +371,7 @@ export default async function BlogPostPage({
 
               {relatedPosts.length > 0 && (
                 <section aria-labelledby="keep-reading" className="mt-16">
-                  <h2 id="keep-reading" className="mb-2 font-mono text-xs text-[var(--text-muted)]">
+                  <h2 id="keep-reading" className="t-card mb-6">
                     Keep reading
                   </h2>
                   <div className="border-b border-[var(--border)]">
@@ -381,7 +384,7 @@ export default async function BlogPostPage({
             </article>
 
             <aside className="hidden lg:block">
-              <div className="sticky top-[calc(var(--chrome-h)_+_1.5rem)] max-h-[calc(100dvh_-_var(--chrome-h)_-_7rem)] space-y-8 overflow-y-auto overscroll-contain pb-4">
+              <div className="sticky top-[calc(var(--header-h)_+_1.5rem)] max-h-[calc(100dvh_-_var(--header-h)_-_7rem)] space-y-8 overflow-y-auto overscroll-contain pb-4">
                 <TableOfContents items={toc} />
                 <ShareBar url={postUrl} title={post.title} layout="vertical" />
               </div>

@@ -3,14 +3,9 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeftIcon,
-  DownloadIcon,
-  SendIcon,
-  FileTextIcon,
-  MessageSquareIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, ArrowUpIcon, DownloadIcon, FileTextIcon, MessageSquareIcon } from "lucide-react";
 import { CHAT_SUGGESTIONS as SUGGESTIONS, splitLinks, useResumeChat } from "@/lib/use-resume-chat";
+import { RESUME_PDF, RESUME_PDF_NAME } from "@/lib/site";
 
 // Renders plain text but converts [label](url) markdown links to <a> tags
 function MessageText({ text }: { text: string }) {
@@ -18,12 +13,7 @@ function MessageText({ text }: { text: string }) {
     <>
       {splitLinks(text).map((part, i) =>
         "href" in part ? (
-          <a
-            key={i}
-            href={part.href}
-            className="underline underline-offset-2 font-medium hover:opacity-80 transition-opacity"
-            style={{ color: "var(--accent)" }}
-          >
+          <a key={i} href={part.href} className="link font-medium">
             {part.label}
           </a>
         ) : (
@@ -36,18 +26,18 @@ function MessageText({ text }: { text: string }) {
 
 function TypingDots() {
   return (
-    <span className="inline-flex items-center gap-1 py-0.5">
+    <span className="inline-flex items-center gap-1 py-0.5" aria-label="Typing">
       {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="w-1.5 h-1.5 rounded-full bg-current animate-bounce"
-          style={{ animationDelay: `${i * 0.15}s` }}
-        />
+        <span key={i} className="h-1.5 w-1.5 animate-bounce bg-current" style={{ animationDelay: `${i * 0.15}s` }} />
       ))}
     </span>
   );
 }
 
+/**
+ * The résumé as a screening room: the PDF on one side, the assistant that
+ * answers questions about it on the other. Phones switch between the two.
+ */
 export default function ResumePage() {
   const { messages, loading, sendMessage: send } = useResumeChat();
   const [input, setInput] = useState("");
@@ -72,207 +62,110 @@ export default function ResumePage() {
   };
 
   return (
-    <div
-      className="h-screen flex flex-col overflow-hidden"
-      style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}
-    >
+    <div className="site field-paper flex h-dvh flex-col overflow-hidden">
       {/* ── Top bar ── */}
-      <header
-        className="shrink-0 flex items-center justify-between px-5 py-2.5 border-b backdrop-blur-xl"
-        style={{
-          borderColor: "var(--border)",
-          background: "var(--bg-primary)/80",
-        }}
-      >
-        {/* Left — back */}
+      <header className="field-ink flex h-16 shrink-0 items-center justify-between gap-4 px-4 md:px-6">
         <Link
           href="/"
-          className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all duration-200 hover:-translate-x-0.5"
-          style={{
-            borderColor: "var(--border)",
-            color: "var(--text-muted)",
-            background: "var(--bg-card)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--accent)";
-            e.currentTarget.style.color = "var(--accent)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color = "var(--text-muted)";
-          }}
+          className="t-label group inline-flex h-10 items-center gap-2 text-[var(--text-secondary)] transition-colors duration-100 hover:text-[var(--text-primary)]"
         >
-          <ArrowLeftIcon size={12} />
+          <ArrowLeftIcon size={15} strokeWidth={2.2} className="transition-transform duration-100 group-hover:-translate-x-0.5" />
           Portfolio
         </Link>
 
-        {/* Centre — identity */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2.5">
-          <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="rounded-full object-cover shrink-0" />
-          <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-            Devanshu Verma
-          </span>
-          <span
-            className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium border"
-            style={{
-              borderColor: "var(--accent)",
-              color: "var(--accent)",
-              background: "var(--accent-muted)",
-            }}
-          >
-            Resume
-          </span>
-        </div>
+        <p className="absolute left-1/2 hidden -translate-x-1/2 items-baseline gap-3 sm:flex">
+          <span className="font-display text-[1.75rem] uppercase leading-none">Devanshu Verma</span>
+          <span className="t-label text-[var(--accent)]">Résumé</span>
+        </p>
 
-        {/* Right — download */}
-        <a
-          href="/resume/Resume.pdf"
-          download="Devanshu_Verma_Resume.pdf"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 hover:opacity-85 hover:-translate-y-px"
-          style={{
-            background: "var(--accent)",
-            color: "#000",
-            boxShadow: "0 0 16px var(--accent-glow)",
-          }}
-        >
-          <DownloadIcon size={11} />
+        <a href={RESUME_PDF} download={RESUME_PDF_NAME} className="btn btn-plate btn-sm">
+          <DownloadIcon size={14} strokeWidth={2.2} />
           Download
         </a>
       </header>
 
-      {/* ── Mobile tabs ── */}
-      <div
-        className="lg:hidden flex shrink-0 border-b"
-        style={{ borderColor: "var(--border)" }}
-      >
-        {(["pdf", "chat"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-medium font-mono transition-colors duration-150"
-            style={{
-              color:
-                activeTab === tab ? "var(--accent)" : "var(--text-muted)",
-              borderBottom:
-                activeTab === tab
-                  ? "2px solid var(--accent)"
-                  : "2px solid transparent",
-            }}
-          >
-            {tab === "pdf" ? (
-              <FileTextIcon size={13} />
-            ) : (
-              <MessageSquareIcon size={13} />
-            )}
-            {tab === "pdf" ? "View PDF" : "Ask AI"}
-          </button>
-        ))}
+      {/* ── Phone tabs ── */}
+      <div role="tablist" aria-label="Résumé view" className="field-ink flex shrink-0 border-t border-[var(--border)] lg:hidden">
+        {(["pdf", "chat"] as const).map((tab) => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setActiveTab(tab)}
+              className={`t-label flex h-12 flex-1 items-center justify-center gap-2 transition-colors duration-100 ${
+                active ? "bg-[var(--cardinal)] text-[#fbf6ec]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              }`}
+            >
+              {tab === "pdf" ? <FileTextIcon size={14} strokeWidth={2.2} /> : <MessageSquareIcon size={14} strokeWidth={2.2} />}
+              {tab === "pdf" ? "View PDF" : "Ask my AI"}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Main area ── */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* ── PDF panel ── */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* PDF */}
         <div
-          className={`${
-            activeTab === "pdf" ? "flex" : "hidden"
-          } lg:flex w-full lg:w-[58%] flex-col border-r`}
-          style={{ borderColor: "var(--border)" }}
+          className={`${activeTab === "pdf" ? "flex" : "hidden"} w-full flex-col bg-[var(--ink)] p-0 lg:flex lg:w-[58%] lg:p-5`}
         >
-          <iframe
-            src="/resume/Resume.pdf"
-            className="w-full flex-1 border-none"
-            title="Devanshu Verma Resume"
-          />
+          <iframe src={RESUME_PDF} className="w-full flex-1 border-none bg-white" title="Devanshu Verma résumé" />
         </div>
 
-        {/* ── Chat panel ── */}
-        <div
-          className={`${
-            activeTab === "chat" ? "flex" : "hidden"
-          } lg:flex flex-1 flex-col`}
-        >
-          {/* Chat header */}
-          <div
-            className="shrink-0 px-5 py-3.5 border-b"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <div className="flex items-center gap-3">
-              <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={28} height={28} className="rounded-full object-cover shrink-0" />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                  Resume Assistant
-                </p>
-                <p className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
-                  Ask anything about this resume
-                </p>
-              </div>
-              <span
-                className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-mono"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                online
-              </span>
+        {/* Chat */}
+        <div className={`${activeTab === "chat" ? "flex" : "hidden"} flex-1 flex-col lg:flex`}>
+          <div className="field-cardinal flex shrink-0 items-center gap-3 px-5 py-4">
+            <span className="cut-a relative h-11 w-11 shrink-0 overflow-hidden bg-[var(--ink)]">
+              <Image src="/images/dev.webp" alt="" fill sizes="44px" className="object-cover object-top grayscale contrast-125" />
+            </span>
+            <div>
+              <h1 className="font-display text-[1.9rem] uppercase leading-none">Ask my AI</h1>
+              <p className="mt-1 text-[14px] text-[var(--text-primary)]">Anything about this résumé</p>
             </div>
           </div>
 
-          {/* Messages area */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-            {/* Suggestion chips — shown only when just the welcome message is present */}
+          {/* Messages */}
+          <div role="log" aria-live="polite" aria-busy={loading} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
             {messages.length === 1 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => sendMessage(s)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150"
-                    style={{
-                      borderColor: "var(--border)",
-                      color: "var(--text-secondary)",
-                      background: "var(--bg-card)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "var(--accent)";
-                      e.currentTarget.style.color = "var(--accent)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = "var(--border)";
-                      e.currentTarget.style.color = "var(--text-secondary)";
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
+              <div className="mb-5">
+                <p className="t-label text-[var(--text-muted)]">Try asking</p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => sendMessage(s)}
+                      className="px-3 py-2 text-left text-[14px] text-[var(--text-primary)] shadow-[inset_0_0_0_1.5px_var(--border)]
+                                 transition-colors duration-100 hover:bg-[var(--ink)] hover:text-[var(--bone-ink)] hover:shadow-none"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
             {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex items-start ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2`}
-              >
+              <div key={i} className={`flex items-start gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                 {msg.role === "assistant" && (
-                  <Image src="/images/LInkedin_heashot.png" alt="Devanshu Verma" width={24} height={24} className="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5" />
+                  <span className="relative mt-0.5 h-8 w-8 shrink-0 overflow-hidden bg-[var(--cardinal)]">
+                    <Image src="/images/dev.webp" alt="" fill sizes="32px" className="object-cover object-top grayscale contrast-125 mix-blend-multiply" />
+                  </span>
                 )}
-
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    msg.role === "user" ? "rounded-tr-sm" : "rounded-tl-sm"
-                  }`}
-                  style={
+                  className={`max-w-[82%] whitespace-pre-wrap text-[15px] leading-relaxed ${
                     msg.role === "user"
-                      ? { background: "var(--accent)", color: "#000" }
-                      : {
-                          background: "var(--bg-card)",
-                          color: "var(--text-primary)",
-                          border: "1px solid var(--border)",
-                        }
-                  }
+                      ? "cut-b bg-[var(--ink)] px-4 py-2.5 text-[var(--bone-ink)]"
+                      : "pt-1 text-[var(--text-primary)]"
+                  }`}
                 >
                   {msg.content ? (
                     <MessageText text={msg.content} />
                   ) : (
-                    <span style={{ color: "var(--text-muted)" }}>
+                    <span className="text-[var(--text-muted)]">
                       <TypingDots />
                     </span>
                   )}
@@ -282,18 +175,12 @@ export default function ResumePage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input bar */}
-          <div
-            className="shrink-0 px-4 py-3 border-t"
-            style={{ borderColor: "var(--border)" }}
-          >
+          {/* Composer */}
+          <div className="shrink-0 border-t-2 border-[var(--text-primary)] px-4 py-3">
             <form
               onSubmit={handleSubmit}
-              className="flex items-center gap-2 rounded-2xl border px-4 py-2.5 transition-colors duration-150 focus-within:border-[var(--accent)]"
-              style={{
-                borderColor: "var(--border)",
-                background: "var(--bg-card)",
-              }}
+              className="flex items-center gap-2 bg-[var(--bg-card)] py-1.5 pl-4 pr-1.5 shadow-[inset_0_0_0_1.5px_var(--border)]
+                         transition-shadow duration-100 focus-within:shadow-[inset_0_0_0_2.5px_var(--text-primary)]"
             >
               <input
                 ref={inputRef}
@@ -301,24 +188,22 @@ export default function ResumePage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about skills, experience, projects…"
+                aria-label="Message"
                 disabled={loading}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)] disabled:opacity-50"
-                style={{ color: "var(--text-primary)" }}
+                className="h-10 min-w-0 flex-1 bg-transparent text-[15px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-opacity duration-150 disabled:opacity-30"
-                style={{ background: "var(--accent)", color: "#000" }}
+                aria-label="Send"
+                className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--plate)] text-[var(--on-plate)] transition-colors duration-100
+                           hover:bg-[var(--plate-hover)] disabled:opacity-30"
               >
-                <SendIcon size={13} />
+                <ArrowUpIcon size={16} strokeWidth={2.4} />
               </button>
             </form>
-            <p
-              className="text-center text-[10px] font-mono mt-2"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Powered by Gemini · Answers based on resume content
+            <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
+              Answers come from my résumé via Gemini, and can be wrong.
             </p>
           </div>
         </div>

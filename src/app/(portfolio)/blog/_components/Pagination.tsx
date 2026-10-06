@@ -6,9 +6,7 @@ interface PaginationProps {
   totalPages: number;
 }
 
-const stepCls =
-  "inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 text-sm " +
-  "font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]";
+const stepCls = "btn btn-line btn-sm";
 
 export function Pagination({ currentPage, totalPages }: PaginationProps) {
   if (totalPages <= 1) return null;
@@ -18,10 +16,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
   const pageHref = (p: number) => (p === 1 ? "/blog" : `/blog?page=${p}`);
 
   return (
-    <nav aria-label="Pagination" className="mt-12 flex items-center justify-between gap-4">
+    <nav aria-label="Pagination" className="mt-14 flex items-center justify-between gap-4">
       {prev !== null ? (
         <Link href={pageHref(prev)} className={stepCls}>
-          <ArrowLeftIcon size={15} />
+          <ArrowLeftIcon size={15} strokeWidth={2.2} />
           Newer
         </Link>
       ) : (
@@ -35,10 +33,10 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
             href={pageHref(p)}
             aria-current={p === currentPage ? "page" : undefined}
             aria-label={`Page ${p}`}
-            className={`flex h-9 w-9 items-center justify-center rounded-lg font-mono text-sm transition-colors ${
+            className={`flex h-10 w-10 items-center justify-center font-display text-[1.4rem] transition-colors duration-100 ${
               p === currentPage
-                ? "bg-[var(--accent)] font-semibold text-[var(--on-accent)]"
-                : "text-[var(--text-muted)] hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+                ? "bg-[var(--ink)] text-[var(--bone-ink)]"
+                : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             {p}
@@ -49,7 +47,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
       {next !== null ? (
         <Link href={pageHref(next)} className={stepCls}>
           Older
-          <ArrowRightIcon size={15} />
+          <ArrowRightIcon size={15} strokeWidth={2.2} />
         </Link>
       ) : (
         <span />

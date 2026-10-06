@@ -23,10 +23,12 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<string>("dark");
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") ?? "dark";
+    // No stored choice: follow the system, without pinning it
+    const storedTheme =
+      localStorage.getItem("theme") ??
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(storedTheme);
     document.documentElement.classList.toggle("dark", storedTheme === "dark");
-    localStorage.setItem("theme", storedTheme);
   }, []);
 
   const toggleTheme = () => {

@@ -4,6 +4,7 @@ import type { Post, Project } from "./supabase";
 import { FAQ, PROFILE } from "./profile";
 import { CONTACT_EMAIL, LINKEDIN_URL, RESUME_PDF, SITE_URL } from "./site";
 import { CSS_TIPS } from "@/app/(portfolio)/css-tips/_components/tips-data";
+import { CATEGORY_LABELS, categoryOf } from "./project-categories";
 
 /**
  * Markdown for AI assistants, following the llms.txt proposal (llmstxt.org):
@@ -61,7 +62,7 @@ function pages() {
     "## Pages",
     "",
     `- [Home](${SITE_URL}/): Introduction, skills, selected work, contact form and FAQ`,
-    `- [Projects](${SITE_URL}/projects): Client websites, utility apps and open-source work`,
+    `- [Projects](${SITE_URL}/projects): Client websites, side projects, free tools and open-source work`,
     `- [Blog](${BLOG_URL}): Articles on web development, React, Next.js and CSS`,
     `- [Modern CSS tips](${SITE_URL}/css-tips): ${CSS_TIPS.length} modern CSS techniques with before and after code`,
     `- [Résumé](${SITE_URL}/resume): Résumé with an AI chat that answers questions about it`,
@@ -77,7 +78,8 @@ function projectList(projects: Project[]) {
     ...projects.map((p) => {
       const stack = p.tech_stack?.length ? ` Built with ${p.tech_stack.join(", ")}.` : "";
       const source = p.github_url ? ` Source: ${p.github_url}` : "";
-      return `- [${p.title}](${p.live_url}): ${sentence(p.description)}${stack}${source}`;
+      const kind = CATEGORY_LABELS[categoryOf(p.category)];
+      return `- [${p.title}](${p.live_url || p.github_url}) (${kind}): ${sentence(p.description)}${stack}${source}`;
     }),
   ];
 }

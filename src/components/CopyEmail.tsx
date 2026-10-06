@@ -23,11 +23,11 @@ export default function CopyEmail() {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] py-1.5 pl-4 pr-1.5">
-      <MailIcon size={15} className="shrink-0 text-[var(--text-muted)]" />
+    <div className="flex h-14 items-center gap-3 bg-[var(--ink)] py-2 pl-4 pr-2 text-[var(--bone-ink)]">
+      <MailIcon size={17} className="shrink-0" />
       <a
         href={`mailto:${CONTACT_EMAIL}`}
-        className="min-w-0 flex-1 truncate font-mono text-[13.5px] text-[var(--text-primary)] transition-colors duration-200 hover:text-[var(--accent)]"
+        className="min-w-0 flex-1 truncate text-[16px] font-medium underline decoration-transparent underline-offset-4 transition-colors duration-100 hover:decoration-current"
       >
         {CONTACT_EMAIL}
       </a>
@@ -35,18 +35,17 @@ export default function CopyEmail() {
         type="button"
         onClick={copy}
         aria-label={copied ? "Email address copied" : "Copy email address"}
-        className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)]
-                   bg-[var(--bg-secondary)] px-3 text-xs font-medium text-[var(--text-primary)]
-                   transition-colors duration-200 hover:border-[var(--accent-line)] active:scale-[0.97]"
+        className="t-label inline-flex h-10 shrink-0 items-center gap-1.5 bg-[var(--ochre)] px-3.5 text-[var(--ink-ink)]
+                   transition-colors duration-100 hover:bg-[var(--cardinal)] hover:text-[#fbf6ec]"
       >
         {copied ? (
           <>
-            <CheckIcon size={13} className="text-[var(--accent)]" />
+            <CheckIcon size={14} strokeWidth={2.4} />
             Copied
           </>
         ) : (
           <>
-            <CopyIcon size={13} />
+            <CopyIcon size={14} strokeWidth={2.2} />
             Copy
           </>
         )}

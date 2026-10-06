@@ -1,8 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useTransition } from "react";
+import { useActionState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import { contactSubmit } from "@/lib/actions";
 import Submitbutton from "./SubmitButton";
 
@@ -17,18 +16,54 @@ declare global {
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
-const inputClass =
-  "block w-full rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] " +
-  "px-3.5 py-2.5 text-[15px] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] " +
-  "focus:outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-muted)] " +
-  "transition-[border-color,box-shadow] duration-200";
+let recaptcha: Promise<void> | null = null;
 
-const labelClass = "text-[13px] font-medium text-[var(--text-secondary)]";
+/**
+ * reCAPTCHA is ~400KB of script, styles and an iframe, so it loads only once
+ * the form is close, not with the page. Safe to call repeatedly.
+ */
+function loadRecaptcha() {
+  if (!SITE_KEY) return Promise.resolve();
+  recaptcha ??= new Promise<void>((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`;
+    s.async = true;
+    s.onload = () => window.grecaptcha.ready(resolve);
+    s.onerror = () => {
+      recaptcha = null;
+      reject(new Error("reCAPTCHA failed to load"));
+    };
+    document.head.appendChild(s);
+  });
+  return recaptcha;
+}
+
+const inputClass = "field-input";
+
+const labelClass = "t-label text-[var(--text-primary)]";
 
 export default function ContactForm() {
   const router = useRouter();
   const [state, formAction] = useActionState(contactSubmit, null);
   const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Start loading reCAPTCHA as the form scrolls near, so a token is ready by submit
+  useEffect(() => {
+    const form = formRef.current;
+    if (!SITE_KEY || !form) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          loadRecaptcha().catch(() => {});
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(form);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     if (state && "success" in state) {
@@ -41,9 +76,9 @@ export default function ContactForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    if (SITE_KEY && typeof window !== "undefined" && window.grecaptcha) {
+    if (SITE_KEY) {
       try {
-        await new Promise<void>((resolve) => window.grecaptcha.ready(resolve));
+        await loadRecaptcha();
         const token = await window.grecaptcha.execute(SITE_KEY, { action: "contact" });
         formData.set("g-recaptcha-response", token);
       } catch {
@@ -58,13 +93,7 @@ export default function ContactForm() {
 
   return (
     <>
-      {SITE_KEY && (
-        <Script
-          src={`https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`}
-          strategy="afterInteractive"
-        />
-      )}
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form ref={formRef} onSubmit={handleSubmit} onFocus={() => loadRecaptcha().catch(() => {})} className="space-y-5">
         {/* Honeypot: off-screen field bots fill, real users never see */}
         <div
           style={{
@@ -138,7 +167,7 @@ export default function ContactForm() {
           <p
             role="alert"
             aria-live="assertive"
-            className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+            className="field-cardinal cut-b px-4 py-3 text-[15px] font-medium"
           >
             {state.error}
           </p>
@@ -148,13 +177,13 @@ export default function ContactForm() {
           <Submitbutton buttonText="Send message" isPending={isPending} />
           {SITE_KEY && (
             /* Required when the floating reCAPTCHA badge is hidden (see globals.css) */
-            <p className="max-w-[46ch] text-xs leading-relaxed text-[var(--text-muted)]">
+            <p className="max-w-[46ch] text-[13px] leading-relaxed text-[var(--text-muted)]">
               This site is protected by reCAPTCHA and the Google{" "}
-              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[var(--text-secondary)]">
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="link">
                 Privacy Policy
               </a>{" "}
               and{" "}
-              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-[var(--text-secondary)]">
+              <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="link">
                 Terms of Service
               </a>{" "}
               apply.

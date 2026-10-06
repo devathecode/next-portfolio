@@ -1,6 +1,6 @@
-import BrowserShell from "@/components/browser/BrowserShell";
+import SiteShell from "@/components/site/SiteShell";
 import { ReactNode } from "react";
 
 export default function PortfolioLayout({ children }: { children: ReactNode }) {
-  return <BrowserShell>{children}</BrowserShell>;
+  return <SiteShell>{children}</SiteShell>;
 }

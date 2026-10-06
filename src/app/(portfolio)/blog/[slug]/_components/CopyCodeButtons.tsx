@@ -24,7 +24,7 @@ export function CopyCodeButtons() {
         justify-content: center;
         width: 30px;
         height: 30px;
-        border-radius: 6px;
+        border-radius: 0;
         border: 1px solid rgba(255,255,255,0.12);
         background: rgba(255,255,255,0.07);
         color: rgba(255,255,255,0.6);
@@ -48,7 +48,7 @@ export function CopyCodeButtons() {
         try {
           await navigator.clipboard.writeText(text);
           btn.innerHTML = checkIcon();
-          btn.style.color = "#4ade80";
+          btn.style.color = "#e3a84b";
           setTimeout(() => {
             btn.innerHTML = copyIcon();
             btn.style.color = "rgba(255,255,255,0.6)";

@@ -57,3 +57,16 @@ GEMINI.md
 /mcp-server/
 
 __pycache__/
+
+# Impeccable design tooling (local only, read by the skill in .claude/)
+.impeccable/
+PRODUCT.md
+DESIGN.md
+
+# Local helper scripts (not part of the deployed app)
+/scripts/
+
+# editor
+.vscode/
+.idea/
+*.swp

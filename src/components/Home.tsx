@@ -1,81 +1,98 @@
 import type { CSSProperties } from "react";
-import { ArrowRightIcon, SparklesIcon } from "lucide-react";
-import HeroBackdrop from "./HeroBackdrop";
-import PortraitWindow from "./PortraitWindow";
-import AskAIButton from "./browser/AskAIButton";
+import Image from "next/image";
+import { ArrowDownRightIcon, SparklesIcon } from "lucide-react";
+import AskAIButton from "./site/AskAIButton";
+import CursorCut from "./sequence/CursorCut";
+import VitalsSlate from "./VitalsSlate";
 
-/** Stagger index for the CSS hero entrance (see .hero-in in globals.css). */
+/** Stagger index for the hero's jump cuts (see .cut-in-up in globals.css). */
 const step = (i: number) => ({ "--i": i }) as CSSProperties;
 
+/**
+ * Act one, the title card: the claim in skinny caps on a cardinal field, an
+ * ink print of the portrait on bone stock, and a cut-paper pointer reaching
+ * in for the first action. On desktop it stops short of the fold so the
+ * proof strip's timings sit on the first screen; phones get a slate instead.
+ */
 const HomeComponent = () => {
   return (
     <section
       id="home"
-      className="relative isolate flex min-h-[calc(100dvh_-_var(--chrome-h))] items-center px-5 pb-16 pt-8 lg:px-10 lg:pb-20"
+      data-act="Titles"
+      data-field="cardinal"
+      className="field-cardinal grain relative isolate flex items-center overflow-hidden px-5 pb-16 pt-8 lg:px-10 lg:pb-12
+                 lg:min-h-[calc(100svh_-_var(--header-h)_-_10.5rem)]"
     >
-      <HeroBackdrop />
-
-      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-10">
-        {/* Copy */}
-        <div className="lg:col-span-7">
-          <p
-            className="hero-in inline-flex items-center gap-2.5 rounded-lg border border-[var(--border)]
-                       bg-[var(--bg-card)] px-3 py-1.5 text-[13px] text-[var(--text-secondary)]"
-            style={step(0)}
-          >
-            <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-            Available for full-time and freelance work
-          </p>
-
-          <h1
-            className="hero-in mt-7 max-w-[15ch] text-balance text-[clamp(2.6rem,5.6vw,4.5rem)] font-semibold leading-[1.02]
-                       tracking-[-0.04em] text-[var(--text-primary)]"
-            style={step(1)}
-          >
+      <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+        {/* The claim */}
+        <div className="relative z-10 lg:col-span-7 lg:pt-6">
+          <h1 className="font-display uppercase">
             <span className="sr-only">Devanshu Verma, frontend developer. </span>
-            I build web apps that feel{" "}
-            <span className="hero-underline text-[var(--accent)]">instant.</span>
+            <span className="cut-in-up block max-w-[16ch] text-balance text-[clamp(2.9rem,6vw,5.9rem)] leading-[0.9] tracking-[0.012em]" style={step(0)}>
+              I build web apps that feel
+            </span>
+            {/* Set by hand: dropped off the baseline and knocked a little askew */}
+            <span
+              className="cut-in-up ml-[0.06em] mt-1 block text-[clamp(6rem,13.5vw,12rem)] leading-[0.8] tracking-[0.01em]"
+              style={step(2)}
+            >
+              <span className="inline-block translate-y-[0.1em] rotate-[-2.4deg]">instant.</span>
+            </span>
           </h1>
 
-          <p
-            className="hero-in mt-6 max-w-[34rem] text-[17px] leading-relaxed text-[var(--text-secondary)] sm:text-lg"
-            style={step(2)}
-          >
-            I&apos;m Devanshu, a frontend engineer who has spent 5+ years shipping
-            production React, Next.js, Angular and Vue apps.
+          <p className="mt-10 text-[18px] leading-snug text-[var(--text-primary)] sm:text-[clamp(1.125rem,1.4vw,1.3rem)]">
+            I&apos;m Devanshu Verma, frontend developer in Noida, India, 5+ years in production.
           </p>
 
-          <div className="hero-in mt-9 flex flex-wrap items-center gap-3" style={step(3)}>
-            <a
-              href="#work"
-              className="group inline-flex h-11 items-center gap-2 rounded-lg bg-[var(--accent)] px-5
-                         text-sm font-semibold text-[var(--on-accent)] transition-opacity duration-200
-                         hover:opacity-90 active:scale-[0.98]"
-            >
-              See my work
-              <ArrowRightIcon
-                size={16}
-                className="transition-transform duration-200 group-hover:translate-x-0.5"
-              />
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="#work" className="btn btn-plate group">
+              See the work
+              <ArrowDownRightIcon size={17} strokeWidth={2.2} className="transition-transform duration-100 group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
             </a>
-            <AskAIButton
-              className="inline-flex h-11 items-center gap-2 rounded-lg border border-[var(--border)]
-                         bg-[var(--bg-card)] px-5 text-sm font-medium text-[var(--text-primary)]
-                         transition-colors duration-200 hover:border-[var(--accent-line)] active:scale-[0.98]"
-            >
-              <SparklesIcon size={15} className="text-[var(--accent)]" />
+            <AskAIButton className="btn btn-line">
+              <SparklesIcon size={15} strokeWidth={2.2} />
               Ask my AI
             </AskAIButton>
           </div>
+
+          <VitalsSlate className="mt-8 max-w-md lg:hidden" />
+
+          <p className="t-label mt-8 flex items-center gap-2.5 text-[var(--text-primary)]">
+            <span aria-hidden="true" className="h-2.5 w-2.5 bg-[var(--ink-ink)]" />
+            Available for full-time roles and freelance projects
+          </p>
         </div>
 
-        {/* Portrait */}
-        <div className="lg:col-span-5">
-          <PortraitWindow />
-        </div>
+        {/* The portrait: an ink print on bone stock, pasted slightly off square */}
+        <figure className="cut-in-right relative mx-auto w-full max-w-[22rem] sm:max-w-[25rem] lg:col-span-5 lg:ml-auto lg:mr-4 lg:max-w-[27rem]">
+          <div aria-hidden="true" className="cut-c absolute -left-4 -top-4 h-full w-full rotate-[3deg] bg-[var(--ink)]" />
+          <div className="cut-a relative aspect-[4/5] rotate-[-2deg] overflow-hidden bg-[#eee6d6]">
+            {/* The ink print is baked into the file (grayscale, contrast 1.35,
+                multiplied onto #eee6d6) so the first paint needs no blend or filters */}
+            <Image
+              src="/images/dev-print.webp"
+              alt="Portrait of Devanshu Verma"
+              fill
+              preload
+              fetchPriority="high"
+              sizes="(max-width: 640px) 22rem, (max-width: 1024px) 25rem, 27rem"
+              className="object-cover object-top"
+            />
+          </div>
+          <figcaption className="t-label absolute -bottom-9 right-1 rotate-[-2deg] text-[var(--text-primary)]">
+            Devanshu Verma · Frontend developer
+          </figcaption>
+        </figure>
+      </div>
+
+      {/* The reach: a pointer cut from black paper, its tail drawn out into an arm.
+          Rotated about its tip, which sits just past the first action. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[62%] top-[83%] z-20 w-[min(46vw,13rem)] origin-top-left rotate-[-30deg]
+                   sm:left-[56%] lg:left-[29%] lg:top-[76%] lg:w-[clamp(14rem,18vw,19rem)] lg:rotate-[-34deg]"
+      >
+        <CursorCut className="reach-in w-full text-[var(--ink)]" />
       </div>
     </section>
   );

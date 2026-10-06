@@ -1,10 +1,12 @@
 import AnimateOnScroll from "./AnimateOnScroll";
 import ProjectsExplorer from "./ProjectsExplorer";
+import BracketsCut from "./sequence/BracketsCut";
 import { supabaseAdmin, Project } from "@/lib/supabase";
 
 /** Featured items shown on the home page when nothing is flagged yet. */
 const FALLBACK_COUNT = 5;
 
+/** The work act, on midnight: each project a scene with its print and title card. */
 const WorkComponent = async () => {
   const { data } = await supabaseAdmin
     .from("projects")
@@ -18,28 +20,21 @@ const WorkComponent = async () => {
   return (
     <section
       id="work"
-      className="border-t border-[var(--border)] px-5 py-24 md:py-32 lg:px-10"
+      data-act="Work"
+      data-field="midnight"
+      className="field-midnight grain relative overflow-hidden px-5 py-24 md:py-32 lg:px-10"
     >
-      <div className="mx-auto max-w-7xl">
-        <AnimateOnScroll direction="up" className="mb-10 max-w-2xl md:mb-12">
-          <h2
-            className="text-[clamp(2rem,4.2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]
-                       text-[var(--text-primary)]"
-          >
-            Projects
-          </h2>
-          <p className="mt-4 text-[17px] leading-relaxed text-[var(--text-secondary)]">
-            Client websites, utility apps and open-source contributions.
+      <BracketsCut className="pointer-events-none absolute -right-24 -top-10 w-[min(70vw,34rem)] rotate-[-8deg] text-[var(--cardinal)] md:-right-16 md:top-6" />
+
+      <div className="relative mx-auto max-w-[90rem]">
+        <AnimateOnScroll direction="left" className="mb-12 max-w-3xl md:mb-16">
+          <h2 className="t-act">Projects</h2>
+          <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--text-secondary)]">
+            Client websites, side projects, free tools and open-source contributions.
           </p>
         </AnimateOnScroll>
 
-        <AnimateOnScroll direction="up" delay={0.08}>
-          <ProjectsExplorer
-            projects={shown}
-            totalCount={all.length}
-            showAllLink
-          />
-        </AnimateOnScroll>
+        <ProjectsExplorer projects={shown} totalCount={all.length} showAllLink />
       </div>
     </section>
   );

@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { UnplugIcon } from "lucide-react";
-import BrowserErrorPage, { ERROR_PRIMARY, ERROR_SECONDARY } from "@/components/browser/BrowserErrorPage";
+import ErrorPage, { ERROR_PRIMARY, ERROR_SECONDARY } from "@/components/site/ErrorPage";
 
 export default function BlogError({
   error,
@@ -17,8 +16,8 @@ export default function BlogError({
   }, [error]);
 
   return (
-    <BrowserErrorPage
-      icon={<UnplugIcon size={44} strokeWidth={1.4} />}
+    <ErrorPage
+      word="Retake."
       title="The blog didn't load"
       code={`Error code: ${error.digest ?? "FETCH_FAILED"}`}
       actions={
@@ -33,6 +32,6 @@ export default function BlogError({
       }
     >
       <p>Couldn&apos;t fetch the blog content. This is usually a temporary issue.</p>
-    </BrowserErrorPage>
+    </ErrorPage>
   );
 }

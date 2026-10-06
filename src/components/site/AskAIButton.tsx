@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useBrowser } from "./context";
+import { useSite } from "./context";
 
 /**
- * Opens the AI side panel. A real link to /resume underneath, so it still
+ * Opens the Ask AI panel. A real link to /resume underneath, so it still
  * works without JavaScript and with modifier-clicks.
  */
-export default function AskAIButton({ className, children }: { className?: string; children: ReactNode }) {
-  const { setAssistantOpen } = useBrowser();
+export default function AskAIButton({
+  className,
+  children,
+  onOpen,
+}: {
+  className?: string;
+  children: ReactNode;
+  onOpen?: () => void;
+}) {
+  const { setAssistantOpen } = useSite();
   return (
     <Link
       href="/resume"
@@ -17,6 +25,7 @@ export default function AskAIButton({ className, children }: { className?: strin
       onClick={(e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
+        onOpen?.();
         setAssistantOpen(true);
       }}
       className={className}

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { m, useReducedMotion } from "framer-motion";
 import { ArrowUpIcon, Maximize2Icon, SparklesIcon, XIcon } from "lucide-react";
 import {
   CHAT_SUGGESTIONS,
@@ -21,7 +21,7 @@ function MessageText({ text }: { text: string }) {
           <a
             key={i}
             href={part.href}
-            className="font-medium text-[var(--accent)] underline underline-offset-2 transition-opacity hover:opacity-80"
+            className="link font-medium"
           >
             {part.label}
           </a>
@@ -39,7 +39,7 @@ function TypingDots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="h-1.5 w-1.5 animate-bounce rounded-full bg-current"
+          className="h-1.5 w-1.5 animate-bounce bg-current"
           style={{ animationDelay: `${i * 0.15}s` }}
         />
       ))}
@@ -48,8 +48,8 @@ function TypingDots() {
 }
 
 /**
- * The browser's AI side panel (think Gemini in Chrome), answering questions
- * about Devanshu from his résumé. Non-modal: the page stays usable beside it.
+ * The Ask AI side panel, answering questions about Devanshu from his résumé.
+ * Non-modal: the page stays usable beside it.
  */
 export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose: () => void }) {
   const { messages, loading, sendMessage } = chat;
@@ -81,7 +81,7 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
   };
 
   return (
-    <motion.aside
+    <m.aside
       aria-label="AI assistant"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -93,19 +93,19 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: reduce ? 0 : 24, pointerEvents: "none", transition: { duration: reduce ? 0 : 0.16 } }}
       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 38 }}
-      className="fixed bottom-0 right-0 top-[var(--chrome-h)] z-30 flex w-full flex-col border-l border-[var(--border)]
-                 bg-[var(--chrome-toolbar)] shadow-[var(--shadow-pop)] md:w-[400px]"
+      className="field-paper fixed bottom-0 right-0 top-[var(--header-h)] z-40 flex w-full flex-col
+                 md:w-[420px] md:border-l-2 md:border-[var(--ink)]"
     >
       {/* Panel header */}
-      <div className="flex h-12 shrink-0 items-center gap-2.5 border-b border-[var(--border)] pl-4 pr-2">
-        <SparklesIcon size={16} strokeWidth={1.9} className="shrink-0 text-[var(--accent)]" />
-        <p className="flex-1 text-sm font-semibold text-[var(--text-primary)]">Ask AI</p>
+      <div className="field-cardinal flex h-14 shrink-0 items-center gap-2.5 pl-4 pr-2">
+        <SparklesIcon size={17} strokeWidth={2} className="shrink-0" />
+        <p className="flex-1 font-display text-[1.6rem] uppercase leading-none tracking-[0.03em]">Ask my AI</p>
         <Link
           href="/resume"
           aria-label="Open the full résumé page"
           title="Open full page"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors
-                     duration-150 hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+          className="flex h-10 w-10 items-center justify-center text-[var(--text-primary)] transition-colors
+                     duration-100 hover:bg-[var(--bg-secondary)]"
         >
           <Maximize2Icon size={15} strokeWidth={1.9} />
         </Link>
@@ -114,8 +114,8 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
           onClick={onClose}
           aria-label="Close AI panel"
           title="Close"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors
-                     duration-150 hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+          className="flex h-10 w-10 items-center justify-center text-[var(--text-primary)] transition-colors
+                     duration-100 hover:bg-[var(--bg-secondary)]"
         >
           <XIcon size={17} strokeWidth={1.9} />
         </button>
@@ -132,10 +132,10 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
         {messages.map((msg, i) =>
           msg.role === "assistant" ? (
             <div key={i} className="flex items-start gap-2.5">
-              <span className="relative mt-0.5 h-7 w-7 shrink-0 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-secondary)]">
-                <Image src="/images/LInkedin_heashot.png" alt="" fill sizes="28px" className="object-cover" />
+              <span className="relative mt-0.5 h-8 w-8 shrink-0 overflow-hidden bg-[var(--cardinal)]">
+                <Image src="/images/dev.webp" alt="" fill sizes="32px" className="object-cover object-top grayscale contrast-125 mix-blend-multiply" />
               </span>
-              <div className="min-w-0 flex-1 whitespace-pre-wrap pt-1 text-[14.5px] leading-relaxed text-[var(--text-primary)]">
+              <div className="min-w-0 flex-1 whitespace-pre-wrap pt-1 text-[15px] leading-relaxed text-[var(--text-primary)]">
                 {msg.content ? (
                   <MessageText text={msg.content} />
                 ) : (
@@ -148,8 +148,8 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
           ) : (
             <div key={i} className="flex justify-end">
               <p
-                className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-[var(--bg-secondary)] px-3.5 py-2.5
-                           text-[14.5px] leading-relaxed text-[var(--text-primary)]"
+                className="cut-b max-w-[85%] whitespace-pre-wrap bg-[var(--ink)] px-4 py-2.5
+                           text-[15px] leading-relaxed text-[var(--bone-ink)]"
               >
                 {msg.content}
               </p>
@@ -158,17 +158,16 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
         )}
 
         {messages.length === 1 && (
-          <div className="pl-[38px]">
-            <p className="text-xs font-medium text-[var(--text-muted)]">Try asking</p>
+          <div className="pl-[42px]">
+            <p className="t-label text-[var(--text-muted)]">Try asking</p>
             <ul className="mt-2 flex flex-col items-start gap-2">
               {CHAT_SUGGESTIONS.map((s) => (
                 <li key={s}>
                   <button
                     type="button"
                     onClick={() => send(s)}
-                    className="rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 py-1.5 text-left text-[13px]
-                               text-[var(--text-secondary)] transition-colors duration-150
-                               hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]"
+                    className="px-3 py-2 text-left text-[14px] text-[var(--text-primary)] shadow-[inset_0_0_0_1.5px_var(--border)]
+                               transition-colors duration-100 hover:bg-[var(--ink)] hover:text-[var(--bone-ink)] hover:shadow-none"
                   >
                     {s}
                   </button>
@@ -180,11 +179,11 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 border-t border-[var(--border)] p-3">
+      <div className="shrink-0 border-t-2 border-[var(--text-primary)] p-3">
         <form
           onSubmit={onSubmit}
-          className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] py-1.5 pl-3.5 pr-1.5
-                     transition-colors duration-150 focus-within:border-[var(--accent-line)]"
+          className="flex items-center gap-2 bg-[var(--bg-card)] py-1.5 pl-3.5 pr-1.5 shadow-[inset_0_0_0_1.5px_var(--border)]
+                     transition-shadow duration-100 focus-within:shadow-[inset_0_0_0_2.5px_var(--text-primary)]"
         >
           <input
             ref={inputRef}
@@ -193,23 +192,23 @@ export default function AssistantPanel({ chat, onClose }: { chat: Chat; onClose:
             placeholder="Ask about skills, projects, availability…"
             aria-label="Message"
             disabled={loading}
-            className="h-9 min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none
+            className="h-10 min-w-0 flex-1 bg-transparent text-[15px] text-[var(--text-primary)] outline-none
                        placeholder:text-[var(--text-muted)] focus-visible:outline-none disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
             aria-label="Send"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--on-accent)]
-                       transition-opacity duration-150 disabled:opacity-30"
+            className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--plate)] text-[var(--on-plate)]
+                       transition-colors duration-100 hover:bg-[var(--plate-hover)] disabled:opacity-30"
           >
             <ArrowUpIcon size={16} strokeWidth={2.2} />
           </button>
         </form>
-        <p className="mt-2 text-center text-[11px] text-[var(--text-muted)]">
+        <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
           Answers come from my résumé via Gemini, and can be wrong.
         </p>
       </div>
-    </motion.aside>
+    </m.aside>
   );
 }

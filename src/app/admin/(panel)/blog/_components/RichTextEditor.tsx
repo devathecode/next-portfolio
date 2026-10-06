@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TableKit } from "@tiptap/extension-table";
 import { Markdown } from "tiptap-markdown";
 import {
   BoldIcon,
@@ -16,6 +17,7 @@ import {
   QuoteIcon,
   CodeIcon,
   MinusIcon,
+  TableIcon,
   LinkIcon,
   Link2OffIcon,
   Undo2Icon,
@@ -73,6 +75,8 @@ export function RichTextEditor({
         HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
       }),
       Placeholder.configure({ placeholder: "Write your post…" }),
+      // Without it, pasted or loaded tables collapse into one paragraph
+      TableKit.configure({ table: { resizable: false } }),
       Markdown.configure({
         html: true,
         transformPastedText: true,
@@ -161,6 +165,13 @@ export function RichTextEditor({
         </TBtn>
         <TBtn title="Horizontal rule" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
           <MinusIcon size={13} />
+        </TBtn>
+        <TBtn
+          title="Table"
+          active={editor.isActive("table")}
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+        >
+          <TableIcon size={13} />
         </TBtn>
 
         <Sep />

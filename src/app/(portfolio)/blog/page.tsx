@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { RssIcon } from "lucide-react";
 import Footer from "@/components/Footer";
+import TitleCard from "@/components/sequence/TitleCard";
+import BarsCut from "@/components/sequence/BarsCut";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 import { BlogSearch } from "./_components/BlogSearch";
@@ -126,48 +128,38 @@ export default async function BlogPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[var(--bg-primary)] px-5 pb-24 pt-14 md:pt-20 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-5">
-            <div>
-              <h1
-                className="text-[clamp(2.4rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]
-                           text-[var(--text-primary)]"
-              >
-                Blog
-              </h1>
-              <p className="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-[var(--text-secondary)]">
-                {DESCRIPTION}
-              </p>
-            </div>
-            <p className="flex items-center gap-3 font-mono text-xs text-[var(--text-muted)]">
-              <span>
-                {allPosts.length} {allPosts.length === 1 ? "post" : "posts"}
-              </span>
-              <span aria-hidden="true">/</span>
-              <a
-                href="/blog/feed.xml"
-                className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--accent)]"
-              >
-                <RssIcon size={13} />
-                RSS
-              </a>
-            </p>
-          </header>
+      <main>
+        <TitleCard
+          field="olive"
+          act="Blog"
+          title="Blog"
+          lead={DESCRIPTION}
+          shape={<BarsCut className="pointer-events-none absolute -bottom-2 right-6 hidden w-[22rem] text-[var(--ink)] md:block lg:right-16 lg:w-[28rem]" />}
+        >
+          <p className="t-label mt-8 flex items-center gap-3 text-[var(--text-secondary)]">
+            <span>
+              {allPosts.length} {allPosts.length === 1 ? "post" : "posts"}
+            </span>
+            <span aria-hidden="true" className="h-1.5 w-1.5 bg-current" />
+            <a href="/blog/feed.xml" className="inline-flex items-center gap-1.5 transition-colors duration-100 hover:text-[var(--text-primary)]">
+              <RssIcon size={14} strokeWidth={2.2} />
+              RSS feed
+            </a>
+          </p>
 
           {topics.length > 0 && (
             // One swipeable row on phones, wrapped from sm up
             <nav
               aria-label="Topics"
-              className="-mx-5 mt-8 flex gap-1.5 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+              className="-mx-5 mt-6 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 md:max-w-[60%]"
             >
               {topics.map(({ tag, count }) => (
                 <Link
                   key={tag}
                   href={`/blog/tag/${encodeURIComponent(tag)}`}
-                  className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[var(--border)] px-2
-                             font-mono text-xs text-[var(--text-secondary)] transition-colors
-                             hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]"
+                  className="t-label inline-flex h-9 shrink-0 items-center gap-2 px-3 text-[var(--text-primary)]
+                             shadow-[inset_0_0_0_1.5px_var(--border)] transition-colors duration-100
+                             hover:bg-[var(--ink)] hover:shadow-none"
                 >
                   {tag}
                   <span className="text-[var(--text-muted)]">{count}</span>
@@ -175,10 +167,12 @@ export default async function BlogPage({
               ))}
             </nav>
           )}
+        </TitleCard>
 
-          <div className="mt-10">
+        <section data-act="Posts" data-field="paper" className="field-paper px-5 pb-28 pt-14 md:pt-16 lg:px-10">
+          <div className="mx-auto max-w-[90rem]">
             {allPosts.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center text-sm text-[var(--text-secondary)]">
+              <p className="border-y border-[var(--border)] py-16 text-center text-[16px] text-[var(--text-secondary)]">
                 No posts yet. The first one is on its way.
               </p>
             ) : (
@@ -186,10 +180,8 @@ export default async function BlogPage({
                 <div className="mt-10">
                   {currentPage === 1 && <FeaturedPost post={posts[0]} />}
                   {listed.length > 0 && (
-                    <section aria-label="More posts" className={currentPage === 1 ? "mt-14" : ""}>
-                      {currentPage === 1 && (
-                        <h2 className="mb-2 font-mono text-xs text-[var(--text-muted)]">Earlier posts</h2>
-                      )}
+                    <section aria-label="More posts" className={currentPage === 1 ? "mt-20" : ""}>
+                      {currentPage === 1 && <h2 className="t-card mb-6">Earlier posts</h2>}
                       <div className="border-b border-[var(--border)]">
                         {listed.map((post) => (
                           <PostRow key={post.id} post={post} />
@@ -202,7 +194,7 @@ export default async function BlogPage({
               </BlogSearch>
             )}
           </div>
-        </div>
+        </section>
       </main>
       <Footer />
     </>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
 import Footer from "@/components/Footer";
+import TitleCard from "@/components/sequence/TitleCard";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Post } from "@/lib/supabase";
 import { PostRow } from "../../_components/PostRow";
@@ -86,44 +86,39 @@ export default async function TagPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[var(--bg-primary)] px-5 pb-24 pt-14 md:pt-20 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <nav aria-label="Breadcrumb" className="font-mono text-xs text-[var(--text-muted)]">
-            <Link href="/blog" className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--accent)]">
-              <ArrowLeftIcon size={13} />
-              All posts
-            </Link>
-          </nav>
-
-          <header className="mt-6">
-            <h1
-              className="text-[clamp(2.4rem,5vw,3.5rem)] font-semibold leading-[1.02] tracking-[-0.04em]
-                         text-[var(--text-primary)]"
-            >
+      <main>
+        <TitleCard
+          field="olive"
+          act={`#${decoded}`}
+          title={
+            <>
               <span className="text-[var(--text-muted)]">#</span>
               {decoded}
-            </h1>
-            <p className="mt-4 text-[17px] text-[var(--text-secondary)]">
-              {posts.length} {posts.length === 1 ? "post" : "posts"} on this topic.
-            </p>
-          </header>
+            </>
+          }
+          lead={`${posts.length} ${posts.length === 1 ? "post" : "posts"} on this topic.`}
+          back={{ href: "/blog", label: "All posts" }}
+        />
 
-          {posts.length === 0 ? (
-            <p className="mt-12 rounded-2xl border border-dashed border-[var(--border)] px-6 py-16 text-center text-sm text-[var(--text-secondary)]">
-              Nothing tagged {decoded} yet.{" "}
-              <Link href="/blog" className="font-medium text-[var(--accent)] hover:underline">
-                Browse every post
-              </Link>
-              .
-            </p>
-          ) : (
-            <div className="mt-12 border-b border-[var(--border)]">
-              {posts.map((post) => (
-                <PostRow key={post.id} post={post} activeTag={decoded} />
-              ))}
-            </div>
-          )}
-        </div>
+        <section data-act="Posts" data-field="paper" className="field-paper px-5 pb-28 pt-6 lg:px-10">
+          <div className="mx-auto max-w-[90rem]">
+            {posts.length === 0 ? (
+              <p className="mt-10 border-y border-[var(--border)] py-16 text-center text-[16px] text-[var(--text-secondary)]">
+                Nothing tagged {decoded} yet.{" "}
+                <Link href="/blog" className="link font-medium">
+                  Browse every post
+                </Link>
+                .
+              </p>
+            ) : (
+              <div className="mt-10 border-b border-[var(--border)]">
+                {posts.map((post) => (
+                  <PostRow key={post.id} post={post} activeTag={decoded} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </main>
       <Footer />
     </>

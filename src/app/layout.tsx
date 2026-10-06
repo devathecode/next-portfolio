@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-context";
-import { geistSans, geistMono } from "@/utils/fonts";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { archivo, geistMono, geistSans, leagueGothic } from "@/utils/fonts";
+import Analytics from "@/components/site/Analytics";
 import { SITE_URL } from "@/lib/site";
 import { PROFILE, jsonLd, siteJsonLd } from "@/lib/profile";
 
@@ -81,22 +81,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable} ${leagueGothic.variable} ${archivo.variable}`}
         style={{ fontFamily: "var(--font-body)" }}
       >
         {/* Runs synchronously before React hydrates — prevents dark-mode flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.classList.toggle('dark',t==='dark')}catch(e){}})()`,
           }}
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(siteJsonLd())} />
         <ThemeProvider>
           <div>{children}</div>
         </ThemeProvider>
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
+        <Analytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
       </body>
     </html>
   );

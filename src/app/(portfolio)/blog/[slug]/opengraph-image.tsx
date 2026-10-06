@@ -26,11 +26,12 @@ export default async function Image({
   const displayExcerpt =
     excerpt.length > 130 ? `${excerpt.slice(0, 130)}…` : excerpt;
 
+  // A title card in the site's colours: cardinal field, bone caps, ink rule
   return new ImageResponse(
     (
       <div
         style={{
-          background: "#0d0d0d",
+          background: "#bf3e16",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -38,21 +39,22 @@ export default async function Image({
           justifyContent: "space-between",
           padding: "64px 80px",
           fontFamily: "system-ui, sans-serif",
+          color: "#f3ecdf",
         }}
       >
         {/* Top: tags */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {tags.slice(0, 4).map((tag) => (
             <div
               key={tag}
               style={{
-                background: "rgba(202,138,4,0.18)",
-                color: "#ca8a04",
-                border: "1px solid rgba(202,138,4,0.35)",
-                borderRadius: 999,
-                padding: "6px 18px",
+                background: "#15120f",
+                color: "#f3ecdf",
+                padding: "8px 18px",
                 fontSize: 18,
-                fontWeight: 500,
+                fontWeight: 700,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
               }}
             >
               {tag}
@@ -61,81 +63,40 @@ export default async function Image({
         </div>
 
         {/* Middle: title + excerpt */}
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: 20, flex: 1, justifyContent: "center" }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 22, flex: 1, justifyContent: "center" }}>
           <div
             style={{
-              fontSize: 58,
-              fontWeight: 800,
-              color: "#ffffff",
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
+              fontSize: 64,
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              textTransform: "uppercase",
             }}
           >
             {displayTitle}
           </div>
 
           {displayExcerpt && (
-            <div
-              style={{
-                fontSize: 24,
-                color: "#9ca3af",
-                lineHeight: 1.55,
-                maxWidth: 900,
-              }}
-            >
-              {displayExcerpt}
-            </div>
+            <div style={{ fontSize: 24, lineHeight: 1.5, maxWidth: 900, color: "#f8efe2" }}>{displayExcerpt}</div>
           )}
         </div>
 
-        {/* Bottom: author + site */}
+        {/* Bottom: author + site, over an ink rule */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            borderTop: "4px solid #15120f",
+            paddingTop: 22,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: "#ca8a04",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-                fontWeight: 700,
-                color: "#ffffff",
-                flexShrink: 0,
-              }}
-            >
-              DV
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ color: "#ffffff", fontSize: 20, fontWeight: 600 }}>
-                Devanshu Verma
-              </div>
-              <div style={{ color: "#6b7280", fontSize: 16 }}>
-                devanshuverma.in/blog
-              </div>
-            </div>
+          <div style={{ display: "flex", fontSize: 30, fontWeight: 900, letterSpacing: "0.02em", textTransform: "uppercase" }}>
+            Devanshu Verma
           </div>
-
-          {/* Accent dot */}
-          <div
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: "50%",
-              background: "#ca8a04",
-              opacity: 0.6,
-            }}
-          />
+          <div style={{ display: "flex", color: "#15120f", fontSize: 18, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+            devanshuverma.in/blog
+          </div>
         </div>
       </div>
     ),

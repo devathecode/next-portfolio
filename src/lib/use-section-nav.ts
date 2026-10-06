@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  useMotionValueEvent,
-  useReducedMotion,
-  useScroll,
-} from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { HOME_SECTIONS, type SectionId } from "./site";
 
 /**
@@ -16,7 +12,6 @@ import { HOME_SECTIONS, type SectionId } from "./site";
 export function useActiveSection(): SectionId | null {
   const pathname = usePathname();
   const onHome = pathname === "/";
-  const { scrollY } = useScroll();
   const [active, setActive] = useState<SectionId>("home");
 
   const measure = useCallback(() => {
@@ -31,17 +26,26 @@ export function useActiveSection(): SectionId | null {
     setActive(current);
   }, []);
 
-  useMotionValueEvent(scrollY, "change", () => {
-    if (onHome) measure();
-  });
-
-  // Re-measure whenever the page's layout changes (streamed sections, fonts, resize)
+  // Re-measure on scroll (once per frame) and whenever the page's layout
+  // changes (streamed sections, fonts, resize)
   useEffect(() => {
     if (!onHome) return;
     measure();
+    let raf = 0;
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(() => {
+        raf = 0;
+        measure();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
     const ro = new ResizeObserver(() => measure());
     ro.observe(document.body);
-    return () => ro.disconnect();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, [onHome, measure]);
 
   if (onHome) return active;

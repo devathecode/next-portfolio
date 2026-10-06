@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
 import ProjectsExplorer from "@/components/ProjectsExplorer";
 import Footer from "@/components/Footer";
+import TitleCard from "@/components/sequence/TitleCard";
+import BracketsCut from "@/components/sequence/BracketsCut";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Project } from "@/lib/supabase";
 
@@ -13,7 +13,7 @@ const PROJECTS_URL = `${SITE_URL}/projects`;
 const OG_IMAGE = `${SITE_URL}/opengraph-image`;
 const TITLE = "Projects | Devanshu Verma";
 const DESCRIPTION =
-  "Client websites, utility apps and open-source contributions built by Devanshu Verma.";
+  "Client websites, side projects, free tools and open-source contributions built by Devanshu Verma.";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -59,23 +59,22 @@ export default async function ProjectsPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <main className="min-h-screen bg-[var(--bg-primary)] px-5 py-20 lg:px-10">
-        <div className="mx-auto max-w-7xl">
-          <Link
-            href="/#work"
-            className="mb-8 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--accent)]"
-          >
-            <ArrowLeftIcon size={14} />
-            Back to home
-          </Link>
-          <h1 className="font-display text-4xl font-bold text-[var(--text-primary)] sm:text-5xl">
-            Projects
-          </h1>
-          <p className="mb-12 mt-3 max-w-xl text-[var(--text-secondary)]">
-            {DESCRIPTION}
-          </p>
-          <ProjectsExplorer projects={projects} priorityFirst />
-        </div>
+      <main>
+        <TitleCard
+          field="midnight"
+          act="Projects"
+          title="Projects"
+          lead={DESCRIPTION}
+          back={{ href: "/#work", label: "Back to home" }}
+          shape={
+            <BracketsCut className="pointer-events-none absolute -right-24 top-4 w-[min(70vw,36rem)] rotate-[-8deg] text-[var(--cardinal)] md:-right-10" />
+          }
+        />
+        <section data-act="All projects" data-field="midnight" className="field-midnight px-5 pb-28 lg:px-10">
+          <div className="mx-auto max-w-[90rem]">
+            <ProjectsExplorer projects={projects} priorityFirst />
+          </div>
+        </section>
       </main>
       <Footer />
     </>

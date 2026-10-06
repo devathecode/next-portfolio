@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { sendGAEvent } from "@next/third-parties/google";
+import { trackEvent } from "@/lib/analytics";
 import { CheckIcon, LinkIcon, Share2Icon } from "lucide-react";
 import { BsLinkedin } from "react-icons/bs";
 import { FaXTwitter } from "react-icons/fa6";
-import { useBrowser } from "@/components/browser/context";
+import { useSite } from "@/components/site/context";
 
 interface ShareBarProps {
   url: string;
@@ -14,14 +14,14 @@ interface ShareBarProps {
 }
 
 export function ShareBar({ url, title, layout = "horizontal" }: ShareBarProps) {
-  const { notify } = useBrowser();
+  const { notify } = useSite();
   const [copied, setCopied] = useState(false);
   const [canShare, setCanShare] = useState(false);
   const slug = url.split("/").pop() ?? url;
 
   useEffect(() => setCanShare(typeof navigator.share === "function"), []);
 
-  const track = (platform: string) => sendGAEvent("event", "blog_share", { platform, post_slug: slug });
+  const track = (platform: string) => trackEvent("blog_share", { platform, post_slug: slug });
 
   const copy = async () => {
     try {
@@ -54,34 +54,33 @@ export function ShareBar({ url, title, layout = "horizontal" }: ShareBarProps) {
 
   const vertical = layout === "vertical";
   const item = vertical
-    ? "flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] text-[var(--text-secondary)] transition-colors " +
-      "hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
-    : "inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3 text-[13px] " +
-      "font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent-line)] hover:text-[var(--text-primary)]";
+    ? "flex h-10 w-full items-center gap-2.5 px-2.5 text-[14px] text-[var(--text-secondary)] transition-colors duration-100 " +
+      "hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+    : "btn btn-line btn-sm";
 
   return (
     <div className={vertical ? "flex flex-col" : "flex flex-wrap items-center gap-2"}>
-      {vertical && <p className="mb-2 px-2.5 font-mono text-[11px] text-[var(--text-muted)]">Share</p>}
+      {vertical && <p className="t-label mb-2 px-2.5 text-[var(--text-muted)]">Share</p>}
 
       <button type="button" onClick={copy} className={item}>
         {copied ? (
-          <CheckIcon size={15} className="text-[var(--accent)]" />
+          <CheckIcon size={15} strokeWidth={2.4} className="text-[var(--accent)]" />
         ) : (
-          <LinkIcon size={15} className="text-[var(--text-muted)]" />
+          <LinkIcon size={15} strokeWidth={2.2} />
         )}
         {copied ? "Copied" : "Copy link"}
       </button>
       <a href={xUrl} target="_blank" rel="noopener noreferrer" onClick={() => track("x")} className={item}>
-        <FaXTwitter size={13} className="text-[var(--text-muted)]" />
+        <FaXTwitter size={13} />
         Post on X
       </a>
       <a href={liUrl} target="_blank" rel="noopener noreferrer" onClick={() => track("linkedin")} className={item}>
-        <BsLinkedin size={13} className="text-[var(--text-muted)]" />
+        <BsLinkedin size={13} />
         LinkedIn
       </a>
       {canShare && (
         <button type="button" onClick={nativeShare} className={item}>
-          <Share2Icon size={15} className="text-[var(--text-muted)]" />
+          <Share2Icon size={15} strokeWidth={2.2} />
           More
         </button>
       )}

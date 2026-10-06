@@ -6,73 +6,50 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
   type ReactNode,
 } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
-import {
-  CONTACT_EMAIL,
-  RESUME_PDF,
-  RESUME_PDF_NAME,
-  SITE_HOST,
-  type SectionId,
-} from "@/lib/site";
+import { AnimatePresence, LazyMotion } from "framer-motion";
+import { CONTACT_EMAIL, RESUME_PDF, RESUME_PDF_NAME, type SectionId } from "@/lib/site";
 import { useGoToSection } from "@/lib/use-section-nav";
 import { useResumeChat } from "@/lib/use-resume-chat";
-import AssistantPanel from "./AssistantPanel";
-import BrowserChrome from "./BrowserChrome";
-import ContextMenu from "./ContextMenu";
-import InspectMode from "./InspectMode";
-import Omnibox from "./Omnibox";
-import StatusBar from "./StatusBar";
-import TabSwitcher from "./TabSwitcher";
+import SiteHeader from "./SiteHeader";
 import Toast, { type ToastState } from "./Toast";
-import { BrowserContext, type BrowserDownload, type BrowserContextValue } from "./context";
-import { useTabs } from "./use-tabs";
+import { SiteContext, type SiteContextValue } from "./context";
 
 let greeted = false;
 
-function fileName(href: string) {
-  return decodeURIComponent(new URL(href, window.location.href).pathname.split("/").pop() || "download");
-}
+// The overlays load on first open: nobody needs them for the first screen
+const AssistantPanel = dynamic(() => import("./AssistantPanel"), { ssr: false });
+const CommandMenu = dynamic(() => import("./CommandMenu"), { ssr: false });
+
+const motionFeatures = () => import("./motion-features").then((mod) => mod.default);
 
 /**
- * The site as a web browser: chrome with tabs and an address bar, a status
- * bubble, right-click menu, loading bar, downloads, an AI side panel and a
- * DevTools-style inspector. Wraps every portfolio page.
+ * Every public page: the fixed header with its reel, the ⌘K command menu,
+ * the Ask AI panel and the toast. Also tracks route loading so the reel can
+ * show a cut in progress.
  */
-export default function BrowserShell({
-  children,
-  pageTitle,
-}: {
-  children: ReactNode;
-  /** Tab title for pages the tab list doesn't know (e.g. the 404 page) */
-  pageTitle?: string;
-}) {
+export default function SiteShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const goTo = useGoToSection();
-  const { tabs, active, path } = useTabs(pageTitle);
   const chat = useResumeChat();
 
-  const [omniboxOpen, setOmniboxOpen] = useState(false);
-  const [tabSwitcherOpen, setTabSwitcherOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const [assistantOpen, setAssistantOpenState] = useState(false);
-  const [inspect, setInspect] = useState<{ target: Element | null } | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
-  const [downloads, setDownloads] = useState<BrowserDownload[]>([]);
   // URL (path + query) a navigation started from; null when idle
   const [pendingFrom, setPendingFrom] = useState<string | null>(null);
-  const [refreshing, startRefresh] = useTransition();
   // Route skeletons (loading.tsx) on screen
   const [holds, setHolds] = useState(0);
   const returnFocus = useRef<HTMLElement | null>(null);
   const assistantReturn = useRef<HTMLElement | null>(null);
 
-  const loading = pendingFrom !== null || refreshing || holds > 0;
+  const loading = pendingFrom !== null || holds > 0;
 
-  /* ── Loading bar ── */
+  /* ── Loading ── */
 
   const beginNavigation = useCallback((href: string) => {
     const url = new URL(href, window.location.href);
@@ -105,8 +82,6 @@ export default function BrowserShell({
     [beginNavigation, router],
   );
 
-  const reload = useCallback(() => startRefresh(() => router.refresh()), [router]);
-
   const holdLoading = useCallback(() => {
     setHolds((n) => n + 1);
     return () => setHolds((n) => n - 1);
@@ -120,53 +95,32 @@ export default function BrowserShell({
     [pathname, goTo, navigate],
   );
 
-  /* ── Downloads ── */
-
-  const recordDownload = useCallback((name: string, href: string) => {
-    setDownloads((list) =>
-      [{ id: Date.now(), name, href }, ...list.filter((d) => d.name !== name)].slice(0, 5),
-    );
-  }, []);
-
   const downloadResume = useCallback(() => {
     const a = document.createElement("a");
     a.href = RESUME_PDF;
     a.download = RESUME_PDF_NAME;
-    // In the document, so the click listener below records it like any other
     document.body.appendChild(a);
     a.click();
     a.remove();
   }, []);
 
-  // Every same-site link click starts the loading bar; download links land in
-  // the downloads bubble
+  // Every same-site link click starts the loading cut
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const a = e.target instanceof Element ? e.target.closest("a[href]") : null;
       if (!(a instanceof HTMLAnchorElement)) return;
-      if (a.hasAttribute("download")) {
-        recordDownload(a.getAttribute("download") || fileName(a.href), a.href);
-        return;
-      }
-      if (a.target === "_blank" || a.closest("[data-no-progress]")) return;
+      if (a.hasAttribute("download") || a.target === "_blank" || a.closest("[data-no-progress]")) return;
       beginNavigation(a.href);
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [beginNavigation, recordDownload]);
+  }, [beginNavigation]);
 
   /* ── Overlays ── */
 
-  const openOmnibox = useCallback(() => setOmniboxOpen(true), []);
-  const closeOmnibox = useCallback(() => setOmniboxOpen(false), []);
-  const openTabSwitcher = useCallback(() => setTabSwitcherOpen(true), []);
-  const closeTabSwitcher = useCallback(() => setTabSwitcherOpen(false), []);
-  const startInspect = useCallback((target?: Element | null) => {
-    setOmniboxOpen(false);
-    setInspect({ target: target ?? null });
-  }, []);
-  const stopInspect = useCallback(() => setInspect(null), []);
+  const openCommand = useCallback(() => setCommandOpen(true), []);
+  const closeCommand = useCallback(() => setCommandOpen(false), []);
   const notify = useCallback(
     (message: string, kind: "success" | "info" = "success") =>
       setToast({ id: Date.now(), message, kind }),
@@ -186,21 +140,21 @@ export default function BrowserShell({
   }, []);
   const closeAssistant = useCallback(() => setAssistantOpen(false), [setAssistantOpen]);
 
-  // ⌘K / Ctrl+K toggles the address bar from anywhere
+  // ⌘K / Ctrl+K toggles the command menu from anywhere
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setOmniboxOpen((o) => !o);
+        setCommandOpen((o) => !o);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Lock page scroll while the address bar is open; hand focus back on close
+  // Lock page scroll while the command menu is open; hand focus back on close
   useEffect(() => {
-    if (!omniboxOpen) return;
+    if (!commandOpen) return;
     returnFocus.current = document.activeElement as HTMLElement | null;
     const { overflow } = document.body.style;
     document.body.style.overflow = "hidden";
@@ -208,7 +162,7 @@ export default function BrowserShell({
       document.body.style.overflow = overflow;
       returnFocus.current?.focus({ preventScroll: true });
     };
-  }, [omniboxOpen]);
+  }, [commandOpen]);
 
   useEffect(() => {
     if (!toast) return;
@@ -216,73 +170,59 @@ export default function BrowserShell({
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Route changes close the tab grid; the side panel stays, like a browser's
-  useEffect(() => setTabSwitcherOpen(false), [pathname]);
-
-  // A hello for anyone who opens the real DevTools
+  // A hello for anyone who opens DevTools
   useEffect(() => {
     if (greeted) return;
     greeted = true;
-    console.log("%cHey, you opened DevTools.", "font: 600 14px system-ui, sans-serif; color: #ca8a04");
+    console.log("%cHey, you opened DevTools.", "font: 600 14px system-ui, sans-serif; color: #bf3e16");
     console.log(
-      `This whole site is a browser inside your browser: tabs, address bar, status bubble, right-click menu and all.\n` +
+      `Every section here is cut like a film title card, and the page times itself in the Proof strip.\n` +
         `Built with Next.js, React and Tailwind CSS. Say hi at ${CONTACT_EMAIL}`,
     );
   }, []);
 
-  const value = useMemo<BrowserContextValue>(
+  const value = useMemo<SiteContextValue>(
     () => ({
-      openOmnibox,
-      startInspect,
+      openCommand,
       notify,
       assistantOpen,
       setAssistantOpen,
-      downloads,
       downloadResume,
       loading,
       holdLoading,
       navigate,
       openSection,
-      reload,
-      openTabSwitcher,
     }),
-    [
-      openOmnibox,
-      startInspect,
-      notify,
-      assistantOpen,
-      setAssistantOpen,
-      downloads,
-      downloadResume,
-      loading,
-      holdLoading,
-      navigate,
-      openSection,
-      reload,
-      openTabSwitcher,
-    ],
+    [openCommand, notify, assistantOpen, setAssistantOpen, downloadResume, loading, holdLoading, navigate, openSection],
   );
 
   return (
-    <BrowserContext.Provider value={value}>
-      <BrowserChrome tabs={tabs} active={active} path={path} />
-      {children}
+    <SiteContext.Provider value={value}>
+      <LazyMotion features={motionFeatures}>
+        <div className="site min-h-dvh">
+          <a
+            href="#main"
+            className="t-label sr-only z-[80] bg-[var(--cardinal)] px-4 py-3 text-[#fbf6ec]
+                       focus-visible:not-sr-only focus-visible:fixed focus-visible:left-3 focus-visible:top-3"
+          >
+            Skip to content
+          </a>
+          <SiteHeader />
+          {/* The header is fixed; this keeps the first act clear of it */}
+          <div aria-hidden="true" className="h-[var(--header-h)]" />
+          <div id="main" tabIndex={-1} className="outline-none">
+            {children}
+          </div>
 
-      <AnimatePresence>
-        {assistantOpen && <AssistantPanel key="assistant" chat={chat} onClose={closeAssistant} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {omniboxOpen && <Omnibox key="omnibox" url={`${SITE_HOST}${path}`} onClose={closeOmnibox} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {tabSwitcherOpen && (
-          <TabSwitcher key="tabs" tabs={tabs} active={active} onClose={closeTabSwitcher} />
-        )}
-      </AnimatePresence>
-      {inspect && <InspectMode initialTarget={inspect.target} onExit={stopInspect} />}
-      <ContextMenu />
-      <StatusBar />
-      <Toast toast={toast} />
-    </BrowserContext.Provider>
+          <AnimatePresence>
+            {assistantOpen && <AssistantPanel key="assistant" chat={chat} onClose={closeAssistant} />}
+          </AnimatePresence>
+          <AnimatePresence>
+            {commandOpen && <CommandMenu key="command" onClose={closeCommand} />}
+          </AnimatePresence>
+          <Toast toast={toast} />
+        </div>
+      </LazyMotion>
+    </SiteContext.Provider>
   );
 }

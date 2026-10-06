@@ -183,7 +183,7 @@ function UrlInput({
 
 function CategoryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div role="radiogroup" aria-label="Category" className="grid grid-cols-3 gap-2">
+    <div role="radiogroup" aria-label="Category" className="grid grid-cols-2 gap-2">
       {PROJECT_CATEGORIES.map((c) => {
         const on = value === c;
         return (

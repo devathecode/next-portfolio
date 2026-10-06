@@ -2,8 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { FrownIcon } from "lucide-react";
-import BrowserErrorPage, { ERROR_PRIMARY, ERROR_SECONDARY } from "@/components/browser/BrowserErrorPage";
+import ErrorPage, { ERROR_PRIMARY, ERROR_SECONDARY } from "@/components/site/ErrorPage";
 
 export default function PortfolioError({
   error,
@@ -17,9 +16,9 @@ export default function PortfolioError({
   }, [error]);
 
   return (
-    <BrowserErrorPage
-      icon={<FrownIcon size={44} strokeWidth={1.4} />}
-      title="Aw, snap!"
+    <ErrorPage
+      word="Retake."
+      title="Something broke mid-scene"
       code={`Error code: ${error.digest ?? "RENDER_FAILED"}`}
       actions={
         <>
@@ -32,7 +31,7 @@ export default function PortfolioError({
         </>
       }
     >
-      <p>Something went wrong while displaying this page. Reloading usually fixes it.</p>
-    </BrowserErrorPage>
+      <p>This page hit an error while it was rendering. Running it again usually fixes it.</p>
+    </ErrorPage>
   );
 }

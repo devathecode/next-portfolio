@@ -4,89 +4,216 @@
 
 /* ─── Design Tokens ─────────────────────────────────────────────── */
 /*
- * Zinc neutrals + one yellow accent.
- * --accent       text-safe accent (links, highlights, icons)
- * --on-accent    text colour for anything filled with --accent
- * Radius rule:   controls 8px (rounded-lg), control groups 12px (rounded-xl),
- *                surfaces / windows 16px (rounded-2xl).
+ * Title Sequence. The public site is cut like a Saul Bass opening: every
+ * act sits on one flat field of colour, set in skinny caps, with cut-paper
+ * shapes. No gradients, no blur shadows, no rounded corners.
+ *
+ * Raw stock: the six papers. Fields (.field-*) map them onto the working
+ * tokens below, so anything inside a field picks up that field's ink.
+ *   --text-primary / --text-secondary / --text-muted   ink on the field
+ *   --accent       text-safe accent on the field
+ *   --plate        fill for the primary action, --on-plate its text
+ *   --border       hairline rule, drawn in the field's own ink
  */
 :root {
-  /* Light mode */
-  --bg-primary:    #fafafa;
-  --bg-secondary:  #f2f2f4;
-  --bg-card:       #fefefe;
-  --accent:        #a16207;
-  --accent-muted:  rgba(161, 98, 7, 0.09);
-  --accent-glow:   rgba(161, 98, 7, 0.18);
-  --on-accent:     #fffdf5;
-  /* Derived from --accent, so it follows the theme automatically */
-  --accent-line:   color-mix(in srgb, var(--accent) 45%, transparent);
-  --text-primary:  #18181b;
-  --text-secondary:#52525b;
-  --text-muted:    #6b6b74;
-  --border:        #e2e2e6;
-  --border-subtle: #ececef;
-  --shadow-card:       0 1px 2px rgba(24, 24, 27, 0.05), 0 8px 24px -12px rgba(24, 24, 27, 0.10);
-  --shadow-card-hover: 0 2px 4px rgba(24, 24, 27, 0.05), 0 24px 48px -20px rgba(24, 24, 27, 0.22);
-  --shadow-pop:        0 24px 80px -24px rgba(24, 24, 27, 0.35);
+  /* Cardinal sits a shade under #d4471c so bone text on it clears 4.5:1 */
+  --cardinal: #bf3e16;
+  --ink:      #15120f;
+  --bone:     #eee6d6;
+  --midnight: #23415a;
+  --ochre:    #c98a2b;
+  --olive:    #5f5c42;
+  /* Ink and paper as text colours */
+  --bone-ink: #f3ecdf;
+  --ink-ink:  #15120f;
+  /* Ochre lifted for use as text on dark fields */
+  --ochre-lit: #e3a84b;
 
-  /* Browser chrome: tab strip (frame), toolbar + active tab, address field */
-  --chrome-frame:       #e6e6ea;
-  --chrome-toolbar:     #fefefe;
-  --chrome-field:       #efeff2;
-  --chrome-field-hover: #e8e8ec;
-  --chrome-hover:       rgba(24, 24, 27, 0.06);
-  --chrome-sep:         #c8c8ce;
-  /* Fixed chrome height: toolbar only on phones, tab strip + toolbar from md */
-  --chrome-h: 3.5rem;
+  /* Reading paper (the default field) */
+  --paper:         #eee6d6;
+  --paper-deep:    #e3d9c5;
+  --paper-raised:  #f6f0e4;
+  --paper-ink:     #15120f;
+  --paper-ink-2:   #3a332b;
+  --paper-ink-3:   #5e554a;
+  --paper-accent:  #b23a12;
+
+  --bg-primary:     var(--paper);
+  --bg-secondary:   var(--paper-deep);
+  --bg-card:        var(--paper-raised);
+  --text-primary:   var(--paper-ink);
+  --text-secondary: var(--paper-ink-2);
+  --text-muted:     var(--paper-ink-3);
+  --accent:         var(--paper-accent);
+  --accent-muted:   color-mix(in srgb, var(--cardinal) 13%, transparent);
+  --accent-line:    color-mix(in srgb, var(--accent) 55%, transparent);
+  --on-accent:      #fbf6ec;
+  --plate:          var(--cardinal);
+  --plate-hover:    var(--ink);
+  --on-plate:       #fbf6ec;
+  --border:         color-mix(in srgb, var(--text-primary) 22%, transparent);
+  --border-subtle:  color-mix(in srgb, var(--text-primary) 12%, transparent);
+
+  /* Flat world: depth comes from overlap and contrasting stock, never a shadow */
+  --shadow-card:       none;
+  --shadow-card-hover: none;
+  --shadow-pop:        none;
+
+  /* Fixed header: bar plus the reel strip under it */
+  --header-h: 3.75rem;
 
   --font-mono-fallback: ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  --radius-sm:  8px;
-  --radius-md:  12px;
-  --radius-lg:  16px;
-  --radius-xl:  16px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 
   --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
   --transition:      0.3s var(--ease-out);
   --transition-fast: 0.15s var(--ease-out);
 
   /* Tailwind compat */
-  --background: #fafafa;
-  --foreground: #18181b;
+  --background: var(--paper);
+  --foreground: var(--paper-ink);
 }
 
+/* Night: the same papers, under a projector. Fields deepen, ink lifts. */
 html.dark {
-  --bg-primary:    #0c0c0e;
-  --bg-secondary:  #131316;
-  --bg-card:       #17171a;
-  --accent:        #f0b100;
-  --accent-muted:  rgba(240, 177, 0, 0.10);
-  --accent-glow:   rgba(240, 177, 0, 0.20);
-  --on-accent:     #141414;
-  --text-primary:  #ededef;
-  --text-secondary:#a1a1aa;
-  --text-muted:    #8b8b94;
-  --border:        #26262b;
-  --border-subtle: #1d1d21;
-  --shadow-card:       0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 24px 48px -20px rgba(0, 0, 0, 0.8);
-  --shadow-pop:        0 24px 80px -16px rgba(0, 0, 0, 0.75);
+  --cardinal: #9a2f10;
+  --ink:      #0d0b09;
+  --midnight: #1a3146;
+  --ochre:    #b47a24;
+  --olive:    #4c4a35;
+  --bone-ink: #ede4d3;
 
-  --chrome-frame:       #070709;
-  --chrome-toolbar:     #26262b;
-  --chrome-field:       #17171a;
-  --chrome-field-hover: #1d1d21;
-  --chrome-hover:       rgba(255, 255, 255, 0.08);
-  --chrome-sep:         #3f3f46;
+  --paper:        #1a1612;
+  --paper-deep:   #221d18;
+  --paper-raised: #252019;
+  --paper-ink:    #ede4d3;
+  --paper-ink-2:  #cfc5b3;
+  --paper-ink-3:  #ada291;
+  --paper-accent: #ec7a43;
 
-  --background: #0c0c0e;
-  --foreground: #ededef;
+  --plate:       var(--cardinal);
+  --plate-hover: #bf3e16;
+  --on-plate:    #fbf6ec;
+  --on-accent:   #15120f;
+
 }
 
 @media (min-width: 768px) {
-  :root { --chrome-h: 5.5rem; }
+  :root { --header-h: 4.25rem; }
 }
+
+/* ─── Fields ────────────────────────────────────────────────────── */
+/* One per act. Each re-points the working tokens at its own inks. */
+.field-paper {
+  background-color: var(--paper);
+  --text-primary: var(--paper-ink);
+  --text-secondary: var(--paper-ink-2);
+  --text-muted: var(--paper-ink-3);
+  --accent: var(--paper-accent);
+  --plate: var(--cardinal);
+  --plate-hover: var(--ink);
+  --on-plate: #fbf6ec;
+  --bg-card: var(--paper-raised);
+  --bg-secondary: var(--paper-deep);
+  --accent-muted: color-mix(in srgb, var(--cardinal) 13%, transparent);
+  color: var(--text-primary);
+}
+html.dark .field-paper,
+html.dark .field-ink { --plate-hover: #bf3e16; }
+
+.field-cardinal {
+  background-color: var(--cardinal);
+  --text-primary: var(--bone-ink);
+  /* No tints on cardinal: bone is the only ink that clears contrast here */
+  --text-secondary: var(--bone-ink);
+  --text-muted: var(--bone-ink);
+  --accent: var(--ink-ink);
+  --plate: var(--ink);
+  --plate-hover: #2a231d;
+  --on-plate: var(--bone-ink);
+  --bg-card: color-mix(in srgb, var(--cardinal) 88%, var(--ink));
+  --bg-secondary: color-mix(in srgb, var(--cardinal) 80%, var(--ink));
+  --accent-muted: color-mix(in srgb, var(--ink) 14%, transparent);
+  color: var(--text-primary);
+}
+
+.field-ink {
+  background-color: var(--ink);
+  --text-primary: var(--bone-ink);
+  --text-secondary: color-mix(in srgb, var(--bone-ink) 82%, var(--ink));
+  --text-muted: color-mix(in srgb, var(--bone-ink) 66%, var(--ink));
+  --accent: var(--ochre-lit);
+  --plate: var(--cardinal);
+  --plate-hover: #9e3110;
+  --on-plate: #fbf6ec;
+  --bg-card: #1f1a16;
+  --bg-secondary: #27211b;
+  --accent-muted: color-mix(in srgb, var(--ochre-lit) 14%, transparent);
+  color: var(--text-primary);
+}
+
+.field-midnight {
+  background-color: var(--midnight);
+  --text-primary: var(--bone-ink);
+  --text-secondary: color-mix(in srgb, var(--bone-ink) 86%, var(--midnight));
+  --text-muted: color-mix(in srgb, var(--bone-ink) 72%, var(--midnight));
+  --accent: var(--ochre-lit);
+  --plate: var(--ochre);
+  --plate-hover: var(--bone);
+  --on-plate: var(--ink-ink);
+  --bg-card: color-mix(in srgb, var(--midnight) 84%, var(--ink));
+  --bg-secondary: color-mix(in srgb, var(--midnight) 74%, var(--ink));
+  --accent-muted: color-mix(in srgb, var(--ochre-lit) 16%, transparent);
+  color: var(--text-primary);
+}
+
+.field-ochre {
+  background-color: var(--ochre);
+  --text-primary: var(--ink-ink);
+  --text-secondary: color-mix(in srgb, var(--ink-ink) 88%, var(--ochre));
+  --text-muted: color-mix(in srgb, var(--ink-ink) 80%, var(--ochre));
+  --accent: var(--ink-ink);
+  --plate: var(--ink);
+  --plate-hover: var(--cardinal);
+  --on-plate: var(--bone-ink);
+  --bg-card: color-mix(in srgb, var(--ochre) 70%, var(--bone));
+  --bg-secondary: color-mix(in srgb, var(--ochre) 86%, var(--ink));
+  --accent-muted: color-mix(in srgb, var(--ink) 12%, transparent);
+  color: var(--text-primary);
+}
+
+.field-olive {
+  background-color: var(--olive);
+  --text-primary: var(--bone-ink);
+  --text-secondary: color-mix(in srgb, var(--bone-ink) 92%, var(--olive));
+  --text-muted: color-mix(in srgb, var(--bone-ink) 86%, var(--olive));
+  --accent: var(--bone-ink);
+  --plate: var(--ink);
+  --plate-hover: var(--cardinal);
+  --on-plate: var(--bone-ink);
+  --bg-card: color-mix(in srgb, var(--olive) 84%, var(--ink));
+  --bg-secondary: color-mix(in srgb, var(--olive) 74%, var(--ink));
+  --accent-muted: color-mix(in srgb, var(--bone) 14%, transparent);
+  color: var(--text-primary);
+}
+
+/* Silk-screen tooth on a field: static noise, printed into the paper */
+.grain { position: relative; isolation: isolate; }
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.06 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html.dark .grain::before { opacity: 0.22; mix-blend-mode: soft-light; }
 
 /* ─── Base ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -106,236 +233,260 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "ss01", "cv11";
 }
 
-::selection { background: var(--accent); color: var(--on-accent); }
+/* The public site's own voice. Admin keeps Geist. */
+.site {
+  --font-body:    var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --font-display: var(--font-gothic), "League Gothic", "Arial Narrow", sans-serif;
+  font-family: var(--font-body);
+  font-feature-settings: "kern";
+  font-variant-numeric: tabular-nums;
+  background-color: var(--paper);
+  /* Cut-in offsets and tilted prints must never widen the page */
+  overflow-x: clip;
+}
+.site ::selection { background: var(--cardinal); color: #fbf6ec; }
+.site .field-cardinal ::selection { background: var(--ink); color: var(--bone-ink); }
+.site input, .site textarea { caret-color: var(--cardinal); }
 
-/* Fixed browser chrome offset for in-page anchors */
-section[id] { scroll-margin-top: calc(var(--chrome-h) + 0.5rem); }
+/* Fixed header offset for in-page anchors */
+section[id] { scroll-margin-top: var(--header-h); }
 
-/* Scrollbar */
-::-webkit-scrollbar               { width: 6px; height: 6px; }
-::-webkit-scrollbar-track         { background: transparent; }
-::-webkit-scrollbar-thumb         { background: var(--border); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover   { background: var(--text-muted); }
+/* Scrollbar: a strip of ink on paper */
+.site { scrollbar-color: var(--paper-ink-3) var(--paper-deep); }
+::-webkit-scrollbar               { width: 10px; height: 10px; }
+::-webkit-scrollbar-track         { background: var(--paper-deep); }
+::-webkit-scrollbar-thumb         { background: var(--paper-ink-3); border: 2px solid var(--paper-deep); }
+::-webkit-scrollbar-thumb:hover   { background: var(--paper-ink); }
 
-/* Focus */
+/* Focus: a cut-out ring in the field's own ink */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--text-primary);
   outline-offset: 3px;
-  border-radius: var(--radius-sm);
 }
 
-/* ─── Keyframes ─────────────────────────────────────────────────── */
+/* ─── Type ──────────────────────────────────────────────────────── */
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0);    }
+/* Display caps: hand-set, slightly loose */
+.t-title, .t-act, .t-card {
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.012em;
+  text-wrap: balance;
+}
+.t-title { font-size: clamp(3.6rem, 9.2vw, 7.75rem); line-height: 0.88; }
+.t-act   { font-size: clamp(2.9rem, 6.4vw, 5.5rem);  line-height: 0.9; }
+.t-card  { font-size: clamp(1.85rem, 3.1vw, 2.6rem); line-height: 0.95; }
+
+/* Labels: Archivo pulled narrow, tracked caps */
+.t-label {
+  font-family: var(--font-body);
+  font-stretch: 72%;
+  font-weight: 650;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.2;
 }
 
-@keyframes rise {
-  from { transform: translateY(24px) scale(0.98); }
-  to   { transform: translateY(0) scale(1);       }
-}
+/* Hand-set: one word sits off the baseline */
+.offset-word { display: inline-block; transform: translateY(0.06em) rotate(-1.2deg); }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* Prints: cover art pulled through ink on bone stock, so outside imagery
+   sits in the world. Full colour returns while its link is hovered or focused. */
+.print { filter: grayscale(1) contrast(1.2); mix-blend-mode: multiply; }
+.group:hover .print,
+.group:focus-visible .print { filter: none; mix-blend-mode: normal; }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
+/* ─── Cut paper ─────────────────────────────────────────────────── */
+/* Rectangles cut by hand: four corners, each a little off true */
+.cut-a { clip-path: polygon(0.6% 1.4%, 99.4% 0, 100% 97.8%, 0 100%); }
+.cut-b { clip-path: polygon(0 0, 98.8% 1.6%, 100% 100%, 1.2% 98.4%); }
+.cut-c { clip-path: polygon(1.4% 0, 100% 1%, 98.9% 100%, 0 98.2%); }
 
-@keyframes draw-line {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-@keyframes shimmer-sweep {
-  from { background-position: -200% center; }
-  to   { background-position:  200% center; }
-}
-
-/* Marquee — keep existing Tailwind animation names */
-@keyframes marquee {
-  from { transform: translateX(0);    }
-  to   { transform: translateX(-50%); }
-}
-
-@keyframes marquee-reverse {
-  from { transform: translateX(-50%); }
-  to   { transform: translateX(0);    }
-}
-
-/* Hero packets: cross in the first ~45%, then rest off-screen until the next run */
-@keyframes packet-x {
-  0%        { transform: translateX(-100%); }
-  45%, 100% { transform: translateX(var(--len)); }
-}
-
-@keyframes packet-y {
-  0%        { transform: translateY(-100%); }
-  45%, 100% { transform: translateY(var(--len)); }
-}
-
-/* ─── Animation Utilities ───────────────────────────────────────── */
-
-/*
- * Hero entrance runs in CSS so it starts on first paint, before hydration.
- * Stagger with style={{ "--i": n }}.
- */
-.hero-in {
-  animation: fade-up 0.8s var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 90ms + 60ms);
-}
-/* Transform only: the portrait is the LCP element, so it never starts invisible */
-.hero-rise { animation: rise 1s var(--ease-out) both; }
-
-/* "instant." underline: draws in fast, once the headline has landed */
-.hero-underline {
-  position: relative;
-  display: inline-block;
-}
-.hero-underline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0.28em; /* stop short of the full stop */
-  bottom: -0.02em;
-  height: 0.07em;
-  background: currentColor;
-  transform-origin: left;
-  animation: draw-line 0.45s var(--ease-out) both;
-  animation-delay: 0.75s;
-}
-
-/*
- * Hero backdrop (HeroBackdrop.tsx). Grid lines sit on the right and bottom
- * edge of each cell, anchored top right, so packets line up with them:
- * rows at top = cell * n, columns at right = cell * n.
- */
-.hero-grid {
-  --cell: 56px;
-  --grid-line: color-mix(in srgb, var(--text-primary) 7%, transparent);
-  background-image:
-    linear-gradient(to left, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: var(--cell) var(--cell);
-  background-position: right top;
-  /* Fades out behind the copy, strongest around the portrait */
-  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 85%, #000 15%, transparent 75%);
-          mask-image: radial-gradient(ellipse 60% 70% at 50% 85%, #000 15%, transparent 75%);
-}
-@media (min-width: 1024px) {
-  .hero-grid {
-    -webkit-mask-image: radial-gradient(ellipse 55% 75% at 72% 45%, #000 20%, transparent 78%);
-            mask-image: radial-gradient(ellipse 55% 75% at 72% 45%, #000 20%, transparent 78%);
+/* ─── Actions ───────────────────────────────────────────────────── */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    height: 3rem;
+    padding: 0 1.35rem;
+    font-family: var(--font-body);
+    font-stretch: 75%;
+    font-weight: 700;
+    font-size: 0.84rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background-color 0.12s steps(2, end), color 0.12s steps(2, end), transform 0.12s steps(2, end);
   }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { cursor: not-allowed; opacity: 0.55; }
+  .btn-sm { height: 2.5rem; padding: 0 1rem; font-size: 0.76rem; }
+
+  /* The plate: a solid cut rectangle; hover swaps the paper */
+  .btn-plate {
+    background-color: var(--plate);
+    color: var(--on-plate);
+    clip-path: polygon(0.8% 4%, 100% 0, 99.2% 100%, 0 95%);
+  }
+  .btn-plate:hover:not(:disabled) { background-color: var(--plate-hover); }
+  .field-midnight .btn-plate:hover:not(:disabled) { color: var(--ink-ink); }
+
+  /* The outline: a ruled box in the field's ink */
+  .btn-line {
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+  .btn-line:hover:not(:disabled) { background-color: var(--text-primary); color: var(--bg-of-field, var(--paper)); }
+  .field-cardinal .btn-line:hover:not(:disabled) { color: var(--cardinal); }
+  .field-midnight .btn-line:hover:not(:disabled) { color: var(--midnight); }
+  .field-ink .btn-line:hover:not(:disabled) { color: var(--ink); }
+  .field-ochre .btn-line:hover:not(:disabled) { color: var(--ochre); }
+  .field-olive .btn-line:hover:not(:disabled) { color: var(--olive); }
+
+  /* Text link: an underline cut from the field's ink, thickens on hover */
+  .link {
+    color: var(--text-primary);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.22em;
+    text-decoration-color: var(--accent-line);
+    transition: text-decoration-thickness 0.12s steps(2, end), text-decoration-color 0.12s steps(2, end);
+  }
+  .link:hover { text-decoration-thickness: 3px; text-decoration-color: currentColor; }
+
+  /* Keyboard key */
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 0.35rem;
+    box-shadow: inset 0 0 0 1.5px var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-stretch: 75%;
+    font-weight: 650;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* Form fields: ruled boxes, no rounding */
+  .field-input {
+    display: block;
+    width: 100%;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 1.5px var(--border);
+    padding: 0.8rem 0.95rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    transition: box-shadow 0.12s steps(2, end);
+  }
+  .field-input::placeholder { color: var(--text-muted); opacity: 1; }
+  .field-input:hover { box-shadow: inset 0 0 0 1.5px var(--text-muted); }
+  .field-input:focus { outline: none; box-shadow: inset 0 0 0 2.5px var(--text-primary); }
 }
 
-.packet { position: absolute; overflow: hidden; }
-.packet-x { left: 0; right: 0; height: 1px; top: calc(var(--cell) * var(--n)); }
-.packet-y { top: 0; bottom: 0; width: 1px; right: calc(var(--cell) * var(--n)); }
-
-/* The streak sits at the far end of a full-length strip, which slides across */
-.packet > span {
-  position: absolute;
-  inset: 0;
-  animation: var(--dur) linear var(--delay) infinite both;
-}
-.packet-x > span {
-  --len: 140px;
-  animation-name: packet-x;
-  background: linear-gradient(to right, transparent calc(100% - var(--len)), var(--accent));
-}
-.packet-y > span {
-  --len: 110px;
-  animation-name: packet-y;
-  background: linear-gradient(to bottom, transparent calc(100% - var(--len)), var(--accent));
-}
-/* Reversed packets travel the other way, so the bright head leads */
-.packet-rev > span { animation-direction: reverse; }
-.packet-x.packet-rev > span {
-  background: linear-gradient(to right, transparent calc(100% - var(--len)), var(--accent) calc(100% - var(--len)), transparent);
-}
-.packet-y.packet-rev > span {
-  background: linear-gradient(to bottom, transparent calc(100% - var(--len)), var(--accent) calc(100% - var(--len)), transparent);
+/* ─── The jittering line ────────────────────────────────────────── */
+/*
+ * Marks the live element, like the hand-drawn line in a Bass title.
+ * Three drawn frames swap on a hard step: it boils on arrival and on hover,
+ * then rests on its first frame.
+ */
+.jitter { display: block; overflow: visible; pointer-events: none; }
+.jitter path { opacity: 0; }
+.jitter path:first-child { opacity: 1; }
+.jitter[data-boil="true"] path,
+.jitter-host:hover .jitter path,
+.jitter-host:focus-visible .jitter path { animation: jitter-frame 0.36s steps(1, end) 3; }
+.jitter-host:hover .jitter path,
+.jitter-host:focus-visible .jitter path { animation-iteration-count: infinite; }
+.jitter path:nth-child(2) { animation-delay: -0.12s !important; }
+.jitter path:nth-child(3) { animation-delay: -0.24s !important; }
+@keyframes jitter-frame {
+  0%      { opacity: 1; }
+  33.33%  { opacity: 0; }
+  100%    { opacity: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .packet { display: none; }
+/* ─── Cuts ──────────────────────────────────────────────────────── */
+/*
+ * Entrances are jump cuts, not fades: a shape lands in three hard frames.
+ * Everything starts in place and visible; only transform moves.
+ */
+@keyframes cut-in-left {
+  0%   { transform: translateX(-14%) rotate(-3deg); }
+  34%  { transform: translateX(-5%) rotate(1.5deg); }
+  67%  { transform: translateX(1%) rotate(-0.5deg); }
+  100% { transform: none; }
 }
+@keyframes cut-in-right {
+  0%   { transform: translateX(18%) rotate(4deg); }
+  34%  { transform: translateX(6%) rotate(-1.5deg); }
+  67%  { transform: translateX(-1%) rotate(0.6deg); }
+  100% { transform: none; }
+}
+@keyframes cut-in-up {
+  0%   { transform: translateY(0.18em); }
+  50%  { transform: translateY(-0.04em); }
+  100% { transform: none; }
+}
+@keyframes reach {
+  0%   { transform: translate(22%, 6%) rotate(6deg); }
+  25%  { transform: translate(10%, 3%) rotate(2deg); }
+  50%  { transform: translate(3%, -1%) rotate(-1deg); }
+  75%  { transform: translate(-1%, 0) rotate(0.4deg); }
+  100% { transform: none; }
+}
+.cut-in-left  { animation: cut-in-left 0.42s steps(3, jump-none) both; }
+.cut-in-right { animation: cut-in-right 0.42s steps(3, jump-none) both; }
+.cut-in-up    { animation: cut-in-up 0.28s steps(2, jump-none) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.reach-in     { animation: reach 0.66s steps(4, jump-none) 0.2s both; }
+
+/* Acts cut in as they arrive (AnimateOnScroll toggles data-shown) */
+[data-cut] { transition: transform 0.36s steps(3, jump-none); }
+/* Cuts drop in vertically, tilted toward their side, so nothing crosses the page edge */
+[data-cut="left"][data-shown="false"]  { transform: translateY(36px) rotate(-1.2deg); }
+[data-cut="right"][data-shown="false"] { transform: translateY(36px) rotate(1.2deg); }
+[data-cut="up"][data-shown="false"]    { transform: translateY(32px); }
+
+/* Route loading: a splice runs along the reel in hard frames */
+@keyframes splice { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
+.reel-splice { animation: splice 0.9s steps(8, end) infinite; }
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
 
 /* ─── Utility Classes ───────────────────────────────────────────── */
 
 .font-display { font-family: var(--font-display); }
-.font-mono    { font-family: var(--font-code);   }
+.font-mono    { font-family: var(--font-code); }
 
 .text-accent   { color: var(--accent); }
 .bg-card       { background-color: var(--bg-card); }
 .border-token  { border-color: var(--border); }
 
-/* Gradient accent text (legacy pages) */
-.text-gradient {
-  background: linear-gradient(135deg, var(--accent) 0%, #e8a200 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Section mono label (legacy pages) */
+/* Section label (legacy pages) */
 .section-label {
-  font-family: var(--font-code);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+  font-stretch: 72%;
+  font-weight: 650;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
 }
 
-/* Keyboard key (components layer, so utilities like `hidden` can override display) */
-@layer components {
-  .kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.35rem;
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    border-bottom-width: 2px;
-    background: var(--bg-card);
-    color: var(--text-muted);
-    font-family: var(--font-code);
-    font-size: 0.68rem;
-    line-height: 1;
-    white-space: nowrap;
-  }
-}
-
-/* Underline draw on hover */
-.link-underline {
-  position: relative;
-  text-decoration: none;
-}
-.link-underline::after {
-  content: "";
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform var(--transition);
-}
-.link-underline:hover::after { transform: scaleX(1); }
-
-/* Horizontal scroll — hide scrollbar */
+/* Horizontal scroll, scrollbar hidden */
 .h-scroll {
   overflow-x: auto;
   scrollbar-width: none;
@@ -343,44 +494,9 @@ section[id] { scroll-margin-top: calc(var(--chrome-h) + 0.5rem); }
 }
 .h-scroll::-webkit-scrollbar { display: none; }
 
-/* Card with hover lift */
-.card-hover {
-  transition: transform var(--transition), box-shadow var(--transition);
-}
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card-hover);
-}
-
-/* Active browser tab: the concave "feet" that melt it into the toolbar */
-.tab-active::before,
-.tab-active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-}
-.tab-active::before {
-  right: 100%;
-  background: radial-gradient(circle at 0 0, transparent 10px, var(--chrome-toolbar) 10.5px);
-}
-.tab-active::after {
-  left: 100%;
-  background: radial-gradient(circle at 100% 0, transparent 10px, var(--chrome-toolbar) 10.5px);
-}
-
-/* The reCAPTCHA v3 badge collides with the floating "Hire me" button;
+/* The reCAPTCHA v3 badge collides with the floating "Hire me" tag;
    the contact form carries Google's required disclosure text instead. */
 .grecaptcha-badge { visibility: hidden; }
-
-/* Inspect mode (right-click → Inspect, or the ⋮ menu) */
-html.inspecting,
-html.inspecting * { cursor: crosshair !important; }
-html.inspecting [data-inspect-ui],
-html.inspecting [data-inspect-ui] * { cursor: default !important; }
-html.inspecting [data-inspect-ui] button { cursor: pointer !important; }
 
 /* ─── Reduced Motion ────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -391,6 +507,8 @@ html.inspecting [data-inspect-ui] button { cursor: pointer !important; }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .jitter path { animation: none !important; }
+  [data-cut] { transform: none !important; }
 }
 
 /* ─── Admin panel tokens (space-separated RGB channels) ─────────── */
@@ -488,6 +606,31 @@ html.dark {
   text-underline-offset: 2px;
 }
 
+.tiptap-content table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+
+.tiptap-content th,
+.tiptap-content td {
+  border: 1px solid rgb(var(--adm-border));
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tiptap-content th {
+  background: rgb(var(--adm-raised));
+  font-weight: 600;
+}
+
+.tiptap-content th > p,
+.tiptap-content td > p { margin: 0; }
+
+.tiptap-content .selectedCell { background: rgb(var(--adm-raised)); }
+
 /* Placeholder */
 .tiptap-content p.is-empty:first-child::before,
 .tiptap-content p.is-editor-empty:first-child::before {
@@ -498,22 +641,22 @@ html.dark {
   pointer-events: none;
 }
 
+
 /* ─── Blog Post Prose ───────────────────────────────────────────── */
 .blog-prose {
   /* --prose-scale is the reader's text size (ReaderBar) */
   font-size: calc(1.0625rem * var(--prose-scale, 1));
-  line-height: 1.85;
+  line-height: 1.8;
   color: var(--text-secondary);
 }
 
 .blog-prose h2[id],
-.blog-prose h3[id] { scroll-margin-top: calc(var(--chrome-h) + 1.5rem); }
+.blog-prose h3[id] { scroll-margin-top: calc(var(--header-h) + 1.5rem); }
 
 /* The block being read aloud */
 .blog-prose .is-speaking {
   background: var(--accent-muted);
   box-shadow: 0 0 0 0.4em var(--accent-muted);
-  border-radius: 4px;
   color: var(--text-primary);
   transition: background-color 0.2s, box-shadow 0.2s;
 }
@@ -522,42 +665,67 @@ html.dark {
 
 .blog-prose p { color: var(--text-secondary); }
 
+/* Headings are title cards: skinny caps */
 .blog-prose h1,
 .blog-prose h2,
-.blog-prose h3 { color: var(--text-primary); font-family: var(--font-display); letter-spacing: -0.02em; }
-.blog-prose h1 { font-size: 1.875em; font-weight: 600; line-height: 1.2; margin-top: 2.25em; margin-bottom: 0.5em; }
-.blog-prose h2 { font-size: 1.45em;   font-weight: 600; line-height: 1.3; margin-top: 2em;    margin-bottom: 0.4em; padding-bottom: 0.4em; border-bottom: 1px solid var(--border-subtle); }
-.blog-prose h3 { font-size: 1.18em;   font-weight: 600; line-height: 1.4; margin-top: 1.75em; margin-bottom: 0.3em; }
+.blog-prose h3 {
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  text-wrap: balance;
+}
+.blog-prose h1 { font-size: 2.6em;  line-height: 0.95; margin-top: 1.6em; margin-bottom: 0.4em; }
+.blog-prose h2 { font-size: 2.1em;  line-height: 0.98; margin-top: 1.7em; margin-bottom: 0.35em; padding-top: 0.45em; border-top: 2px solid var(--text-primary); }
+.blog-prose h3 { font-size: 1.55em; line-height: 1;    margin-top: 1.5em; margin-bottom: 0.3em; }
 
-.blog-prose ul { list-style-type: disc;    padding-left: 1.6rem; }
+.blog-prose ul { list-style-type: square; padding-left: 1.4rem; }
 .blog-prose ol { list-style-type: decimal; padding-left: 1.6rem; }
 .blog-prose li { line-height: 1.75; color: var(--text-secondary); }
 .blog-prose li + li { margin-top: 0.4rem; }
+.blog-prose li::marker { color: var(--accent); }
 
 .blog-prose blockquote {
-  border-left: 3px solid var(--accent);
-  padding: 0.6rem 1rem 0.6rem 1.25rem;
-  color: var(--text-muted);
-  font-style: italic;
+  /* A slip of ochre stock pasted into the page */
+  clip-path: polygon(0.6% 1.4%, 99.4% 0, 100% 97.8%, 0 100%);
+  padding: 1.25rem 1.5rem;
   margin: 1.75rem 0;
-  background: var(--accent-muted);
-  border-radius: 0 8px 8px 0;
+  background: var(--ochre);
+  color: var(--ink-ink);
+  font-size: 1.08em;
 }
+.blog-prose blockquote p,
+.blog-prose blockquote li,
+.blog-prose blockquote strong,
+.blog-prose blockquote a { color: var(--ink-ink); }
+.blog-prose blockquote > :first-child { margin-top: 0; }
+.blog-prose blockquote > :last-child { margin-bottom: 0; }
+
+/* Checklists: "[ ]" items from the editor, set as ink squares */
+.blog-prose li.task { list-style: none; position: relative; }
+.blog-prose li.task > p { display: inline; }
+.blog-prose .task-box {
+  position: absolute;
+  left: -1.4rem;
+  top: 0.42em;
+  width: 0.85em;
+  height: 0.85em;
+  box-shadow: inset 0 0 0 2px var(--text-primary);
+}
+.blog-prose .task-box[data-done] { background: var(--text-primary); }
 
 .blog-prose code {
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 0.15em 0.45em;
-  font-family: var(--font-mono);
-  font-size: 0.82em;
-  color: var(--accent);
+  padding: 0.12em 0.4em;
+  font-family: var(--font-code);
+  font-size: 0.84em;
+  color: var(--text-primary);
 }
 
 .blog-prose pre {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--ink);
+  color: var(--bone-ink);
   padding: 1.25rem 1.5rem;
   overflow-x: auto;
   margin: 1.75rem 0;
@@ -567,34 +735,32 @@ html.dark {
 
 .blog-prose pre code {
   background: none;
-  border: none;
   padding: 0;
-  color: var(--text-primary);
+  color: inherit;
   font-size: inherit;
 }
 
 .blog-prose img {
   width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--border);
   margin: 1.75rem 0;
 }
 
 .blog-prose hr {
   border: none;
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--text-primary);
   margin: 2.5rem 0;
 }
 
 .blog-prose a {
-  color: var(--accent);
+  color: var(--text-primary);
   text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: opacity 0.15s;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 0.22em;
 }
-.blog-prose a:hover { opacity: 0.75; }
+.blog-prose a:hover { text-decoration-thickness: 3px; }
 
-.blog-prose strong { color: var(--text-primary); font-weight: 600; }
+.blog-prose strong { color: var(--text-primary); font-weight: 650; }
 
 .blog-prose table {
   display: block;
@@ -612,10 +778,16 @@ html.dark {
   text-align: left;
   vertical-align: top;
 }
+/* The editor wraps cell content in a paragraph */
+.blog-prose th > p,
+.blog-prose td > p { margin: 0; }
 .blog-prose th {
   color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.85em;
-  border-bottom-color: var(--text-muted);
+  font-stretch: 75%;
+  font-weight: 650;
+  font-size: 0.8em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--text-primary);
 }
 .blog-prose em { font-style: italic; }

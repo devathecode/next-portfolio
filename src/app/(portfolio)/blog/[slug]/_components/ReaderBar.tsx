@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import { HeadphonesIcon, HistoryIcon, MinusIcon, PauseIcon, PlayIcon, PlusIcon, SquareIcon } from "lucide-react";
-import { useBrowser } from "@/components/browser/context";
+import { useSite } from "@/components/site/context";
 import { READ_AT, saveReading, useReading } from "@/lib/reading";
 
 const SIZES = [0.9, 1, 1.1, 1.22];
@@ -27,7 +27,7 @@ function articleGeometry(el: HTMLElement) {
  */
 export function ReaderBar({ slug, articleId }: { slug: string; articleId: string }) {
   const reduce = useReducedMotion();
-  const { notify } = useBrowser();
+  const { notify } = useSite();
   const saved = useReading(slug);
   const [size, setSize] = useState(1);
   const [progress, setProgress] = useState(0);
@@ -189,25 +189,24 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
   };
 
   const btn =
-    "flex h-9 items-center justify-center gap-2 rounded-lg text-[var(--text-secondary)] transition-colors duration-150 " +
-    "hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)] disabled:pointer-events-none disabled:opacity-35";
+    "flex h-10 items-center justify-center gap-2 text-[var(--text-secondary)] transition-colors duration-100 " +
+    "hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] disabled:pointer-events-none disabled:opacity-35";
   const pct = Math.round(progress * 100);
 
   return (
     // Centred by the wrapper: motion owns the toolbar's transform
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 md:bottom-6">
-      <motion.div
+      <m.div
         role="toolbar"
         aria-label="Reader tools"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32, delay: 0.4 }}
-        className="pointer-events-auto flex items-center gap-1 rounded-xl border border-[var(--border)]
-                   bg-[var(--chrome-toolbar)] p-1 shadow-[var(--shadow-pop)]"
+        className="field-ink cut-a pointer-events-auto flex items-center gap-1 p-1"
       >
         <AnimatePresence initial={false}>
           {resumeAt !== null && (
-            <motion.button
+            <m.button
               key="resume"
               type="button"
               onClick={resume}
@@ -215,12 +214,12 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: reduce ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="flex h-9 items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg bg-[var(--accent)] px-3
-                         text-[13px] font-semibold text-[var(--on-accent)]"
+              className="t-label flex h-10 items-center gap-2 overflow-hidden whitespace-nowrap bg-[var(--cardinal)] px-3
+                         text-[#fbf6ec]"
             >
               <HistoryIcon size={15} strokeWidth={2.2} className="shrink-0" />
               Resume at {Math.round(resumeAt * 100)}%
-            </motion.button>
+            </m.button>
           )}
         </AnimatePresence>
 
@@ -235,7 +234,7 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
           >
             <MinusIcon size={15} />
           </button>
-          <span className="w-8 select-none text-center text-[15px] font-semibold text-[var(--text-primary)]" aria-hidden="true">
+          <span className="w-8 select-none text-center font-display text-[1.3rem] leading-none text-[var(--text-primary)]" aria-hidden="true">
             Aa
           </span>
           <button
@@ -254,12 +253,12 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
           <>
             <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
             {speech === "playing" ? (
-              <button type="button" onClick={pause} className={`${btn} px-2.5 text-[13px] font-medium text-[var(--accent)]`}>
+              <button type="button" onClick={pause} className={`${btn} t-label px-3 text-[var(--accent)]`}>
                 <PauseIcon size={15} />
                 Pause
               </button>
             ) : (
-              <button type="button" onClick={play} className={`${btn} px-2.5 text-[13px] font-medium`}>
+              <button type="button" onClick={play} className={`${btn} t-label px-3`}>
                 {speech === "paused" ? <PlayIcon size={15} /> : <HeadphonesIcon size={15} />}
                 {speech === "paused" ? "Resume" : "Listen"}
               </button>
@@ -274,13 +273,13 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
 
         <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
         <span
-          className="w-12 text-center font-mono text-xs tabular-nums text-[var(--text-muted)]"
+          className="w-14 text-center font-display text-[1.35rem] leading-none text-[var(--accent)]"
           aria-label={`${pct}% read`}
           title="Progress through the article"
         >
           {pct}%
         </span>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

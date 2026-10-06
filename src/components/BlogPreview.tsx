@@ -16,6 +16,7 @@ function publishedOn(post: Post) {
   return raw ? dateFormat.format(new Date(raw)) : null;
 }
 
+/** The writing act, on olive: the latest post as a print, the next two as title lines. */
 const BlogPreview = async () => {
   const { data } = await supabaseAdmin
     .from("posts")
@@ -31,104 +32,74 @@ const BlogPreview = async () => {
   const [lead, ...rest] = posts;
 
   return (
-    <section
-      id="blog"
-      className="border-t border-[var(--border)] px-5 py-24 md:py-32 lg:px-10"
-    >
-      <div className="mx-auto max-w-7xl">
-        <AnimateOnScroll direction="up" className="mb-10 flex flex-wrap items-end justify-between gap-6 md:mb-12">
+    <section id="blog" data-act="Writing" data-field="olive" className="field-olive grain px-5 py-24 md:py-32 lg:px-10">
+      <div className="mx-auto max-w-[90rem]">
+        <AnimateOnScroll direction="left" className="mb-12 flex flex-wrap items-end justify-between gap-8 md:mb-16">
           <div>
-            <h2
-              className="text-[clamp(2rem,4.2vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.035em]
-                         text-[var(--text-primary)]"
-            >
-              Writing
-            </h2>
-            <p className="mt-4 text-[17px] text-[var(--text-secondary)]">
+            <h2 className="t-act">Writing</h2>
+            <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--text-secondary)]">
               Notes on web development, React, Next.js and CSS.
             </p>
           </div>
-          <Link
-            href="/blog"
-            className="group inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-[var(--border)]
-                       bg-[var(--bg-card)] px-4 text-sm font-medium text-[var(--text-primary)]
-                       transition-colors duration-200 hover:border-[var(--accent-line)] active:scale-[0.98]"
-          >
+          <Link href="/blog" className="btn btn-line group">
             All posts
-            <ArrowRightIcon size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            <ArrowRightIcon size={16} strokeWidth={2.2} className="transition-transform duration-100 group-hover:translate-x-0.5" />
           </Link>
         </AnimateOnScroll>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-10">
           {/* Lead post */}
-          <AnimateOnScroll direction="up" className={rest.length ? "lg:col-span-7" : "lg:col-span-12"}>
-            <Link
-              href={`/blog/${lead.slug}`}
-              className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)]
-                         bg-[var(--bg-card)] shadow-[var(--shadow-card)] transition-[transform,box-shadow,border-color]
-                         duration-300 hover:-translate-y-1 hover:border-[var(--accent-line)] hover:shadow-[var(--shadow-card-hover)]"
-            >
-              <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-[var(--bg-secondary)]">
+          <Link href={`/blog/${lead.slug}`} className={`group block ${rest.length ? "lg:col-span-7" : "lg:col-span-12"}`}>
+            <div className="cut-b rotate-[-0.8deg] bg-[#eee6d6] p-2 transition-transform duration-150 group-hover:rotate-0 sm:p-2.5">
+              <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#eee6d6]">
                 {lead.cover_image ? (
-                  <Image
-                    src={lead.cover_image}
-                    alt=""
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 58vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
+                  <Image src={lead.cover_image} alt="" fill sizes="(max-width: 1024px) 100vw, 56vw" className="print object-cover" />
                 ) : (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-0 flex items-center justify-center text-7xl font-semibold text-[var(--border)]"
+                    className="field-cardinal absolute inset-0 flex items-end p-6 font-display text-[clamp(3rem,7vw,6rem)] uppercase leading-[0.85]"
                   >
-                    {lead.title.charAt(0)}
+                    {lead.title}
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 flex-col gap-3 p-6 md:p-7">
+            </div>
+            <div className="mt-7">
+              <h3 className="t-card max-w-[30ch] text-[var(--text-primary)] decoration-2 underline-offset-[0.12em] group-hover:underline">
+                {lead.title}
+              </h3>
+              {lead.excerpt && (
+                <p className="mt-4 line-clamp-2 max-w-[58ch] text-[17px] leading-relaxed text-[var(--text-secondary)]">
+                  {lead.excerpt}
+                </p>
+              )}
+              <div className="mt-4">
                 <PostMeta post={lead} />
-                <h3 className="text-xl font-semibold leading-snug tracking-[-0.02em] text-[var(--text-primary)] md:text-2xl">
-                  {lead.title}
-                </h3>
-                {lead.excerpt && (
-                  <p className="line-clamp-2 text-[15px] leading-relaxed text-[var(--text-secondary)]">
-                    {lead.excerpt}
-                  </p>
-                )}
               </div>
-            </Link>
-          </AnimateOnScroll>
+            </div>
+          </Link>
 
           {/* More posts */}
           {rest.length > 0 && (
-            <ul className="flex flex-col gap-5 lg:col-span-5">
-              {rest.map((post, index) => (
-                <li key={post.id} className="flex-1">
-                  <AnimateOnScroll direction="up" delay={0.08 * (index + 1)} className="h-full">
-                    <Link
-                      href={`/blog/${post.slug}`}
-                      className="group flex h-full gap-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] p-5
-                                 transition-colors duration-200 hover:border-[var(--accent-line)]"
-                    >
-                      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                        <PostMeta post={post} />
-                        <h3 className="line-clamp-2 text-[17px] font-semibold leading-snug tracking-[-0.015em] text-[var(--text-primary)]">
-                          {post.title}
-                        </h3>
-                        {post.excerpt && (
-                          <p className="line-clamp-2 text-sm leading-relaxed text-[var(--text-secondary)]">
-                            {post.excerpt}
-                          </p>
-                        )}
-                      </div>
-                      {post.cover_image && (
-                        <div className="relative hidden aspect-square w-24 shrink-0 self-start overflow-hidden rounded-xl bg-[var(--bg-secondary)] sm:block">
-                          <Image src={post.cover_image} alt="" fill sizes="96px" className="object-cover" />
-                        </div>
+            <ul className="border-t-2 border-[var(--text-primary)] lg:col-span-5">
+              {rest.map((post) => (
+                <li key={post.id} className="border-b border-[var(--border)]">
+                  <Link href={`/blog/${post.slug}`} className="group flex gap-5 py-7">
+                    <div className="flex min-w-0 flex-1 flex-col gap-3">
+                      <h3 className="font-display text-[2rem] uppercase leading-[0.95] text-[var(--text-primary)] decoration-2 underline-offset-[0.12em] group-hover:underline">
+                        {post.title}
+                      </h3>
+                      {post.excerpt && (
+                        <p className="line-clamp-2 text-[15.5px] leading-relaxed text-[var(--text-secondary)]">{post.excerpt}</p>
                       )}
-                    </Link>
-                  </AnimateOnScroll>
+                      <PostMeta post={post} />
+                    </div>
+                    {post.cover_image && (
+                      <div className="cut-c relative hidden aspect-square w-24 shrink-0 self-start overflow-hidden bg-[#eee6d6] sm:block">
+                        <Image src={post.cover_image} alt="" fill sizes="96px" className="print object-cover" />
+                      </div>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -144,12 +115,8 @@ function PostMeta({ post }: { post: Post }) {
   const tag = post.tags[0];
   if (!date && !tag) return null;
   return (
-    <p className="flex items-center gap-3 text-xs text-[var(--text-muted)]">
-      {tag && (
-        <span className="rounded-md border border-[var(--border)] bg-[var(--bg-secondary)] px-2 py-0.5 font-mono text-[11px] text-[var(--text-secondary)]">
-          {tag}
-        </span>
-      )}
+    <p className="t-label flex flex-wrap items-center gap-x-3 gap-y-1 text-[var(--text-muted)]">
+      {tag && <span className="text-[var(--text-primary)]">{tag}</span>}
       {date && <time dateTime={post.published_at ?? post.created_at}>{date}</time>}
       <ReadState slug={post.slug} />
     </p>

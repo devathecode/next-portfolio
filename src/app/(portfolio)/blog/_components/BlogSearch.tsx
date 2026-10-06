@@ -37,10 +37,10 @@ export function BlogSearch({ posts, children }: { posts: Post[]; children: React
   return (
     <>
       <div
-        className="flex h-11 items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] pl-3.5 pr-2
-                   transition-colors duration-150 focus-within:border-[var(--accent-line)]"
+        className="flex h-14 max-w-2xl items-center gap-3 bg-[var(--bg-card)] pl-4 pr-2 shadow-[inset_0_0_0_1.5px_var(--border)]
+                   transition-shadow duration-100 focus-within:shadow-[inset_0_0_0_2.5px_var(--text-primary)]"
       >
-        <SearchIcon size={16} className="shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+        <SearchIcon size={18} strokeWidth={2.2} className="shrink-0 text-[var(--text-primary)]" aria-hidden="true" />
         <input
           ref={inputRef}
           type="search"
@@ -54,7 +54,7 @@ export function BlogSearch({ posts, children }: { posts: Post[]; children: React
           }}
           placeholder={`Search ${posts.length} posts`}
           aria-label="Search posts"
-          className="h-full min-w-0 flex-1 bg-transparent text-sm text-[var(--text-primary)] outline-none
+          className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-[var(--text-primary)] outline-none
                      placeholder:text-[var(--text-muted)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
         />
         {query ? (
@@ -65,8 +65,8 @@ export function BlogSearch({ posts, children }: { posts: Post[]; children: React
               inputRef.current?.focus();
             }}
             aria-label="Clear search"
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors
-                       hover:bg-[var(--chrome-hover)] hover:text-[var(--text-primary)]"
+            className="flex h-10 w-10 items-center justify-center text-[var(--text-muted)] transition-colors duration-100
+                       hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
           >
             <XIcon size={15} />
           </button>
@@ -81,13 +81,13 @@ export function BlogSearch({ posts, children }: { posts: Post[]; children: React
         children
       ) : (
         <section aria-live="polite" className="mt-10">
-          <p className="mb-2 font-mono text-xs text-[var(--text-muted)]">
+          <p className="t-label mb-3 text-[var(--text-muted)]">
             {results.length} {results.length === 1 ? "result" : "results"} for &ldquo;{query}&rdquo;
           </p>
           {results.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[var(--border)] px-6 py-14 text-center text-sm text-[var(--text-secondary)]">
-              Nothing matches that. Try a topic like <span className="font-mono">react</span> or{" "}
-              <span className="font-mono">npm</span>.
+            <p className="border-y border-[var(--border)] py-14 text-center text-[16px] text-[var(--text-secondary)]">
+              Nothing matches that. Try a topic like <strong className="font-semibold text-[var(--text-primary)]">react</strong> or{" "}
+              <strong className="font-semibold text-[var(--text-primary)]">npm</strong>.
             </p>
           ) : (
             <div className="border-b border-[var(--border)]">
