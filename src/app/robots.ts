@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 
-const PRIVATE = ["/admin/", "/thankyou", "/api/"];
+// No trailing slash on /admin, so /admin itself is covered too
+const PRIVATE = ["/admin", "/thankyou", "/api/"];
 
 /**
  * AI search, answer and training crawlers, welcomed by name. A crawler only

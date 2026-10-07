@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
-import type { Post } from "@/lib/supabase";
+import type { PostSummary } from "@/lib/posts";
 import ReadState from "@/components/ReadState";
-import { postDate, readMinutes } from "./post-meta";
+import { postDate } from "./post-meta";
 
 /** The newest post: its cover as a print on bone stock beside the title card. */
-export function FeaturedPost({ post }: { post: Post }) {
+export function FeaturedPost({ post }: { post: PostSummary }) {
   const date = postDate(post);
 
   return (
@@ -35,7 +35,7 @@ export function FeaturedPost({ post }: { post: Post }) {
         )}
         <p className="t-label mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[var(--text-muted)]">
           <time dateTime={date.iso}>{date.label}</time>
-          <span>{readMinutes(post.content)} min read</span>
+          <span>{post.minutes} min read</span>
         </p>
         <div className="mt-7 flex flex-wrap items-center gap-4">
           <span className="btn btn-plate btn-sm">

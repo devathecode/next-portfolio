@@ -278,7 +278,7 @@ export function PostEditor({ post }: { post?: Post }) {
           <div className="flex items-center gap-2">
             {slug && (
               <a
-                href={`/blog/${slug}${!published ? "?preview=true" : ""}`}
+                href={published ? `/blog/${slug}` : `/api/draft?slug=${encodeURIComponent(slug)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={btnGhost}

@@ -30,6 +30,7 @@ import {
 import { BsLinkedin } from "react-icons/bs";
 import { useTheme } from "@/context/theme-context";
 import { CONTACT_EMAIL, LINKEDIN_URL, SITE_HOST } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
 import { useSite } from "./context";
 
 type Group = "Jump to" | "Actions" | "Elsewhere";
@@ -96,8 +97,14 @@ export default function CommandMenu({ onClose }: { onClose: () => void }) {
       { id: "ai", group: "Actions", label: "Ask AI about me", icon: <SparklesIcon {...ICON} />, keywords: "chat resume assistant questions", run: () => setAssistantOpen(true) },
       { id: "resume-pdf", group: "Actions", label: "Download résumé", icon: <FileDownIcon {...ICON} />, hint: "PDF", keywords: "resume cv", run: downloadResume },
 
-      { id: "linkedin", group: "Elsewhere", label: "LinkedIn", icon: <BsLinkedin size={14} />, hint: "devthecoder", keywords: "social profile", run: () => window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer") },
-      { id: "email", group: "Elsewhere", label: "Send an email", icon: <MailIcon {...ICON} />, hint: CONTACT_EMAIL, keywords: "contact mail", run: () => { window.location.href = `mailto:${CONTACT_EMAIL}`; } },
+      { id: "linkedin", group: "Elsewhere", label: "LinkedIn", icon: <BsLinkedin size={14} />, hint: "devthecoder", keywords: "social profile", run: () => {
+        trackEvent("outbound_click", { destination: "linkedin", url: LINKEDIN_URL });
+        window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer");
+      } },
+      { id: "email", group: "Elsewhere", label: "Send an email", icon: <MailIcon {...ICON} />, hint: CONTACT_EMAIL, keywords: "contact mail", run: () => {
+        trackEvent("outbound_click", { destination: "email", url: `mailto:${CONTACT_EMAIL}` });
+        window.location.href = `mailto:${CONTACT_EMAIL}`;
+      } },
     ],
     [openSection, navigate, theme, toggleTheme, notify, setAssistantOpen, downloadResume],
   );

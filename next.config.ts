@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         has: [{ type: "host", value: "devanshuverma.in" }],
         destination: "https://www.devanshuverma.in/:path*",
-        permanent: true,
+        statusCode: 301,
       },
     ];
   },
@@ -54,6 +54,12 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        // Belt and braces with the pages' own noindex meta: covers redirects,
+        // route handlers and PDFs under /admin too
+        source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
         source: "/images/:path*",

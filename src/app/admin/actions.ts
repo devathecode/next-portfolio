@@ -93,11 +93,19 @@ export async function reorderProjectsAction(
 
 // ── Blog Posts ────────────────────────────────────────────────────────────────
 
+/** Posts are static pages: refresh every /blog/** page (lists, tags, related
+ *  posts), the home page's latest posts and the sitemap. */
+function revalidateBlog() {
+  revalidatePath("/blog", "layout");
+  revalidatePath("/");
+  revalidatePath("/sitemap.xml");
+}
+
 export async function deletePostAction(id: string) {
   await requireAdminSession();
   await supabaseAdmin.from("posts").delete().eq("id", id);
   revalidatePath("/admin", "layout");
-  revalidatePath("/blog");
+  revalidateBlog();
 }
 
 export async function togglePostPublishedAction(id: string, published: boolean) {
@@ -107,7 +115,7 @@ export async function togglePostPublishedAction(id: string, published: boolean) 
     published_at: published ? new Date().toISOString() : null,
   }).eq("id", id);
   revalidatePath("/admin", "layout");
-  revalidatePath("/blog");
+  revalidateBlog();
 }
 
 async function uploadCoverImage(file: File): Promise<{ url: string } | { error: string }> {
@@ -152,7 +160,7 @@ export async function createPostAction(
 
   if (error) return { error: error.message };
   revalidatePath("/admin", "layout");
-  revalidatePath("/blog");
+  revalidateBlog();
   return {};
 }
 
@@ -199,7 +207,6 @@ export async function updatePostAction(
 
   if (error) return { error: error.message };
   revalidatePath("/admin", "layout");
-  revalidatePath("/blog");
-  revalidatePath(`/blog/${slug}`);
+  revalidateBlog();
   return {};
 }

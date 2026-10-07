@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import { marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import { supabaseAdmin } from "@/lib/supabase";
-import type { Post } from "@/lib/supabase";
+import { getPost, getPublishedPosts } from "@/lib/posts";
 import { ShareBar } from "./_components/ShareBar";
 import { ReadTracker } from "./_components/ReadTracker";
 import { ScrollProgress } from "./_components/ScrollProgress";
@@ -14,49 +14,22 @@ import type { TocItem } from "./_components/TableOfContents";
 import { CopyCodeButtons } from "./_components/CopyCodeButtons";
 import { ReaderBar } from "./_components/ReaderBar";
 import { PostRow } from "../_components/PostRow";
+import { relatedPosts, tagHref } from "../_components/post-meta";
 import Footer from "@/components/Footer";
 import { BsLinkedin } from "react-icons/bs";
 import { ArrowLeftIcon } from "lucide-react";
 import { WEBSITE_ID, jsonLd, personRef } from "@/lib/profile";
 
-export const revalidate = 86400; // revalidate post pages every 24 hours
+// Static, rebuilt daily and whenever a post is saved in the admin. Drafts are
+// previewed through draft mode (/api/draft), never a query string, which
+// would render every request on demand.
+export const revalidate = 86400;
 
 const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 
 export async function generateStaticParams() {
-  const { data } = await supabaseAdmin
-    .from("posts")
-    .select("slug")
-    .eq("published", true);
-  return (data ?? []).map((p) => ({ slug: p.slug }));
-}
-
-async function getRelatedPosts(slug: string, tags: string[]): Promise<Post[]> {
-  if (tags.length === 0) return [];
-  const { data } = await supabaseAdmin
-    .from("posts")
-    .select("*")
-    .eq("published", true)
-    .overlaps("tags", tags)
-    .neq("slug", slug)
-    .order("published_at", { ascending: false })
-    .limit(3);
-  return (data as Post[]) ?? [];
-}
-
-async function getPost(slug: string, preview: boolean): Promise<Post | null> {
-  let query = supabaseAdmin
-    .from("posts")
-    .select("*")
-    .eq("slug", slug);
-
-  if (!preview) {
-    query = query.eq("published", true);
-  }
-
-  const { data } = await query.single();
-  return (data as Post) ?? null;
+  return (await getPublishedPosts()).map((p) => ({ slug: p.slug }));
 }
 
 function formatDate(iso: string | null): string {
@@ -124,8 +97,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getPost(slug, false);
+  const [{ slug }, draft] = await Promise.all([params, draftMode()]);
+  const post = await getPost(slug, draft.isEnabled);
   if (!post) return {};
 
   const url = `${BLOG_URL}/${post.slug}`;
@@ -164,22 +137,13 @@ export async function generateMetadata({
   };
 }
 
-export default async function BlogPostPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
-}) {
-  const [{ slug }, sp] = await Promise.all([params, searchParams]);
-  const isPreview = sp.preview === "true";
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const [{ slug }, draft] = await Promise.all([params, draftMode()]);
+  const isPreview = draft.isEnabled;
 
-  const post = await getPost(slug, isPreview);
+  const [post, allPosts] = await Promise.all([getPost(slug, isPreview), getPublishedPosts()]);
   if (!post) notFound();
-
-  const [relatedPosts] = await Promise.all([
-    getRelatedPosts(post.slug, post.tags),
-  ]);
+  const related = relatedPosts(post, allPosts);
 
   const date = formatDate(post.published_at ?? post.created_at);
   const { wordCount, readTime } = postStats(post.content);
@@ -245,7 +209,10 @@ export default async function BlogPostPage({
       <main className="pb-32">
         {isPreview && !post.published && (
           <div className="t-label bg-[var(--ochre)] px-4 py-2.5 text-center text-[var(--ink-ink)]">
-            Preview: this post is not published yet
+            Preview: this post is not published yet ·{" "}
+            <a href={`/api/draft?slug=${post.slug}&exit=1`} className="underline underline-offset-2">
+              Exit preview
+            </a>
           </div>
         )}
 
@@ -280,7 +247,7 @@ export default async function BlogPostPage({
                   {post.tags.slice(0, 3).map((tag) => (
                     <li key={tag}>
                       <Link
-                        href={`/blog/tag/${encodeURIComponent(tag)}`}
+                        href={tagHref(tag)}
                         className="t-label inline-flex h-8 items-center bg-[var(--ink)] px-3 text-[var(--bone-ink)] transition-colors duration-100 hover:bg-[var(--bone-ink)] hover:text-[var(--ink-ink)]"
                       >
                         {tag}
@@ -369,13 +336,13 @@ export default async function BlogPostPage({
                 </div>
               </section>
 
-              {relatedPosts.length > 0 && (
-                <section aria-labelledby="keep-reading" className="mt-16">
-                  <h2 id="keep-reading" className="t-card mb-6">
-                    Keep reading
+              {related.length > 0 && (
+                <section aria-labelledby="related-posts" className="mt-16">
+                  <h2 id="related-posts" className="t-card mb-6">
+                    Related posts
                   </h2>
                   <div className="border-b border-[var(--border)]">
-                    {relatedPosts.map((rp) => (
+                    {related.map((rp) => (
                       <PostRow key={rp.id} post={rp} heading="h3" />
                     ))}
                   </div>

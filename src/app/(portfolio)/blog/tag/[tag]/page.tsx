@@ -1,73 +1,59 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import Footer from "@/components/Footer";
 import TitleCard from "@/components/sequence/TitleCard";
-import { supabaseAdmin } from "@/lib/supabase";
-import type { Post } from "@/lib/supabase";
+import { getPublishedPosts } from "@/lib/posts";
+import { jsonLd } from "@/lib/profile";
+import { SITE_URL } from "@/lib/site";
 import { PostRow } from "../../_components/PostRow";
+import { tagSlug } from "../../_components/post-meta";
 
 export const revalidate = 3600;
 
-const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
 
+/** Lowercase slugs only; middleware 301s any mixed-case /blog/tag/* URL here. */
 export async function generateStaticParams() {
-  const { data } = await supabaseAdmin
-    .from("posts")
-    .select("tags")
-    .eq("published", true);
-  const tags = [...new Set((data ?? []).flatMap((p: { tags: string[] }) => p.tags))];
-  return tags.map((tag) => ({ tag }));
+  const posts = await getPublishedPosts();
+  const slugs = new Set(posts.flatMap((p) => p.tags.map(tagSlug)));
+  return [...slugs].map((tag) => ({ tag }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ tag: string }>;
-}): Promise<Metadata> {
-  const { tag } = await params;
-  const decoded = decodeURIComponent(tag);
-  const url = `${BLOG_URL}/tag/${tag}`;
+function decode(param: string): string {
+  try {
+    return decodeURIComponent(param);
+  } catch {
+    return param;
+  }
+}
+
+/** The posts carrying this tag, and the tag as it was written ("Next.js", not "next.js"). */
+async function getTag(param: string) {
+  const slug = tagSlug(decode(param));
+  const posts = (await getPublishedPosts()).filter((p) => p.tags.some((t) => tagSlug(t) === slug));
+  const label = posts[0]?.tags.find((t) => tagSlug(t) === slug) ?? slug;
+  return { slug, label, posts, url: `${BLOG_URL}/tag/${encodeURIComponent(slug)}` };
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
+  const { label, posts, url } = await getTag((await params).tag);
+  if (posts.length === 0) return {};
+  const description = `All posts tagged "${label}" by Devanshu Verma.`;
 
   return {
-    title: `${decoded} posts`,
-    description: `All posts tagged "${decoded}" by Devanshu Verma.`,
-    alternates: { canonical: BLOG_URL },
-    openGraph: {
-      type: "website",
-      url,
-      title: `${decoded} posts | Devanshu Verma`,
-      description: `All posts tagged "${decoded}" by Devanshu Verma.`,
-      siteName: "Devanshu Verma",
-    },
-    twitter: {
-      card: "summary",
-      title: `${decoded} posts | Devanshu Verma`,
-      description: `All posts tagged "${decoded}" by Devanshu Verma.`,
-    },
+    title: `${label} posts`,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, title: `${label} posts | Devanshu Verma`, description, siteName: "Devanshu Verma" },
+    twitter: { card: "summary", title: `${label} posts | Devanshu Verma`, description },
+    // Thin list pages: kept out of the index (and the sitemap), but their links are followed
     robots: { index: false, follow: true },
   };
 }
 
-async function getPostsByTag(tag: string): Promise<Post[]> {
-  const { data } = await supabaseAdmin
-    .from("posts")
-    .select("*")
-    .eq("published", true)
-    .contains("tags", [tag])
-    .order("published_at", { ascending: false });
-  return (data as Post[]) ?? [];
-}
-
-export default async function TagPage({
-  params,
-}: {
-  params: Promise<{ tag: string }>;
-}) {
-  const { tag } = await params;
-  const decoded = decodeURIComponent(tag);
-  const posts = await getPostsByTag(decoded);
-  const tagUrl = `${BLOG_URL}/tag/${tag}`;
+export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
+  const { slug, label, posts, url } = await getTag((await params).tag);
+  if (posts.length === 0) notFound();
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -75,25 +61,22 @@ export default async function TagPage({
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Blog", item: BLOG_URL },
-      { "@type": "ListItem", position: 3, name: decoded, item: tagUrl },
+      { "@type": "ListItem", position: 3, name: label, item: url },
     ],
   };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbJsonLd)} />
 
       <main>
         <TitleCard
           field="olive"
-          act={`#${decoded}`}
+          act={`#${label}`}
           title={
             <>
               <span className="text-[var(--text-muted)]">#</span>
-              {decoded}
+              {label}
             </>
           }
           lead={`${posts.length} ${posts.length === 1 ? "post" : "posts"} on this topic.`}
@@ -102,21 +85,11 @@ export default async function TagPage({
 
         <section data-act="Posts" data-field="paper" className="field-paper px-5 pb-28 pt-6 lg:px-10">
           <div className="mx-auto max-w-[90rem]">
-            {posts.length === 0 ? (
-              <p className="mt-10 border-y border-[var(--border)] py-16 text-center text-[16px] text-[var(--text-secondary)]">
-                Nothing tagged {decoded} yet.{" "}
-                <Link href="/blog" className="link font-medium">
-                  Browse every post
-                </Link>
-                .
-              </p>
-            ) : (
-              <div className="mt-10 border-b border-[var(--border)]">
-                {posts.map((post) => (
-                  <PostRow key={post.id} post={post} activeTag={decoded} />
-                ))}
-              </div>
-            )}
+            <div className="mt-10 border-b border-[var(--border)]">
+              {posts.map((post) => (
+                <PostRow key={post.id} post={post} activeTag={slug} />
+              ))}
+            </div>
           </div>
         </section>
       </main>

@@ -13,7 +13,7 @@ export function Pagination({ currentPage, totalPages }: PaginationProps) {
 
   const prev = currentPage > 1 ? currentPage - 1 : null;
   const next = currentPage < totalPages ? currentPage + 1 : null;
-  const pageHref = (p: number) => (p === 1 ? "/blog" : `/blog?page=${p}`);
+  const pageHref = (p: number) => (p === 1 ? "/blog" : `/blog/page/${p}`);
 
   return (
     <nav aria-label="Pagination" className="mt-14 flex items-center justify-between gap-4">

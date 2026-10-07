@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Fuse from "fuse.js";
 import { SearchIcon, XIcon } from "lucide-react";
-import type { Post } from "@/lib/supabase";
+import type { PostSummary } from "@/lib/posts";
 import { PostRow } from "./PostRow";
 
 /**
  * Find-in-list for the blog. While there's a query the results replace the
  * server-rendered list (children); "/" focuses the field from anywhere.
  */
-export function BlogSearch({ posts, children }: { posts: Post[]; children: ReactNode }) {
+export function BlogSearch({ posts, children }: { posts: PostSummary[]; children: ReactNode }) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Post } from "@/lib/supabase";
+import type { PostSummary } from "@/lib/posts";
 import ReadState from "@/components/ReadState";
-import { postDate, readMinutes } from "./post-meta";
+import { postDate, tagSlug } from "./post-meta";
 
 /** One entry in a reading list: date gutter, title in caps and excerpt, a small print. */
 export function PostRow({
@@ -10,9 +10,9 @@ export function PostRow({
   heading: Heading = "h2",
   activeTag,
 }: {
-  post: Post;
+  post: PostSummary;
   heading?: "h2" | "h3";
-  /** Highlighted on tag pages */
+  /** Highlighted on tag pages; the lowercase tag slug */
   activeTag?: string;
 }) {
   const date = postDate(post);
@@ -41,9 +41,9 @@ export function PostRow({
           <time dateTime={date.iso} className="sm:hidden">
             {date.label}
           </time>
-          <span>{readMinutes(post.content)} min read</span>
+          <span>{post.minutes} min read</span>
           {post.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className={tag === activeTag ? "bg-[var(--ink)] px-1.5 py-0.5 text-[var(--bone-ink)]" : "text-[var(--text-secondary)]"}>
+            <span key={tag} className={tagSlug(tag) === activeTag ? "bg-[var(--ink)] px-1.5 py-0.5 text-[var(--bone-ink)]" : "text-[var(--text-secondary)]"}>
               {tag}
             </span>
           ))}

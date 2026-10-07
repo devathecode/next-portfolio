@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeftIcon, ArrowUpIcon, DownloadIcon, FileTextIcon, MessageSquareIcon } from "lucide-react";
 import { CHAT_SUGGESTIONS as SUGGESTIONS, splitLinks, useResumeChat } from "@/lib/use-resume-chat";
 import { RESUME_PDF, RESUME_PDF_NAME } from "@/lib/site";
+import { trackEvent } from "@/lib/analytics";
 
 // Renders plain text but converts [label](url) markdown links to <a> tags
 function MessageText({ text }: { text: string }) {
@@ -44,6 +45,10 @@ export default function ResumePage() {
   const [activeTab, setActiveTab] = useState<"pdf" | "chat">("chat");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    trackEvent("resume_view");
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

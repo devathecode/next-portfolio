@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { contactSubmit } from "@/lib/actions";
+import { trackEvent } from "@/lib/analytics";
 import Submitbutton from "./SubmitButton";
 
 declare global {
@@ -67,6 +68,7 @@ export default function ContactForm() {
 
   useEffect(() => {
     if (state && "success" in state) {
+      trackEvent("contact_submit");
       router.push("/thankyou");
     }
   }, [state, router]);

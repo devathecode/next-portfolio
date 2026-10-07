@@ -38,11 +38,15 @@ const BlogPreview = async () => {
           <div>
             <h2 className="t-act">Writing</h2>
             <p className="mt-6 max-w-[44ch] text-[18px] leading-relaxed text-[var(--text-secondary)]">
-              Notes on web development, React, Next.js and CSS.
+              Notes on web development, React, Next.js and CSS. The latest three are below; the rest are on{" "}
+              <Link href="/blog" className="link font-medium text-[var(--text-primary)]">
+                the frontend and JavaScript blog
+              </Link>
+              .
             </p>
           </div>
           <Link href="/blog" className="btn btn-line group">
-            All posts
+            All blog posts
             <ArrowRightIcon size={16} strokeWidth={2.2} className="transition-transform duration-100 group-hover:translate-x-0.5" />
           </Link>
         </AnimateOnScroll>
