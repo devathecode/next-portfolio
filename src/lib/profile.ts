@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, LINKEDIN_URL, RESUME_PDF, SITE_URL } from "./site";
+import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL, RESUME_PDF, SITE_URL } from "./site";
 
 /**
  * Public facts about Devanshu, in one place. Structured data (JSON-LD), the
@@ -19,7 +19,7 @@ export const PROFILE = {
   yearsExperience: "5+",
   appsShipped: "10+",
   openTo: ["Full-time frontend roles", "Freelance projects"],
-  sameAs: [LINKEDIN_URL],
+  sameAs: [LINKEDIN_URL, GITHUB_URL],
   languages: ["English", "Hindi"],
   skills: {
     Frontend: ["React", "Next.js", "TypeScript", "JavaScript", "HTML", "CSS", "Tailwind CSS", "Angular", "Vue.js"],

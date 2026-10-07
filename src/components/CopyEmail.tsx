@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckIcon, CopyIcon, MailIcon } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import { CONTACT_EMAIL } from "@/lib/site";
 
 export default function CopyEmail() {
@@ -16,7 +17,10 @@ export default function CopyEmail() {
   const copy = () => {
     navigator.clipboard
       .writeText(CONTACT_EMAIL)
-      .then(() => setCopied(true))
+      .then(() => {
+        setCopied(true);
+        trackEvent("email_copy", { source: location.pathname });
+      })
       .catch(() => {
         window.location.href = `mailto:${CONTACT_EMAIL}`;
       });

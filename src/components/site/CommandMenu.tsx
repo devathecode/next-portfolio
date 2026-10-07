@@ -27,9 +27,9 @@ import {
   SunIcon,
   UserIcon,
 } from "lucide-react";
-import { BsLinkedin } from "react-icons/bs";
+import { BsGithub, BsLinkedin } from "react-icons/bs";
 import { useTheme } from "@/context/theme-context";
-import { CONTACT_EMAIL, LINKEDIN_URL, SITE_HOST } from "@/lib/site";
+import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL, SITE_HOST } from "@/lib/site";
 import { trackEvent } from "@/lib/analytics";
 import { useSite } from "./context";
 
@@ -98,11 +98,15 @@ export default function CommandMenu({ onClose }: { onClose: () => void }) {
       { id: "resume-pdf", group: "Actions", label: "Download résumé", icon: <FileDownIcon {...ICON} />, hint: "PDF", keywords: "resume cv", run: downloadResume },
 
       { id: "linkedin", group: "Elsewhere", label: "LinkedIn", icon: <BsLinkedin size={14} />, hint: "devthecoder", keywords: "social profile", run: () => {
-        trackEvent("outbound_click", { destination: "linkedin", url: LINKEDIN_URL });
+        trackEvent("outbound_click", { destination: "linkedin", url: LINKEDIN_URL, source: location.pathname });
         window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer");
       } },
+      { id: "github", group: "Elsewhere", label: "GitHub", icon: <BsGithub size={14} />, hint: "code-devanshu", keywords: "code source repos open source", run: () => {
+        trackEvent("outbound_click", { destination: "github", url: GITHUB_URL, source: location.pathname });
+        window.open(GITHUB_URL, "_blank", "noopener,noreferrer");
+      } },
       { id: "email", group: "Elsewhere", label: "Send an email", icon: <MailIcon {...ICON} />, hint: CONTACT_EMAIL, keywords: "contact mail", run: () => {
-        trackEvent("outbound_click", { destination: "email", url: `mailto:${CONTACT_EMAIL}` });
+        trackEvent("outbound_click", { destination: "email", url: `mailto:${CONTACT_EMAIL}`, source: location.pathname });
         window.location.href = `mailto:${CONTACT_EMAIL}`;
       } },
     ],

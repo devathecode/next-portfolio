@@ -2,7 +2,7 @@ import "server-only";
 import { supabaseAdmin } from "./supabase";
 import type { Post, Project } from "./supabase";
 import { FAQ, PROFILE } from "./profile";
-import { CONTACT_EMAIL, LINKEDIN_URL, RESUME_PDF, SITE_URL } from "./site";
+import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL, RESUME_PDF, SITE_URL } from "./site";
 import { CSS_TIPS } from "@/app/(portfolio)/css-tips/_components/tips-data";
 import { CATEGORY_LABELS, categoryOf } from "./project-categories";
 
@@ -54,6 +54,7 @@ function intro() {
     `- Education: ${PROFILE.education.degree}, ${PROFILE.education.school}`,
     `- Languages: ${PROFILE.languages.join(", ")}`,
     `- Contact: ${CONTACT_EMAIL}, ${LINKEDIN_URL}, or the form at ${SITE_URL}/#contact`,
+    `- Code: ${GITHUB_URL}`,
   ];
 }
 

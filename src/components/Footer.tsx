@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import PaletteHint from "./PaletteHint";
-import { CONTACT_EMAIL, LINKEDIN_URL } from "@/lib/site";
+import { CONTACT_EMAIL, GITHUB_URL, LINKEDIN_URL } from "@/lib/site";
 
 const siteLinks = [
   { label: "Home", href: "/" },
@@ -62,6 +62,11 @@ const Footer = () => {
                 <li>
                   <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
                     LinkedIn
+                  </a>
+                </li>
+                <li>
+                  <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    GitHub
                   </a>
                 </li>
                 <li>

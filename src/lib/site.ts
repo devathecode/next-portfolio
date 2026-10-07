@@ -4,8 +4,15 @@ export const SITE_URL = "https://www.devanshuverma.in";
 export const OG_IMAGE = `${SITE_URL}/opengraph-image`;
 export const CONTACT_EMAIL = "code.devanshu@gmail.com";
 export const LINKEDIN_URL = "https://www.linkedin.com/in/devthecoder/";
+export const GITHUB_URL = "https://github.com/code-devanshu";
 export const RESUME_PDF = "/resume/Resume.pdf";
 export const RESUME_PDF_NAME = "Devanshu_Verma_Resume.pdf";
+
+/** Posts with the most search impressions (Search Console), shown as "Most read" on the home page. */
+export const POPULAR_POSTS = [
+  "javascript-tail-call-optimization-runtime-reality",
+  "minimum-release-age-package-managers-complete-guide",
+];
 
 /** Home-page section ids, top to bottom. Used by scroll-spy and the command palette. */
 export const HOME_SECTIONS = ["home", "about", "work", "contact", "blog"] as const;

@@ -33,6 +33,9 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
   const [progress, setProgress] = useState(0);
   const [speech, setSpeech] = useState<Speech>("idle");
   const [canSpeak, setCanSpeak] = useState(false);
+  // Out of the way while reading down the page; back on any scroll up
+  const [tucked, setTucked] = useState(false);
+  const [entered, setEntered] = useState(false);
   // Offered once per visit, only if the reader starts at the top
   const [resumeAt, setResumeAt] = useState<number | null>(null);
   const offered = useRef(false);
@@ -72,11 +75,17 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
     if (!el) return;
     let frame = 0;
     let lastSave = 0;
+    let lastY = window.scrollY;
     const update = () => {
       frame = 0;
       const { top, height } = articleGeometry(el);
       const p = Math.min(1, Math.max(0, (window.scrollY + window.innerHeight * LINE - top) / height));
       setProgress(p);
+      const dy = window.scrollY - lastY;
+      if (Math.abs(dy) > 6) {
+        setTucked(dy > 0 && p > 0.02);
+        lastY = window.scrollY;
+      }
       const now = Date.now();
       if (now - lastSave > 400 || p >= READ_AT) {
         lastSave = now;
@@ -192,6 +201,8 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
     "flex h-10 items-center justify-center gap-2 text-[var(--text-secondary)] transition-colors duration-100 " +
     "hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)] disabled:pointer-events-none disabled:opacity-35";
   const pct = Math.round(progress * 100);
+  // Stays up while it has something to say: a resume offer, speech, or the end of the post
+  const shown = !tucked || resumeAt !== null || speech !== "idle" || progress >= READ_AT;
 
   return (
     // Centred by the wrapper: motion owns the toolbar's transform
@@ -200,9 +211,15 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
         role="toolbar"
         aria-label="Reader tools"
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32, delay: 0.4 }}
-        className="field-ink cut-a pointer-events-auto flex items-center gap-1 p-1"
+        animate={shown ? { opacity: 1, y: 0 } : { opacity: 0, y: reduce ? 0 : 88 }}
+        transition={
+          reduce
+            ? { duration: 0 }
+            : { type: "spring", stiffness: 380, damping: 32, delay: entered ? 0 : 0.4 }
+        }
+        onAnimationComplete={() => setEntered(true)}
+        onFocus={() => setTucked(false)}
+        className={`field-ink cut-a flex items-center gap-1 p-1 ${shown ? "pointer-events-auto" : ""}`}
       >
         <AnimatePresence initial={false}>
           {resumeAt !== null && (
@@ -218,7 +235,7 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
                          text-[#fbf6ec]"
             >
               <HistoryIcon size={15} strokeWidth={2.2} className="shrink-0" />
-              Resume at {Math.round(resumeAt * 100)}%
+              Resume<span className="hidden sm:inline"> at</span> {Math.round(resumeAt * 100)}%
             </m.button>
           )}
         </AnimatePresence>
@@ -253,14 +270,20 @@ export function ReaderBar({ slug, articleId }: { slug: string; articleId: string
           <>
             <span className="mx-0.5 h-5 w-px bg-[var(--border)]" aria-hidden="true" />
             {speech === "playing" ? (
-              <button type="button" onClick={pause} className={`${btn} t-label px-3 text-[var(--accent)]`}>
+              <button type="button" onClick={pause} aria-label="Pause" className={`${btn} t-label w-9 text-[var(--accent)] sm:w-auto sm:px-3`}>
                 <PauseIcon size={15} />
-                Pause
+                {/* Icon only on phones, so the bar fits beside a resume offer */}
+                <span className="hidden sm:inline">Pause</span>
               </button>
             ) : (
-              <button type="button" onClick={play} className={`${btn} t-label px-3`}>
+              <button
+                type="button"
+                onClick={play}
+                aria-label={speech === "paused" ? "Resume reading aloud" : "Listen to this post"}
+                className={`${btn} t-label w-9 sm:w-auto sm:px-3`}
+              >
                 {speech === "paused" ? <PlayIcon size={15} /> : <HeadphonesIcon size={15} />}
-                {speech === "paused" ? "Resume" : "Listen"}
+                <span className="hidden sm:inline">{speech === "paused" ? "Resume" : "Listen"}</span>
               </button>
             )}
             {speech !== "idle" && (

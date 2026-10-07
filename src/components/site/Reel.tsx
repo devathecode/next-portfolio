@@ -9,7 +9,8 @@ import { useSite } from "./context";
 const STOCK: Record<string, string> = {
   cardinal: "var(--cardinal)",
   ink: "#3a322a",
-  paper: "#ddd3c0",
+  // Follows the theme: cream at night would be the brightest thing on screen
+  paper: "var(--reel-paper)",
   midnight: "var(--midnight)",
   ochre: "var(--ochre)",
   olive: "var(--olive)",

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { DownloadIcon } from "lucide-react";
-import { BsLinkedin } from "react-icons/bs";
-import { LINKEDIN_URL, RESUME_PDF, RESUME_PDF_NAME } from "@/lib/site";
+import { BsGithub, BsLinkedin } from "react-icons/bs";
+import { GITHUB_URL, LINKEDIN_URL, RESUME_PDF, RESUME_PDF_NAME } from "@/lib/site";
 
 const credits = [
   { role: "Based in", value: "Noida, India. Remote-friendly." },
@@ -60,6 +60,15 @@ export default function ProfilePanel() {
           className="btn btn-line w-12 px-0"
         >
           <BsLinkedin size={15} />
+        </a>
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub profile"
+          className="btn btn-line w-12 px-0"
+        >
+          <BsGithub size={15} />
         </a>
       </div>
     </div>

@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CheckIcon, CircleCheckIcon, CircleXIcon, CopyIcon, DownloadIcon, SearchIcon, XIcon } from "lucide-react";
+import { CheckIcon, CircleCheckIcon, CircleXIcon, CopyIcon, DownloadIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import LinkedInBadge from "./LinkedInBadge";
 import Footer from "@/components/Footer";
 import { useSite } from "@/components/site/context";
-import { CSS_TIPS, CATEGORIES, type CssTip, type Category } from "./tips-data";
+import { CSS_TIPS, CATEGORIES, CATEGORY_HEADINGS, CSS_FAQ, type CssTip, type Category } from "./tips-data";
 import { browserLabel, runChecks, type SupportMap } from "./feature-checks";
 
 // ─── CSS syntax highlighter ───────────────────────────────────────────────────
@@ -145,6 +145,16 @@ function TipCard({
           {tip.title}
         </h3>
         <p className="mt-3 text-[15px] leading-relaxed text-[var(--text-secondary)]">{tip.description}</p>
+        <dl className="mt-4 space-y-3 text-[14.5px] leading-relaxed">
+          <div>
+            <dt className="t-label text-[var(--text-primary)]">Use it when</dt>
+            <dd className="mt-1 text-[var(--text-secondary)]">{tip.when}</dd>
+          </div>
+          <div>
+            <dt className="t-label text-[var(--accent)]">Watch out</dt>
+            <dd className="mt-1 text-[var(--text-secondary)]">{tip.gotcha}</dd>
+          </div>
+        </dl>
       </div>
 
       {/* Editor panel */}
@@ -443,6 +453,11 @@ export default function CssTipsClient() {
     return counts;
   }, []);
 
+  // One H2 per topic, so the page reads as an outline even with every tip showing
+  const groups = CATEGORIES.map((cat) => ({ cat, tips: filteredTips.filter((t) => t.category === cat) })).filter(
+    (g) => g.tips.length > 0,
+  );
+
   const filters: { id: Category | "All"; count: number }[] = [
     { id: "All", count: CSS_TIPS.length },
     ...CATEGORIES.map((cat) => ({ id: cat, count: categoryCounts[cat] ?? 0 })),
@@ -472,8 +487,9 @@ export default function CssTipsClient() {
               Modern CSS <span className="offset-word text-[var(--cardinal)]">tips</span> and tricks
             </h1>
             <p className="mt-7 max-w-[36rem] text-[18px] leading-relaxed text-[var(--text-primary)] md:text-[19px]">
-              {CSS_TIPS.length} modern CSS features every frontend developer should know. Container
-              queries, cascade layers, :has() and more, each with a real before and after.
+              {CSS_TIPS.length} modern CSS features worth using in 2026, from container queries and :has() to
+              cascade layers. Each one has a real before and after, when to reach for it, and the gotcha
+              that trips people up.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
@@ -559,20 +575,30 @@ export default function CssTipsClient() {
               : ""}
           </p>
 
-          <motion.div layout={!reduce} className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            <AnimatePresence mode="popLayout">
-              {filteredTips.map((tip, i) => (
-                <TipCard
-                  key={tip.id}
-                  tip={tip}
-                  index={i}
-                  copied={copied}
-                  onCopy={handleCopy}
-                  supported={support?.[tip.id]}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          {groups.map(({ cat, tips }, gi) => {
+            const headingId = `tips-${cat.toLowerCase().replace(/\s+/g, "-")}`;
+            return (
+              <section key={cat} aria-labelledby={headingId} className={gi > 0 ? "mt-16" : ""}>
+                <h2 id={headingId} className="t-card mb-6 text-[var(--text-primary)]">
+                  {CATEGORY_HEADINGS[cat]}
+                </h2>
+                <motion.div layout={!reduce} className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  <AnimatePresence mode="popLayout">
+                    {tips.map((tip, i) => (
+                      <TipCard
+                        key={tip.id}
+                        tip={tip}
+                        index={i}
+                        copied={copied}
+                        onCopy={handleCopy}
+                        supported={support?.[tip.id]}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              </section>
+            );
+          })}
 
           {filteredTips.length === 0 && (
             <div className="border-y border-[var(--border)] px-6 py-16 text-center">
@@ -604,6 +630,39 @@ export default function CssTipsClient() {
               {downloadButton("Download all as PDF")}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── FAQ: mirrors the FAQPage structured data in page.tsx ── */}
+      <section aria-labelledby="css-faq" data-act="Questions" data-field="paper" className="field-paper border-t border-[var(--border)] px-5 py-16 md:py-24 lg:px-10">
+        <div className="mx-auto grid max-w-[90rem] gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-4">
+            <h2 id="css-faq" className="t-act">Questions</h2>
+            <p className="mt-6 max-w-sm text-[18px] leading-relaxed text-[var(--text-secondary)]">
+              What people ask before using modern CSS in production.
+            </p>
+          </div>
+          <div className="border-t-2 border-[var(--text-primary)] lg:col-span-8">
+            {CSS_FAQ.map(({ question, answer }, i) => (
+              <details key={question} open={i === 0} className="group border-b border-[var(--border)]">
+                <summary
+                  className="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-left
+                             text-[19px] font-semibold text-[var(--text-primary)] transition-colors duration-100
+                             hover:text-[var(--accent)] [&::-webkit-details-marker]:hidden"
+                >
+                  <h3>{question}</h3>
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center bg-[var(--ink)] text-[var(--bone-ink)]
+                               transition-colors duration-100 group-open:bg-[var(--cardinal)]"
+                  >
+                    <PlusIcon size={18} strokeWidth={2.4} className="transition-transform duration-150 group-open:rotate-45" />
+                  </span>
+                </summary>
+                <p className="max-w-[62ch] pb-7 text-[17px] leading-relaxed text-[var(--text-secondary)]">{answer}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 

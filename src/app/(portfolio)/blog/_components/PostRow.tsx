@@ -11,7 +11,7 @@ export function PostRow({
   activeTag,
 }: {
   post: PostSummary;
-  heading?: "h2" | "h3";
+  heading?: "h2" | "h3" | "h4";
   /** Highlighted on tag pages; the lowercase tag slug */
   activeTag?: string;
 }) {

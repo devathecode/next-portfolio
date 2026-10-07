@@ -8,8 +8,7 @@ import sanitizeHtml from "sanitize-html";
 import { getPost, getPublishedPosts } from "@/lib/posts";
 import { ShareBar } from "./_components/ShareBar";
 import { ReadTracker } from "./_components/ReadTracker";
-import { ScrollProgress } from "./_components/ScrollProgress";
-import { TableOfContents } from "./_components/TableOfContents";
+import { MobileToc, TableOfContents } from "./_components/TableOfContents";
 import type { TocItem } from "./_components/TableOfContents";
 import { CopyCodeButtons } from "./_components/CopyCodeButtons";
 import { ReaderBar } from "./_components/ReaderBar";
@@ -17,8 +16,10 @@ import { PostRow } from "../_components/PostRow";
 import { relatedPosts, tagHref } from "../_components/post-meta";
 import Footer from "@/components/Footer";
 import { BsLinkedin } from "react-icons/bs";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, RssIcon } from "lucide-react";
 import { WEBSITE_ID, jsonLd, personRef } from "@/lib/profile";
+import { extractFaq } from "@/lib/post-faq";
+import { decodeEntities, highlightCodeBlocks } from "@/lib/highlight";
 
 // Static, rebuilt daily and whenever a post is saved in the admin. Drafts are
 // previewed through draft mode (/api/draft), never a query string, which
@@ -27,16 +28,17 @@ export const revalidate = 86400;
 
 const SITE_URL = "https://www.devanshuverma.in";
 const BLOG_URL = `${SITE_URL}/blog`;
+const TITLE_SUFFIX = " | Devanshu Verma";
 
 export async function generateStaticParams() {
   return (await getPublishedPosts()).map((p) => ({ slug: p.slug }));
 }
 
-function formatDate(iso: string | null): string {
+function formatDate(iso: string | null, withYear = true): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
+    year: withYear ? "numeric" : undefined,
+    month: "short",
     day: "numeric",
   });
 }
@@ -48,15 +50,6 @@ function slugify(text: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .trim();
-}
-
-function decodeEntities(text: string): string {
-  return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&#x27;/g, "'")
-    .replace(/&amp;/g, "&");
 }
 
 function extractTocAndAddIds(html: string): { html: string; toc: TocItem[] } {
@@ -105,7 +98,8 @@ export async function generateMetadata({
   const image = post.cover_image ?? `${SITE_URL}/opengraph-image`;
 
   return {
-    title: post.title,
+    // Search results cut titles at ~60 characters; keep the post's own words, drop the brand
+    title: post.title.length + TITLE_SUFFIX.length <= 60 ? post.title : { absolute: post.title },
     description: post.excerpt ?? undefined,
     alternates: { canonical: url },
     authors: [{ name: "Devanshu Verma", url: SITE_URL }],
@@ -145,8 +139,21 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   if (!post) notFound();
   const related = relatedPosts(post, allPosts);
 
-  const date = formatDate(post.published_at ?? post.created_at);
+  const publishedAt = post.published_at ?? post.created_at;
+  const date = formatDate(publishedAt);
+  // Worth a line only when the post changed after its first day out
+  const updated =
+    post.updated_at && Date.parse(post.updated_at) - Date.parse(publishedAt) > 86_400_000
+      ? formatDate(post.updated_at, post.updated_at.slice(0, 4) !== publishedAt.slice(0, 4))
+      : null;
   const { wordCount, readTime } = postStats(post.content);
+  // Long titles step down a size so the post still starts on the first screen
+  const titleSize =
+    post.title.length > 52
+      ? `max-w-[24ch] !text-[clamp(2.3rem,6.6vw,3.4rem)] ${
+          post.cover_image ? "lg:!text-[clamp(2.6rem,3.5vw,3.6rem)]" : "lg:!text-[clamp(3rem,4.4vw,4.4rem)]"
+        }`
+      : `max-w-[20ch] ${post.cover_image ? "lg:!text-[clamp(3rem,4.6vw,4.4rem)]" : ""}`;
   const postUrl = `${BLOG_URL}/${post.slug}`;
   const rawHtml = toHtml(post.content);
   const safeHtml = sanitizeHtml(rawHtml, {
@@ -168,8 +175,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     .replace(/<li>(\s*<p>)?\s*\[( |x|X)\]\s*/g, (_, p = "", mark: string) => {
       const done = mark.trim() !== "";
       return `<li class="task">${p}<span class="task-box"${done ? " data-done" : ""} aria-hidden="true"></span><span class="sr-only">${done ? "Done: " : "To do: "}</span>`;
-    });
-  const { html: contentHtml, toc } = extractTocAndAddIds(bodyHtml);
+    })
+    // Every h2 already sits under its own rule; a divider before one doubles it
+    .replace(/<hr\s*\/?>\s*(?=<h2[\s>])/g, "");
+  const { html: tocHtml, toc } = extractTocAndAddIds(bodyHtml);
+  const contentHtml = await highlightCodeBlocks(tocHtml);
 
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -190,6 +200,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     ...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
   };
 
+  // From the post's "Frequently asked questions" section, when it has one
+  const faq = extractFaq(tocHtml);
+  const faqJsonLd = faq.length > 0 && {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${postUrl}#faq`,
+    mainEntity: faq.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
+  };
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -202,9 +225,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <>
-      <ScrollProgress />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(articleJsonLd)} />
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(breadcrumbJsonLd)} />
+      {faqJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(faqJsonLd)} />}
 
       <main className="pb-32">
         {isPreview && !post.published && (
@@ -217,9 +240,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         )}
 
         {/* ── Title card: words left, cover print right ─────────── */}
-        <header data-act="Title" data-field="cardinal" className="field-cardinal grain relative overflow-hidden px-5 pb-14 pt-10 md:pb-20 md:pt-14 lg:px-10">
+        <header data-act="Title" data-field="cardinal" className="field-cardinal grain relative overflow-hidden px-5 pb-10 pt-6 md:pb-12 md:pt-8 lg:px-10">
           <div
-            className={`relative mx-auto grid max-w-6xl gap-y-10 ${
+            className={`relative mx-auto grid max-w-6xl gap-y-6 md:gap-y-8 ${
               post.cover_image ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-14 xl:gap-x-20" : ""
             }`}
           >
@@ -233,17 +256,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </Link>
             </div>
 
-            <div className="-mt-4 min-w-0 lg:col-start-1">
-              <h1 className={`t-act cut-in-up max-w-[20ch] ${post.cover_image ? "lg:!text-[clamp(3rem,4.6vw,4.4rem)]" : ""}`}>
+            <div className="-mt-2 min-w-0 lg:col-start-1">
+              <h1 className={`t-act cut-in-up ${titleSize}`}>
                 {post.title}
               </h1>
 
               {post.excerpt && (
-                <p className="mt-7 max-w-[60ch] text-[19px] leading-relaxed text-[var(--text-primary)]">{post.excerpt}</p>
+                <p className="mt-5 max-w-[60ch] text-[17px] leading-relaxed text-[var(--text-primary)] md:text-[19px]">{post.excerpt}</p>
               )}
 
               {post.tags.length > 0 && (
-                <ul aria-label="Topics" className="mt-7 flex flex-wrap gap-2">
+                <ul aria-label="Topics" className="mt-5 flex flex-wrap gap-2">
                   {post.tags.slice(0, 3).map((tag) => (
                     <li key={tag}>
                       <Link
@@ -259,14 +282,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             </div>
 
             {post.cover_image && (
-              <figure className="cut-a relative rotate-[1.1deg] bg-[#eee6d6] p-2 md:p-2.5 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:self-center">
+              // Beside the title on wide screens only: under it, it pushes the post below the fold
+              <figure className="cut-a relative hidden rotate-[1.1deg] bg-[#eee6d6] p-2.5 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:block lg:self-center">
                 <div className="relative aspect-[1200/630] overflow-hidden bg-[#e3d9c5]">
-                  <Image src={post.cover_image} alt="" fill priority sizes="(min-width: 1152px) 560px, (min-width: 1024px) 48vw, 100vw" className="object-cover" />
+                  <Image src={post.cover_image} alt="" fill priority sizes="(min-width: 1152px) 560px, (min-width: 1024px) 48vw, 1px" className="object-cover" />
                 </div>
               </figure>
             )}
 
-            <dl className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t-2 border-[var(--text-primary)] pt-5 text-[15px] text-[var(--text-primary)] lg:col-start-1 lg:self-start">
+            <dl className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t-2 border-[var(--text-primary)] pt-4 text-[15px] text-[var(--text-primary)] lg:col-start-1 lg:self-start">
               <div className="flex items-center gap-3">
                 <dt className="sr-only">Author</dt>
                 <span className="cut-a relative h-9 w-9 shrink-0 overflow-hidden bg-[#eee6d6]">
@@ -275,9 +299,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 <dd className="font-semibold">Devanshu Verma</dd>
               </div>
               {[
-                { label: "Published", value: <time dateTime={post.published_at ?? post.created_at}>{date}</time> },
+                { label: "Published", value: <time dateTime={publishedAt}>{date}</time> },
+                ...(updated
+                  ? [{ label: "Updated", value: <>Updated <time dateTime={post.updated_at}>{updated}</time></> }]
+                  : []),
                 { label: "Reading time", value: readTime },
-                { label: "Length", value: `${wordCount.toLocaleString("en-US")} words` },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center gap-3">
                   <span aria-hidden="true" className="h-1.5 w-1.5 bg-[var(--text-primary)]" />
@@ -291,14 +317,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
         <div data-act="Article" data-field="paper" className="field-paper mx-auto max-w-6xl px-5 lg:px-10">
           {/* ── Article + sidebar ──────────────────────────────── */}
-          <div className="mt-14 grid gap-12 md:mt-20 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
+          <div className="mt-10 grid gap-12 md:mt-14 lg:grid-cols-[minmax(0,1fr)_13.5rem] xl:gap-20">
             <article className="min-w-0 max-w-[72ch]">
+              {toc.length >= 3 && <MobileToc items={toc} />}
               <div
                 id="article-body"
                 className="blog-prose"
                 dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
-              <CopyCodeButtons />
+              <CopyCodeButtons articleId="article-body" />
               <ReadTracker slug={post.slug} title={post.title} />
 
               <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t-2 border-[var(--text-primary)] pt-8">
@@ -320,10 +347,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     Frontend engineer building web apps with React, Next.js, Angular and Vue.
                   </p>
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2">
                   <Link href="/#contact" className="btn btn-plate btn-sm">
                     Get in touch
                   </Link>
+                  <a href="/blog/feed.xml" className="btn btn-line btn-sm" title="New posts, in any feed reader">
+                    <RssIcon size={14} strokeWidth={2.2} aria-hidden="true" />
+                    RSS feed
+                  </a>
                   <a
                     href="https://www.linkedin.com/in/devthecoder/"
                     target="_blank"
