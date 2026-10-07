@@ -98,11 +98,11 @@ export default function CommandMenu({ onClose }: { onClose: () => void }) {
       { id: "resume-pdf", group: "Actions", label: "Download résumé", icon: <FileDownIcon {...ICON} />, hint: "PDF", keywords: "resume cv", run: downloadResume },
 
       { id: "linkedin", group: "Elsewhere", label: "LinkedIn", icon: <BsLinkedin size={14} />, hint: "devthecoder", keywords: "social profile", run: () => {
-        trackEvent("outbound_click", { destination: "linkedin", url: LINKEDIN_URL });
+        trackEvent("outbound_click", { destination: "linkedin", url: LINKEDIN_URL, source: location.pathname });
         window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer");
       } },
       { id: "email", group: "Elsewhere", label: "Send an email", icon: <MailIcon {...ICON} />, hint: CONTACT_EMAIL, keywords: "contact mail", run: () => {
-        trackEvent("outbound_click", { destination: "email", url: `mailto:${CONTACT_EMAIL}` });
+        trackEvent("outbound_click", { destination: "email", url: `mailto:${CONTACT_EMAIL}`, source: location.pathname });
         window.location.href = `mailto:${CONTACT_EMAIL}`;
       } },
     ],

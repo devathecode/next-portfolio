@@ -59,6 +59,9 @@
   --shadow-card-hover: none;
   --shadow-pop:        none;
 
+  /* The paper act's strip on the reel */
+  --reel-paper: #ddd3c0;
+
   /* Fixed header: bar plus the reel strip under it */
   --header-h: 3.75rem;
 
@@ -94,6 +97,7 @@ html.dark {
   --paper-ink-2:  #cfc5b3;
   --paper-ink-3:  #ada291;
   --paper-accent: #ec7a43;
+  --reel-paper:  #5b5246;
 
   --plate:       var(--cardinal);
   --plate-hover: #bf3e16;
@@ -676,6 +680,13 @@ html.dark {
   letter-spacing: 0.015em;
   text-wrap: balance;
 }
+/* Code is code, even in a heading: never cased */
+.blog-prose :is(h1, h2, h3) code {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.56em;
+  vertical-align: 0.14em;
+}
 .blog-prose h1 { font-size: 2.6em;  line-height: 0.95; margin-top: 1.6em; margin-bottom: 0.4em; }
 .blog-prose h2 { font-size: 2.1em;  line-height: 0.98; margin-top: 1.7em; margin-bottom: 0.35em; padding-top: 0.45em; border-top: 2px solid var(--text-primary); }
 .blog-prose h3 { font-size: 1.55em; line-height: 1;    margin-top: 1.5em; margin-bottom: 0.3em; }
@@ -739,6 +750,45 @@ html.dark {
   color: inherit;
   font-size: inherit;
 }
+
+/* Highlighted blocks: a head strip with the language and copy, then the code */
+.blog-prose .code-block {
+  margin: 1.75rem 0;
+  background: var(--ink);
+  color: var(--bone-ink);
+}
+.blog-prose .code-block pre { margin: 0; background: none; padding-top: 1rem; }
+.blog-prose .code-block pre:focus-visible { outline: 2px solid var(--ochre-lit); outline-offset: -2px; }
+.blog-prose .code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 2.5rem;
+  padding: 0 0.375rem 0 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--bone-ink) 14%, transparent);
+}
+.blog-prose .code-lang {
+  font-family: var(--font-body);
+  font-stretch: 72%;
+  font-weight: 650;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--bone-ink) 66%, var(--ink));
+}
+.blog-prose .code-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: color-mix(in srgb, var(--bone-ink) 66%, var(--ink));
+  transition: background-color 0.1s, color 0.1s;
+}
+.blog-prose .code-copy:hover { background: color-mix(in srgb, var(--bone-ink) 10%, transparent); color: var(--bone-ink); }
+.blog-prose .code-copy:focus-visible { outline: 2px solid var(--ochre-lit); outline-offset: -2px; color: var(--bone-ink); }
+.blog-prose .code-copy[data-copied] { color: var(--ochre-lit); }
 
 .blog-prose img {
   width: 100%;

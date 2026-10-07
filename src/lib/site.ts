@@ -7,6 +7,12 @@ export const LINKEDIN_URL = "https://www.linkedin.com/in/devthecoder/";
 export const RESUME_PDF = "/resume/Resume.pdf";
 export const RESUME_PDF_NAME = "Devanshu_Verma_Resume.pdf";
 
+/** Posts with the most search impressions (Search Console), shown as "Most read" on the home page. */
+export const POPULAR_POSTS = [
+  "javascript-tail-call-optimization-runtime-reality",
+  "minimum-release-age-package-managers-complete-guide",
+];
+
 /** Home-page section ids, top to bottom. Used by scroll-spy and the command palette. */
 export const HOME_SECTIONS = ["home", "about", "work", "contact", "blog"] as const;
 export type SectionId = (typeof HOME_SECTIONS)[number];

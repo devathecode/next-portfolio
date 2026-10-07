@@ -1,6 +1,9 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
-import { ArrowDownRightIcon, SparklesIcon } from "lucide-react";
+import Link from "next/link";
+import { ArrowDownRightIcon, ArrowRightIcon, DownloadIcon, SparklesIcon } from "lucide-react";
+import { getPublishedPosts, type PostSummary } from "@/lib/posts";
+import { RESUME_PDF, RESUME_PDF_NAME } from "@/lib/site";
 import AskAIButton from "./site/AskAIButton";
 import CursorCut from "./sequence/CursorCut";
 import VitalsSlate from "./VitalsSlate";
@@ -14,7 +17,13 @@ const step = (i: number) => ({ "--i": i }) as CSSProperties;
  * in for the first action. On desktop it stops short of the fold so the
  * proof strip's timings sit on the first screen; phones get a slate instead.
  */
-const HomeComponent = () => {
+const HomeComponent = async () => {
+  // The newest post gets a line under the actions; a Supabase hiccup just drops the line
+  let latest: PostSummary | undefined;
+  try {
+    [latest] = await getPublishedPosts();
+  } catch {}
+
   return (
     <section
       id="home"
@@ -26,6 +35,16 @@ const HomeComponent = () => {
       <div className="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
         {/* The claim */}
         <div className="relative z-10 lg:col-span-7 lg:pt-6">
+          {/* Kept above the claim: below the actions, the pointer's arm crosses it */}
+          {latest && (
+            <p className="mb-8 max-w-[56ch] text-[15px] leading-snug text-[var(--text-primary)]">
+              <span className="t-label mr-2.5">New on the blog</span>
+              <Link href={`/blog/${latest.slug}`} className="link group font-medium">
+                {latest.title}
+                <ArrowRightIcon size={14} strokeWidth={2.4} className="ml-1 inline-block transition-transform duration-100 group-hover:translate-x-0.5" />
+              </Link>
+            </p>
+          )}
           <h1 className="font-display uppercase">
             <span className="sr-only">Devanshu Verma, frontend developer. </span>
             <span className="cut-in-up block max-w-[16ch] text-balance text-[clamp(2.9rem,6vw,5.9rem)] leading-[0.9] tracking-[0.012em]" style={step(0)}>
@@ -44,15 +63,28 @@ const HomeComponent = () => {
             I&apos;m Devanshu Verma, frontend developer in Noida, India, 5+ years in production.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="relative mt-8 flex flex-wrap items-center gap-3">
             <a href="#work" className="btn btn-plate group">
               See the work
               <ArrowDownRightIcon size={17} strokeWidth={2.2} className="transition-transform duration-100 group-hover:translate-x-0.5 group-hover:translate-y-0.5" />
+            </a>
+            <a href={RESUME_PDF} download={RESUME_PDF_NAME} className="btn btn-line">
+              <DownloadIcon size={15} strokeWidth={2.2} />
+              Résumé (PDF)
             </a>
             <AskAIButton className="btn btn-line">
               <SparklesIcon size={15} strokeWidth={2.2} />
               Ask my AI
             </AskAIButton>
+
+            {/* The reach, desktop: pinned under this row rather than to the section,
+                so whatever sits above the actions, its tip never lands on a button */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute left-[25rem] top-[calc(100%_+_1rem)] z-20 hidden w-[clamp(14rem,18vw,19rem)] origin-top-left rotate-[-34deg] lg:block"
+            >
+              <CursorCut className="reach-in w-full text-[var(--ink)]" />
+            </div>
           </div>
 
           <VitalsSlate className="mt-8 max-w-md lg:hidden" />
@@ -86,11 +118,11 @@ const HomeComponent = () => {
       </div>
 
       {/* The reach: a pointer cut from black paper, its tail drawn out into an arm.
-          Rotated about its tip, which sits just past the first action. */}
+          Rotated about its tip, which sits just past the first action. Phones only;
+          desktop pins it under the actions (above). */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-[62%] top-[83%] z-20 w-[min(46vw,13rem)] origin-top-left rotate-[-30deg]
-                   sm:left-[56%] lg:left-[29%] lg:top-[76%] lg:w-[clamp(14rem,18vw,19rem)] lg:rotate-[-34deg]"
+        className="pointer-events-none absolute left-[62%] top-[83%] z-20 w-[min(46vw,13rem)] origin-top-left rotate-[-30deg] sm:left-[56%] lg:hidden"
       >
         <CursorCut className="reach-in w-full text-[var(--ink)]" />
       </div>

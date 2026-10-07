@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import CssTipsClient from "./_components/CssTipsClient";
+import { CSS_FAQ } from "./_components/tips-data";
 
-const TITLE       = "Modern CSS Tips & Tricks: 20 Code Examples | Devanshu Verma";
+const TITLE       = "Modern CSS in 2026: 20 Features to Use Now (With Examples)";
 const DESCRIPTION =
-  "20 modern CSS tips every frontend developer should know: container queries, :has(), cascade layers, color-mix(), clamp(), CSS nesting, and more. Each tip includes a Before/After code example and a free PDF download.";
+  "20 modern CSS features to use in 2026: container queries, :has(), nesting, cascade layers, color-mix() and more, each with before/after code, when to use it and the common gotcha.";
+// Bump when the tips change. Not the build date: that would claim an update on every deploy.
+const PUBLISHED   = "2025-01-01";
+const UPDATED     = "2026-10-07";
 const URL         = "https://www.devanshuverma.in/css-tips";
 const OG_IMAGE    = "https://www.devanshuverma.in/opengraph-image";
 
@@ -12,7 +16,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   keywords: [
     "modern CSS tips",
-    "CSS tricks 2024",
+    "modern CSS 2026",
     "CSS container queries",
     "CSS :has() selector",
     "cascade layers CSS",
@@ -48,7 +52,8 @@ export const metadata: Metadata = {
         alt: "Modern CSS Tips & Tricks by Devanshu Verma",
       },
     ],
-    publishedTime: "2025-01-01T00:00:00.000Z",
+    publishedTime: `${PUBLISHED}T00:00:00.000Z`,
+    modifiedTime: `${UPDATED}T00:00:00.000Z`,
     authors: ["https://www.devanshuverma.in"],
   },
   twitter: {
@@ -76,8 +81,8 @@ const jsonLd = {
   headline: TITLE,
   description: DESCRIPTION,
   url: URL,
-  datePublished: "2025-01-01",
-  dateModified: new Date().toISOString().split("T")[0],
+  datePublished: PUBLISHED,
+  dateModified: UPDATED,
   author: {
     "@type": "Person",
     name: "Devanshu Verma",
@@ -122,6 +127,16 @@ const breadcrumbJsonLd = {
   ],
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: CSS_FAQ.map(({ question, answer }) => ({
+    "@type": "Question",
+    name: question,
+    acceptedAnswer: { "@type": "Answer", text: answer },
+  })),
+};
+
 export default function CssTipsPage() {
   return (
     <>
@@ -132,6 +147,10 @@ export default function CssTipsPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <CssTipsClient />
     </>

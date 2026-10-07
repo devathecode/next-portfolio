@@ -68,7 +68,7 @@ export default function ContactForm() {
 
   useEffect(() => {
     if (state && "success" in state) {
-      trackEvent("contact_submit");
+      trackEvent("contact_submit", { source: location.pathname });
       router.push("/thankyou");
     }
   }, [state, router]);

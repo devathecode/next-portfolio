@@ -14,6 +14,10 @@ export interface CssTip {
   category: Category;
   support: Support;
   description: string;
+  /** Where the feature earns its place */
+  when: string;
+  /** The mistake people make with it */
+  gotcha: string;
   /** The modern/new approach */
   code: string;
   /** Old/legacy approach — when present, card shows Before/After toggle */
@@ -37,6 +41,8 @@ export const CSS_TIPS: CssTip[] = [
     support: "Baseline 2023",
     description:
       "Respond to a container's own size instead of the viewport. Build truly portable components that adapt wherever they're placed.",
+    when: "Components that live in more than one place: a card that sits in a narrow sidebar on one page and a wide grid on another, or a dashboard widget users can resize.",
+    gotcha: "Only an ancestor with container-type can be queried; an element can't query itself. container-type: inline-size also stops the container sizing itself from its content, so a shrink-to-fit container (a flex item with no width, say) can collapse to zero.",
     oldCode: `/* Media queries check the viewport — not the component.
    This breaks when .card lives in a narrow sidebar. */
 
@@ -70,6 +76,8 @@ export const CSS_TIPS: CssTip[] = [
     support: "Baseline 2023",
     description:
       "Let nested grid items snap to the parent's tracks. Solves the classic 'cards with misaligned footers' problem without JavaScript.",
+    when: "Rows of cards whose titles, bodies and footers should line up across cards, and forms where every label and input shares the same two columns.",
+    gotcha: "The child has to span the parent tracks it inherits (grid-row: span 3, for example), and it inherits the parent's gaps unless you set its own. Subgrid has worked in every major engine since late 2023.",
     oldCode: `/* Old: JavaScript to equalise card section heights */
 const cards = document.querySelectorAll('.card');
 let maxHead = 0, maxBody = 0;
@@ -104,6 +112,8 @@ cards.forEach(c => {
     support: "Widely available",
     description:
       "auto-fit collapses empty tracks so columns stretch to fill space. auto-fill keeps them. Use auto-fit for responsive grids with zero media queries.",
+    when: "Card and gallery grids where the number of columns should follow the space available, with no breakpoints at all.",
+    gotcha: "The two only differ when there are fewer items than fit in a row: auto-fill keeps the empty columns, auto-fit collapses them so items stretch. Write minmax(min(16rem, 100%), 1fr) so a single column can't overflow a narrow phone.",
     oldCode: `/* Old: a breakpoint for every column count change */
 .grid { grid-template-columns: 1fr; }
 
@@ -138,6 +148,8 @@ cards.forEach(c => {
     support: "Widely available",
     description:
       "Lock element proportions in one line. Replaces the old padding-top percentage hack entirely.",
+    when: "Video embeds, image placeholders, avatars and media cards that should reserve their space before content loads, which also prevents layout shift.",
+    gotcha: "It's ignored when both width and height are set. It's also a preferred size: content taller than the ratio allows still grows the box, unless you add overflow: hidden or min-height: 0.",
     oldCode: `/* The padding-top % hack — 56.25% = 9/16 */
 .embed-wrapper {
   position: relative;
@@ -173,6 +185,8 @@ img.cover {
     support: "Widely available",
     description:
       "Use flow-relative props instead of directional ones. Layouts mirror automatically for RTL languages — no extra CSS needed.",
+    when: "Any site that may be translated into Arabic, Hebrew or another right-to-left language, and components that should survive vertical writing modes.",
+    gotcha: "Shorthands like margin: 1rem 2rem are still physical; use margin-block and margin-inline instead. Mixing physical and logical properties on the same element makes overrides hard to follow.",
     oldCode: `/* Physical properties break in RTL languages */
 .card {
   margin-left: 1rem;
@@ -210,6 +224,8 @@ img.cover {
     support: "Baseline 2023",
     description:
       "Select an element based on its descendants. The most requested CSS feature in history — now universally supported.",
+    when: "Styling a parent from what it contains: a field wrapper with an invalid input, a card that has an image, or the page while a dialog is open (body:has(dialog[open])).",
+    gotcha: ":has() can't be nested inside another :has(). Broad selectors like body:has(...) are re-checked on many DOM changes, so keep the subject and the argument as specific as you can on large pages.",
     oldCode: `/* Old: JavaScript to style parents based on children */
 document.querySelectorAll('.card').forEach(card => {
   if (card.querySelector('img')) {
@@ -248,6 +264,8 @@ form:has(input:invalid) .btn-submit {
     support: "Baseline 2024",
     description:
       "Write nested rules natively — no Sass or PostCSS needed. Use & to reference the parent and keep related styles together.",
+    when: "Component styles where states, children and media queries belong together, without reaching for Sass or PostCSS.",
+    gotcha: "Nested selectors behave like :is(), so specificity follows the most specific selector in the parent list, which can differ from what Sass compiles to. Early versions needed & before element selectors; current browsers don't.",
     oldCode: `/* Had to repeat the selector every time */
 .button { padding: .5rem 1rem; }
 .button:hover { background: oklch(45% 0.18 85); translate: 0 -2px; }
@@ -283,6 +301,8 @@ form:has(input:invalid) .btn-submit {
     support: "Widely available",
     description:
       ":is() groups selectors and keeps the highest specificity of the list. :where() does the same but with zero specificity — ideal for resets.",
+    when: ":where() for resets and library defaults that should be trivial to override; :is() to shorten long, repetitive selector lists.",
+    gotcha: ":is() takes the specificity of its most specific argument, so :is(#nav, .link) a is as strong as an ID selector. Both are forgiving: one invalid selector in the list no longer drops the whole rule.",
     oldCode: `/* Verbose — hard to read and update */
 h1 a, h2 a, h3 a, h4 a { color: inherit; }
 
@@ -320,6 +340,8 @@ h1 a, h2 a, h3 a, h4 a { color: inherit; }
     support: "Widely available",
     description:
       "Control specificity at the layer level. Layers declared earlier always lose — no more specificity wars with third-party CSS.",
+    when: "Keeping third-party CSS in a low layer so your own styles always win, and structuring a design system as reset, base, components and utilities.",
+    gotcha: "Styles outside any layer beat every layer. For !important declarations the order flips, so earlier layers win. Declare the order once at the top of your CSS: @layer reset, base, components;.",
     oldCode: `/* Old: specificity wars with no clean resolution */
 
 /* Third-party library ships this (0,1,0) */
@@ -355,6 +377,8 @@ h1 a, h2 a, h3 a, h4 a { color: inherit; }
     support: "Baseline 2024",
     description:
       "Register CSS variables with a type and initial value. Unlocks smooth animation of properties that were previously unanimatable.",
+    when: "Animating gradients, angles and colours held in custom properties, and giving design tokens a type the browser checks.",
+    gotcha: "The rule needs syntax and inherits, plus initial-value for any syntax except '*', or it's ignored. It only became Baseline in mid-2024, so treat the animation as an enhancement: older browsers jump straight to the end state.",
     oldCode: `/* Old: custom properties simply cannot be transitioned */
 .swatch {
   --hue: 0;
@@ -396,6 +420,8 @@ h1 a, h2 a, h3 a, h4 a { color: inherit; }
     support: "Widely available",
     description:
       "Custom properties are more than static variables. Combine them with calc() to build a single-source-of-truth design system.",
+    when: "Spacing and type scales, theme switching, and per-component overrides that all flow from one variable.",
+    gotcha: "An invalid value doesn't fall back to the previous declaration: the property resets to its inherited or initial value. var(--gap, 1rem) only helps when the variable isn't defined at all.",
     oldCode: `/* Old: Sass variables — compiled away, not dynamic */
 
 /* _variables.scss */
@@ -436,6 +462,8 @@ $radius: 8px;
     support: "Widely available",
     description:
       "Fluid font sizes and spacing that scale smoothly between a min and max — no breakpoints, no JavaScript.",
+    when: "Headings, section padding and grid gaps that should scale smoothly with the viewport between a minimum and a maximum.",
+    gotcha: "Keep a rem term in the middle value, as in clamp(1.5rem, 1rem + 2vw, 3rem). Pure vw ignores the reader's font-size setting and can fail WCAG's resize-text check.",
     oldCode: `/* Stepped breakpoints — still jumps, not smooth */
 h1 { font-size: 2rem; }
 
@@ -473,6 +501,8 @@ section {
     support: "Baseline 2024",
     description:
       "balance distributes words evenly across lines for headings. pretty prevents orphaned last words in paragraphs. Both with one property.",
+    when: "balance for headings, captions and short pull quotes; pretty for body paragraphs where a single orphaned last word looks off.",
+    gotcha: "balance only works on short blocks (Chromium stops at 6 lines, Firefox at 10), so it does nothing on long text. pretty isn't Baseline yet; browsers without it just wrap normally, so it's safe to add today.",
     oldCode: `/* Guesswork max-width to force even breaks */
 h1, h2, h3 {
   max-width: 28ch; /* magic number, breaks on font change */
@@ -505,6 +535,8 @@ p, li {
     support: "Widely available",
     description:
       "Apply blur, brightness, and saturation to whatever is behind an element. The foundation of modern glassmorphism UI.",
+    when: "Frosted headers, menus and overlays that sit on top of photos or scrolling content.",
+    gotcha: "It's costly to repaint while scrolling on low-end phones. It also makes the element a containing block, so position: fixed children are placed relative to it, not the viewport. Keep a solid fallback background for contrast.",
     oldCode: `/* Old: fake blur using a cloned, blurred background */
 .glass {
   position: relative;
@@ -541,6 +573,8 @@ p, li {
     support: "Baseline 2023",
     description:
       "Mix two colors in any color space directly in CSS. Generate tints, shades, and transparent variants from a single token.",
+    when: "Hover, active and disabled states, tints and translucent variants generated from one brand colour token.",
+    gotcha: "The colour space changes the result: mixing in srgb can look muddy, while oklch or oklab keep lightness more even. Percentages that add up to less than 100% also make the result partly transparent.",
     oldCode: `/* Old: hardcoded hex values — update one, update all */
 :root {
   --brand:       #ca8a04;
@@ -574,6 +608,8 @@ p, li {
     support: "Widely available",
     description:
       "Theme all native form controls — checkboxes, radios, range sliders, progress bars — with one line. No custom component needed.",
+    when: "Matching native checkboxes, radios, range sliders and progress bars to your brand without rebuilding them as custom components.",
+    gotcha: "It only tints the control; size and shape stay native. Browsers may also adjust the colour to keep enough contrast. For fully custom controls you still need appearance: none and your own styles.",
     oldCode: `/* Old: 30+ lines just to style one checkbox */
 input[type="checkbox"] {
   appearance: none;
@@ -621,6 +657,8 @@ progress { accent-color: #ca8a04; }`,
     support: "Widely available",
     description:
       "Smooth scroll-stop points with zero JavaScript. Perfect for carousels, image galleries, and full-screen sections.",
+    when: "Carousels, image galleries and horizontally scrolling card rows, especially on touch screens.",
+    gotcha: "mandatory can trap content that's taller than the viewport, so prefer proximity for vertical pages. Add scroll-padding-top when a fixed header would cover the snapped item.",
     oldCode: `/* Required a library + JS event wiring */
 /* npm install swiper — adds ~40KB */
 
@@ -662,6 +700,8 @@ const swiper = new Swiper('.carousel', {
     support: "Widely available",
     description:
       "Stop scroll chaining — the UX bug where scrolling inside a modal also scrolls the page. One line, no JS needed.",
+    when: "Modals, side drawers, chat panes and any nested scroll area that shouldn't drag the page along when it reaches its end.",
+    gotcha: "It only acts on an element that actually scrolls. On the root element it also turns off pull-to-refresh in Chrome on Android. contain keeps the element's own bounce or glow; none removes that too.",
     oldCode: `/* Old: block scroll chaining with JS event handling */
 modal.addEventListener('wheel', (e) => {
   const { scrollTop, scrollHeight, clientHeight } = modal;
@@ -697,6 +737,8 @@ body {
     support: "Baseline 2024",
     description:
       "Tell the browser to skip rendering off-screen content entirely. Can cut initial render time by 50%+ on content-heavy pages.",
+    when: "Long pages with many sections below the fold: documentation, feeds, comment threads and long-form articles.",
+    gotcha: "Pair it with contain-intrinsic-size (auto 500px, say), or skipped sections count as zero height and the scrollbar jumps as you scroll. Skipped content stays in the DOM and the accessibility tree, and find-in-page still reaches it.",
     oldCode: `/* Old: Intersection Observer to defer off-screen renders */
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -733,6 +775,8 @@ document.querySelectorAll('.section')
     support: "Widely available",
     description:
       "Name your grid regions for visual, readable layout code. Rearranging the layout for different breakpoints is as easy as editing a string.",
+    when: "Page shells and complex components with a handful of named regions that rearrange at breakpoints.",
+    gotcha: "Every row string needs the same number of cells and every area must be a rectangle, or the whole declaration is ignored. Use a dot (.) for an empty cell.",
     oldCode: `/* Old: absolute positioning for every region */
 .page     { position: relative; min-height: 100vh; }
 header    { position: absolute; top: 0; left: 0; right: 0; height: 60px; }
@@ -757,5 +801,40 @@ header { grid-area: header; }
 aside  { grid-area: sidebar; }
 main   { grid-area: main;   }
 footer { grid-area: footer; }`,
+  },
+];
+
+/** The H2 over each group of tips, in CATEGORIES order. */
+export const CATEGORY_HEADINGS: Record<Category, string> = {
+  Layout: "Layout: containers, grids and proportions",
+  Selectors: "Selectors: :has(), nesting and :is()",
+  "Visual Effects": "Visual effects: blur, colour and form controls",
+  Typography: "Typography: fluid sizes and better line breaks",
+  Variables: "Cascade layers and custom properties",
+  Performance: "Scrolling and rendering performance",
+};
+
+const countBy = (support: Support) => CSS_TIPS.filter((t) => t.support === support).length;
+
+/** Rendered on the page and as FAQPage JSON-LD, so the two never drift apart. */
+export const CSS_FAQ: { question: string; answer: string }[] = [
+  {
+    question: "Are these CSS features safe to use in production in 2026?",
+    answer: `Yes. Of the ${CSS_TIPS.length}, ${countBy("Widely available")} are widely available, ${countBy("Baseline 2023")} became Baseline in 2023 and ${countBy("Baseline 2024")} in 2024, so they work in current Chrome, Edge, Firefox and Safari. The one exception is text-wrap: pretty, which isn't in every browser yet. For it and the newest features, such as @property animations, write the CSS so the page still works without them.`,
+  },
+  {
+    question: "Do I still need Sass?",
+    answer:
+      "Often not. Native nesting, custom properties, color-mix() and cascade layers cover most of what teams used Sass for. Sass still helps with loops, mixins and splitting styles into partials at build time.",
+  },
+  {
+    question: "Should I use container queries or media queries?",
+    answer:
+      "Both. Media queries suit page-level layout such as the site shell and navigation. Container queries suit components that get reused at different widths, because they respond to the space the component actually has.",
+  },
+  {
+    question: "How do I check whether a browser supports a CSS feature?",
+    answer:
+      "Use @supports in CSS, for example @supports (container-type: inline-size), or CSS.supports() in JavaScript. The support report on this page runs CSS.supports() in your browser. For your whole audience, check the Baseline status on MDN or caniuse.com.",
   },
 ];
